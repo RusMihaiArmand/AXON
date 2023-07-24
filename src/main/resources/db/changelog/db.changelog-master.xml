@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <changeSet author="raluca.serban" id="000">
+        <comment>Create sequence for generating surrogate keys for team.</comment>
+        <createSequence sequenceName="TEAM_ID_SQ" startValue="50"/>
+        <comment>Create sequence for generating surrogate keys for leave request</comment>
+        <createSequence sequenceName="LEAVE_REQUEST_ID_SQ" startValue="50"/>
+        <comment>Create sequence for generating surrogate keys for employee yearly days off</comment>
+        <createSequence sequenceName="EMP_YEARLY_DAYS_OFF_ID_SQ" startValue="50"/>
+        <comment>Create sequence for generating surrogate keys for employee yearly days off hist
+        </comment>
+        <createSequence sequenceName="EMP_YEARLY_DAYS_OFF_HIST_ID_SQ" startValue="50"/>
+    </changeSet>
+
+    <changeSet author="raluca.serban" id="001">
+        <createTable tableName="TEAM" remarks="Team details.">
+            <column name="ID" remarks="Generated surrogate key." type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="TEAM_PK"/>
+            </column>
+            <column name="NAME" type="VARCHAR2(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CRT_USR" remarks="User that created this record"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CRT_TMS" remarks="Timestamp of the record's creation"
+                    type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MDF_USR" remarks="User that modified last this record" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MDF_TMS" remarks="Timestamp of the record's last modification" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STATUS" remarks="Status of the team" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="V" remarks="Technical version of this record" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable remarks="Employee details." tableName="EMPLOYEE">
+            <column name="EMPLOYEE_ID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="EMPLOYEE_PK"/>
+            </column>
+            <column name="USERNAME" type="VARCHAR2(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PASSWORD" remarks="Password of a employee." type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FIRST_NAME" type="VARCHAR2(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LAST_NAME" type="VARCHAR2(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EMAIL" type="VARCHAR2(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CRT_USR" remarks="User that created this record"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CRT_TMS" remarks="Timestamp of the record's creation"
+                    type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MDF_USR" remarks="User that modified last this record" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MDF_TMS" remarks="Timestamp of the record's last modification" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="USER" name="ROLE" remarks="Role of employee" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STATUS" remarks="Status of employee" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONTRACT_START_DATE" remarks="Start date of employee's contract" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONTRACT_END_DATE" remarks="End date of employee's contract" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="TEAM_ID" remarks="Id of team" type="BIGINT">
+                <constraints foreignKeyName="EMPLOYEE_TEAM_FK"
+                             nullable="false"
+                             references="TEAM(ID)"/>
+            </column>
+            <column name="V" remarks="Technical version of this record" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable remarks="Leave request details." tableName="LEAVE_REQUEST">
+            <column name="ID" remarks="Generated surrogate key." type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="LEAVE_REQUEST_ID"/>
+            </column>
+            <column name="EMPLOYEE_ID" remarks="Id of the employee that request vacation"
+                    type="VARCHAR2(255)">
+                <constraints foreignKeyName="LEAVE_REQUEST_EMPLOYEE_FK"
+                             nullable="false"
+                             references="EMPLOYEE(EMPLOYEE_ID)"/>
+            </column>
+            <column name="CRT_USR" remarks="User that created this record"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CRT_TMS" remarks="Timestamp of the record's creation"
+                    type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MDF_USR" remarks="User that modified last this record" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MDF_TMS" remarks="Timestamp of the record's last modification" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="START_DATE" remarks="Start date of employee's vacation" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="END_DATE" remarks="End date of employee's vacation" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NO_DAYS" remarks="Number of days for vacation" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TYPE" remarks="Type of leave request" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="PENDING" name="STATUS" remarks="Status of employee" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRIPTION" remarks="Description of leave request" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="REJECT_REASON" remarks="Reason of the rejection of leave request"
+                    type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="V" remarks="Technical version of this record" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable remarks="Employee yearly vacation details." tableName="EMP_YEARLY_DAYS_OFF">
+            <column name="ID" remarks="Generated surrogate key." type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="EMP_YEARLY_DAYS_OFF_PK"/>
+            </column>
+            <column name="EMPLOYEE_ID" remarks="Id of employee's vacation" type="VARCHAR(255)">
+                <constraints foreignKeyName="EMP_YEARLY_DAYS_OFF_EMPLOYEE_FK"
+                             nullable="false"
+                             references="EMPLOYEE(EMPLOYEE_ID)"/>
+            </column>
+            <column name="TOTAL_NO_DAYS" remarks="Total number of days for employee's vacation"
+                    type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="YEAR" remarks="Year of employee's vacation" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable remarks="Employee yearly vacation history details."
+                     tableName="EMP_YEARLY_DAYS_OFF_HIST">
+            <column name="ID" remarks="Generated surrogate key." type="BIGINT">
+                <constraints nullable="false" primaryKey="true"
+                             primaryKeyName="EMP_YEARLY_DAYS_OFF_HIST_PK"/>
+            </column>
+            <column name="EMP_YEARLY_DAYS_OFF_ID" type="BIGINT">
+                <constraints foreignKeyName="EMP_YEARLY_DAYS_OFF_HIST_EMP_YEARLY_DAYS_OFF_FK"
+                             nullable="false"
+                             references="EMP_YEARLY_DAYS_OFF(id)"/>
+            </column>
+            <column name="NO_DAYS" remarks="Number of days for employee's vacation" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRIPTION" remarks="Reason of modification" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TYPE" remarks="Type of of modification" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CRT_USR" remarks="User that created this record"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CRT_TMS" remarks="Timestamp of the record's creation"
+                    type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable remarks="Legally days off details." tableName="LEGALLY_DAYS_OFF">
+            <column name="DATE" remarks="Date of day off." type="DATE">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="LEGALLY_DAYS_OFF_PK"/>
+            </column>
+            <column name="DESCRIPTION" remarks="Description of day off" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+    </changeSet>
+
+    <changeSet author="raluca.serban" id="002">
+        <comment>Initial Load Team details</comment>
+        <loadData file="includes/data-team-initial-load.csv" tableName="TEAM"
+                  relativeToChangelogFile="true"/>
+        <comment>Initial Legally days off</comment>
+        <loadData file="includes/data-legally-days-off-initial-load.csv" relativeToChangelogFile="true"
+                  tableName="LEGALLY_DAYS_OFF"/>
+    </changeSet>
+
+</databaseChangeLog>

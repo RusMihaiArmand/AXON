@@ -1,0 +1,5 @@
+ID,NAME,CRT_USR,CRT_TMS,MDF_USR,MDF_TMS,STATUS,V
+1,Backend,initial.load,2022-06-18,initial.load,2022-06-18,ACTIVE,0
+2,Frontend,initial.load,2022-06-18,initial.load,2022-06-18,ACTIVE,0
+3,HR,initial.load,2022-06-18,initial.load,2022-06-18,ACTIVE,0
+4,Altele,initial.load,2022-06-18,initial.load,2022-06-18,ACTIVE,0
