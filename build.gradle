@@ -10,7 +10,7 @@ plugins {
 
 group = "$groupId"
 version = "$version"
-sourceCompatibility = '11'
+sourceCompatibility = '17'
 
 configurations {
 	compileOnly {
@@ -78,8 +78,4 @@ jacocoTestReport {
 
 jar {
 	enabled = true
-}
-
-wrapper {
-	gradleVersion = '6.5'
 }
