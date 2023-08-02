@@ -13,13 +13,10 @@ import ro.axon.dot.service.TeamService;
 @RequestMapping("/api/v1")
 public class TeamApi {
 
-  private final TeamService teamService;
+    private final TeamService teamService;
 
-  @GetMapping("teams")
-  public ResponseEntity<TeamDetailsList> getTeamDetailsList() {
-
-    return ResponseEntity.ok(teamService.getTeamsDetails());
-  }
-
-
+    @GetMapping("/teams")
+    public ResponseEntity<TeamDetailsList> getTeamDetailsList() {
+        return ResponseEntity.ok(teamService.getActiveTeams());
+    }
 }
