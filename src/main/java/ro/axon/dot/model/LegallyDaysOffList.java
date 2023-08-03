@@ -5,11 +5,11 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class OffDayList {
+public class LegallyDaysOffList {
 
-    private List<OffDayListItem> days;
+    private List<LegallyDaysOffItem> days;
 
-    public void addDay(OffDayListItem day)
+    public void addDay(LegallyDaysOffItem day)
     {
         if(days == null)
             days = new ArrayList<>();

@@ -14,7 +14,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "LEGALLY_DAYS_OFF")
-public class OffDayEty extends OffDaySrgKeyEntityTml<Date> {
+public class LegallyDaysOffEty extends SrgKeyEntityTml<Date> {
 
 
     @Id
@@ -30,7 +30,9 @@ public class OffDayEty extends OffDaySrgKeyEntityTml<Date> {
     }
 
     @Override
-    protected Class<? extends OffDaySrgKeyEntityTml<Date>> entityRefClass() {
-        return OffDayEty.class;
+    protected Class<? extends SrgKeyEntityTml<Date>> entityRefClass() {
+
+        return null;
     }
+
 }

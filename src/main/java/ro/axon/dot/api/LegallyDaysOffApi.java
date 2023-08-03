@@ -7,23 +7,23 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ro.axon.dot.model.OffDayList;
-import ro.axon.dot.service.OffDayService;
+import ro.axon.dot.model.LegallyDaysOffList;
+import ro.axon.dot.service.LegallyDaysOffService;
 
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
-public class OffDaysApi {
+public class LegallyDaysOffApi {
 
-  private final OffDayService offDayService;
+  private final LegallyDaysOffService legallyDaysOffService;
 
 
   @GetMapping("misc/legally-days-off")
-  public ResponseEntity<OffDayList> getDaysOff( @RequestParam("periods") List<String> periods,
+  public ResponseEntity<LegallyDaysOffList> getDaysOff( @RequestParam("periods") List<String> periods,
       @RequestParam("years") List<String> years) {
 
-    return ResponseEntity.ok(offDayService.getOffDays(periods,years));
+    return ResponseEntity.ok(legallyDaysOffService.getOffDays(periods,years));
   }
 
 }

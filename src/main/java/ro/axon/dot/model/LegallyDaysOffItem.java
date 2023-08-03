@@ -4,7 +4,7 @@ import java.sql.Date;
 import lombok.Data;
 
 @Data
-public class OffDayListItem {
+public class LegallyDaysOffItem {
 
     private Date date;
     private String desc;
