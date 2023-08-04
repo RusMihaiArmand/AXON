@@ -1,5 +1,6 @@
 package ro.axon.dot.domain;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Getter;
@@ -42,11 +43,9 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @Column(name = "STATUS")
   private String status;
   @Column(name = "CONTRACT_START_DATE")
-  private Instant contractStartDate;
+  private LocalDate contractStartDate;
   @Column(name = "CONTRACT_END_DATE")
-  private Instant contractEndDate;
-  @Column(name = "V")
-  private Long v;
+  private LocalDate contractEndDate;
   @Column(name = "USERNAME")
   private String username;
   @Column(name = "PASSWORD")
@@ -67,7 +66,7 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
 
   public EmployeeEty(String id, String firstName, String lastName, String email, String crtUsr,
       Instant crtTms, String mdfUsr, Instant mdfTms, String role, String status,
-      Instant contractStartDate, Instant contractEndDate, Long v, String username, TeamEty team ) {
+      LocalDate contractStartDate, LocalDate contractEndDate, String username, TeamEty team ) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -80,7 +79,6 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
     this.status = status;
     this.contractStartDate = contractStartDate;
     this.contractEndDate = contractEndDate;
-    this.v = v;
     this.username = username;
     this.team = team;
   }

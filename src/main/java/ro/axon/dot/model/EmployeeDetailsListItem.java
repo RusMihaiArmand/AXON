@@ -1,6 +1,7 @@
 package ro.axon.dot.model;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import lombok.Data;
 
 @Data
@@ -17,7 +18,7 @@ public class EmployeeDetailsListItem {
   private Instant mdfTms;
   private String role;
   private String status;
-  private Instant contractStartDate;
+  private LocalDate contractStartDate;
   private Long v;
   private Integer totalVacationDays;
   private TeamDetailsListItem teamDetails;
