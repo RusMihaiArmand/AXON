@@ -49,7 +49,7 @@ class EmployeeServiceTest {
 
     when(employeeRepository.findAll()).thenReturn(employees);
 
-    EmployeeDetailsList returnedEmployeesList = employeeService.getEmployeesDetails();
+    EmployeeDetailsList returnedEmployeesList = employeeService.getEmployeesDetails(null);
 
     assertEquals(3, returnedEmployeesList.getItems().size());
 
@@ -77,32 +77,32 @@ class EmployeeServiceTest {
 
   @Test
   void getEmployeeByName() {
-    String searchName = "Cristi";
+    String searchName = "Pop";
 
-    EmployeeEty employee1 = new EmployeeEty(ID, "Cristian", LAST_NAME, EMAIL, CRT_USR, CRT_TMS,
+    EmployeeEty employee1 = new EmployeeEty(ID, FIRST_NAME, "Pop", EMAIL, CRT_USR, CRT_TMS,
         MDF_USR, MDF_TMS, ROLE, STATUS, CONTRACT_START_DATE, CONTRACT_END_DATE,
         V, USERNAME, TEAM_ETY);
 
-    EmployeeEty employee2 = new EmployeeEty(ID, "Cristina", LAST_NAME, EMAIL, CRT_USR, CRT_TMS,
+    EmployeeEty employee2 = new EmployeeEty(ID, FIRST_NAME, "Popa", EMAIL, CRT_USR, CRT_TMS,
         MDF_USR, MDF_TMS, ROLE, STATUS, CONTRACT_START_DATE, CONTRACT_END_DATE,
         V, USERNAME, TEAM_ETY);
 
-    EmployeeEty employee3 = new EmployeeEty(ID, FIRST_NAME, "Cristurean", EMAIL, CRT_USR, CRT_TMS,
+    EmployeeEty employee3 = new EmployeeEty(ID, FIRST_NAME, "Dan", EMAIL, CRT_USR, CRT_TMS,
         MDF_USR, MDF_TMS, ROLE, STATUS, CONTRACT_START_DATE, CONTRACT_END_DATE,
         V, USERNAME, TEAM_ETY);
 
     List<EmployeeEty> employees = Arrays.asList(employee1, employee2, employee3);
 
-    when(employeeRepository.findEmployeeByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(searchName, searchName))
+    when(employeeRepository.findEmployeeByLastNameContainingIgnoreCase(searchName))
         .thenReturn(employees.stream()
             .filter(e -> e.getFirstName().contains(searchName) || e.getLastName().contains(searchName))
             .collect(Collectors.toList()));
 
-    EmployeeDetailsList returnedEmployees = employeeService.getEmployeeByName(searchName);
+    EmployeeDetailsList returnedEmployees = employeeService.getEmployeesDetails(searchName);
 
     assertEquals(2, returnedEmployees.getItems().size());
     verify(employeeRepository, times(1))
-        .findEmployeeByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(searchName, searchName);
+        .findEmployeeByLastNameContainingIgnoreCase(searchName);
   }
 
 }

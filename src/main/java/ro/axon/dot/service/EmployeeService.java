@@ -1,8 +1,11 @@
 package ro.axon.dot.service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.model.EmployeeDetailsList;
@@ -13,17 +16,19 @@ public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
 
-  public EmployeeDetailsList getEmployeesDetails(){
+  public EmployeeDetailsList getEmployeesDetails(String name) {
     var employeeDetailsList = new EmployeeDetailsList();
-    employeeDetailsList.setItems(employeeRepository.findAll().stream().map(EmployeeMapper.INSTANCE::mapEmployeeEtyToEmployeeDto)
-        .collect(Collectors.toList()));
-    return employeeDetailsList;
-  }
+    List<EmployeeEty> employees;
 
-  public EmployeeDetailsList getEmployeeByName(String name){
-    var employeeDetailsList = new EmployeeDetailsList();
+    Optional<String> searchName = Optional.ofNullable(name);
 
-    employeeDetailsList.setItems(employeeRepository.findEmployeeByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(name, name).stream()
+    if (searchName.isPresent() && !searchName.get().isEmpty()) {
+      employees = employeeRepository.findEmployeeByLastNameContainingIgnoreCase(searchName.get());
+    } else {
+      employees = employeeRepository.findAll();
+    }
+
+    employeeDetailsList.setItems(employees.stream()
         .map(EmployeeMapper.INSTANCE::mapEmployeeEtyToEmployeeDto)
         .collect(Collectors.toList()));
 

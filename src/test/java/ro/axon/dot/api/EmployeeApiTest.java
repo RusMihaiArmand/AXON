@@ -74,7 +74,7 @@ class EmployeeApiTest {
 
     employeesList.setItems(Arrays.asList(employee1,employee2));
 
-    when(employeeService.getEmployeesDetails()).thenReturn(employeesList);
+    when(employeeService.getEmployeesDetails(null)).thenReturn(employeesList);
 
     mockMvc.perform(get("/api/v1/employees")
         .contentType(MediaType.APPLICATION_JSON))
@@ -98,9 +98,9 @@ class EmployeeApiTest {
   void getEmployeesByName() throws Exception {
     employeesList.setItems(Arrays.asList(employee2));
 
-    when(employeeService.getEmployeeByName("Mar")).thenReturn(employeesList);
+    when(employeeService.getEmployeesDetails("An")).thenReturn(employeesList);
 
-    mockMvc.perform(get("/api/v1/employees/Mar")
+    mockMvc.perform(get("/api/v1/employees/An")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.items", hasSize(1)))

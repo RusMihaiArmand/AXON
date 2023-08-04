@@ -16,13 +16,9 @@ public class EmployeeApi {
 
   private final EmployeeService employeeService;
 
-  @GetMapping("/employees")
-  public ResponseEntity<EmployeeDetailsList> getEmployeesList(){
-    return ResponseEntity.ok(employeeService.getEmployeesDetails());
+  @GetMapping(value = {"/employees/{name}", "/employees"})
+  public ResponseEntity<EmployeeDetailsList> getEmployeesList(@PathVariable(required = false) String name){
+    return ResponseEntity.ok(employeeService.getEmployeesDetails(name));
   }
 
-  @GetMapping("/employees/{name}")
-  public ResponseEntity<EmployeeDetailsList> getEmployeesByName(@PathVariable String name){
-    return ResponseEntity.ok(employeeService.getEmployeeByName(name));
-  }
 }

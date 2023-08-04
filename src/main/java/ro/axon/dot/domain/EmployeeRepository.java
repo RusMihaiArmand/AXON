@@ -8,6 +8,6 @@ public interface EmployeeRepository extends
     JpaRepository<EmployeeEty, String>,
     QuerydslPredicateExecutor<EmployeeEty> {
 
-  List<EmployeeEty> findEmployeeByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String name1, String name2);
+  List<EmployeeEty> findEmployeeByLastNameContainingIgnoreCase(String name);
 
 }
