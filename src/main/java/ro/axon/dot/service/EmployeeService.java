@@ -23,7 +23,11 @@ public class EmployeeService {
     Optional<String> searchName = Optional.ofNullable(name);
 
     if (searchName.isPresent() && !searchName.get().isEmpty()) {
-      employees = employeeRepository.findEmployeeByLastNameContainingIgnoreCase(searchName.get());
+      employees = employeeRepository.findAll().stream()
+          .filter(employee ->
+              employee.getFirstName().toLowerCase().contains(searchName.get().toLowerCase()) ||
+              employee.getLastName().toLowerCase().contains(searchName.get().toLowerCase()))
+          .collect(Collectors.toList());
     } else {
       employees = employeeRepository.findAll();
     }

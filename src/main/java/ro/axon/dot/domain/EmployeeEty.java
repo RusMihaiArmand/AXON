@@ -63,23 +63,4 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
     return EmployeeEty.class;
   }
 
-
-  public EmployeeEty(String id, String firstName, String lastName, String email, String crtUsr,
-      Instant crtTms, String mdfUsr, Instant mdfTms, String role, String status,
-      LocalDate contractStartDate, LocalDate contractEndDate, String username, TeamEty team ) {
-    this.id = id;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.email = email;
-    this.crtUsr = crtUsr;
-    this.crtTms = crtTms;
-    this.mdfUsr = mdfUsr;
-    this.mdfTms = mdfTms;
-    this.role = role;
-    this.status = status;
-    this.contractStartDate = contractStartDate;
-    this.contractEndDate = contractEndDate;
-    this.username = username;
-    this.team = team;
-  }
 }

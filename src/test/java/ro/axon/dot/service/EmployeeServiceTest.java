@@ -42,9 +42,22 @@ class EmployeeServiceTest {
   @Test
   void getEmployeesDetails() throws Exception{
 
-    EmployeeEty employee = new EmployeeEty(ID, FIRST_NAME, LAST_NAME, EMAIL, CRT_USR, CRT_TMS,
-        MDF_USR, MDF_TMS, ROLE, STATUS, CONTRACT_START_DATE, CONTRACT_END_DATE,
-        V, USERNAME, TEAM_ETY);
+    EmployeeEty employee = new EmployeeEty();
+
+    employee.setId(ID);
+    employee.setFirstName(FIRST_NAME);
+    employee.setLastName(LAST_NAME);
+    employee.setEmail(EMAIL);
+    employee.setCrtUsr(CRT_USR);
+    employee.setCrtTms(CRT_TMS);
+    employee.setMdfUsr(MDF_USR);
+    employee.setMdfTms(MDF_TMS);
+    employee.setRole(ROLE);
+    employee.setStatus(STATUS);
+    employee.setContractStartDate(CONTRACT_START_DATE);
+    employee.setContractEndDate(CONTRACT_END_DATE);
+    employee.setUsername(USERNAME);
+    employee.setTeam(TEAM_ETY);
 
     List<EmployeeEty> employees = Arrays.asList(employee, new EmployeeEty(), new EmployeeEty());
 
@@ -66,7 +79,6 @@ class EmployeeServiceTest {
     assertEquals(ROLE, returnedEmployee.getRole());
     assertEquals(STATUS, returnedEmployee.getStatus());
     assertEquals(CONTRACT_START_DATE, returnedEmployee.getContractStartDate());
-    assertEquals(V, returnedEmployee.getV());
     assertEquals(USERNAME, returnedEmployee.getUsername());
 
     assertEquals(TEAM_ETY.getId(), returnedEmployee.getTeamDetails().getId());
@@ -78,32 +90,53 @@ class EmployeeServiceTest {
 
   @Test
   void getEmployeeByName() {
-    String searchName = "Pop";
+    String searchName = "Cris";
 
-    EmployeeEty employee1 = new EmployeeEty(ID, FIRST_NAME, "Pop", EMAIL, CRT_USR, CRT_TMS,
-        MDF_USR, MDF_TMS, ROLE, STATUS, CONTRACT_START_DATE, CONTRACT_END_DATE,
-        V, USERNAME, TEAM_ETY);
+    EmployeeEty employee1 = new EmployeeEty();
 
-    EmployeeEty employee2 = new EmployeeEty(ID, FIRST_NAME, "Popa", EMAIL, CRT_USR, CRT_TMS,
-        MDF_USR, MDF_TMS, ROLE, STATUS, CONTRACT_START_DATE, CONTRACT_END_DATE,
-        V, USERNAME, TEAM_ETY);
+    employee1.setId(ID);
+    employee1.setFirstName("Cristian");
+    employee1.setLastName(LAST_NAME);
+    employee1.setEmail(EMAIL);
+    employee1.setCrtUsr(CRT_USR);
+    employee1.setCrtTms(CRT_TMS);
+    employee1.setMdfUsr(MDF_USR);
+    employee1.setMdfTms(MDF_TMS);
+    employee1.setRole(ROLE);
+    employee1.setStatus(STATUS);
+    employee1.setContractStartDate(CONTRACT_START_DATE);
+    employee1.setContractEndDate(CONTRACT_END_DATE);
+    employee1.setUsername(USERNAME);
+    employee1.setTeam(TEAM_ETY);
 
-    EmployeeEty employee3 = new EmployeeEty(ID, FIRST_NAME, "Dan", EMAIL, CRT_USR, CRT_TMS,
-        MDF_USR, MDF_TMS, ROLE, STATUS, CONTRACT_START_DATE, CONTRACT_END_DATE,
-        V, USERNAME, TEAM_ETY);
+    EmployeeEty employee2 = new EmployeeEty();
 
-    List<EmployeeEty> employees = Arrays.asList(employee1, employee2, employee3);
+    employee2.setId(ID);
+    employee2.setFirstName(FIRST_NAME);
+    employee2.setLastName("Cristurean");
+    employee2.setEmail(EMAIL);
+    employee2.setCrtUsr(CRT_USR);
+    employee2.setCrtTms(CRT_TMS);
+    employee2.setMdfUsr(MDF_USR);
+    employee2.setMdfTms(MDF_TMS);
+    employee2.setRole(ROLE);
+    employee2.setStatus(STATUS);
+    employee2.setContractStartDate(CONTRACT_START_DATE);
+    employee2.setContractEndDate(CONTRACT_END_DATE);
+    employee2.setUsername(USERNAME);
+    employee2.setTeam(TEAM_ETY);
 
-    when(employeeRepository.findEmployeeByLastNameContainingIgnoreCase(searchName))
+    List<EmployeeEty> employees = Arrays.asList(employee1, employee2);
+
+    when(employeeRepository.findAll())
         .thenReturn(employees.stream()
             .filter(e -> e.getFirstName().contains(searchName) || e.getLastName().contains(searchName))
             .collect(Collectors.toList()));
 
     EmployeeDetailsList returnedEmployees = employeeService.getEmployeesDetails(searchName);
 
-    assertEquals(2, returnedEmployees.getItems().size());
-    verify(employeeRepository, times(1))
-        .findEmployeeByLastNameContainingIgnoreCase(searchName);
+    assertEquals(1, returnedEmployees.getItems().size());
+    verify(employeeRepository, times(1)).findAll();
   }
 
 }

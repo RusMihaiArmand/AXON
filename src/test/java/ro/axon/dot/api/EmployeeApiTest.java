@@ -1,9 +1,11 @@
 package ro.axon.dot.api;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,19 +97,33 @@ class EmployeeApiTest {
 
   @Test
   void getEmployeesListNull() throws Exception{
-    when(employeeService.getEmployeesDetails(null)).thenReturn(null);
+    when(employeeService.getEmployeesDetails(null)).thenReturn(employeesList);
 
     mockMvc.perform(get("/api/v1/employees")
-        .contentType(MediaType.APPLICATION_JSON));
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items").isEmpty());
+  }
+  @Test
+  void getEmployeesByNameNotFound() throws Exception {
+
+    when(employeeService.getEmployeesDetails(anyString())).thenReturn(employeesList);
+
+    mockMvc.perform(get("/api/v1/employees")
+            .param("name", "Radu")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items").isEmpty());
   }
 
   @Test
   void getEmployeesByName() throws Exception {
     employeesList.setItems(Arrays.asList(employee2));
 
-    when(employeeService.getEmployeesDetails("An")).thenReturn(employeesList);
+    when(employeeService.getEmployeesDetails(anyString())).thenReturn(employeesList);
 
-    mockMvc.perform(get("/api/v1/employees/An")
+    mockMvc.perform(get("/api/v1/employees")
+            .param("name", "Anton")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.items", hasSize(1)))
@@ -116,6 +132,8 @@ class EmployeeApiTest {
         .andExpect(jsonPath("$.items[0].totalVacationDays").value(21))
         .andExpect(jsonPath("$.items[0].teamDetails.name").value("InternshipTeam"));
   }
+
+
 
 
 }

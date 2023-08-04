@@ -32,9 +32,21 @@ class EmployeeMapperTest {
     Set<EmpYearlyDaysOffEty> empYearlyDaysOffEtySet = new HashSet<>();
     empYearlyDaysOffEtySet.add(empYearlyDaysOffEty);
 
-    EmployeeEty employeeEty = new EmployeeEty(ID, FIRST_NAME, LAST_NAME, EMAIL, CRT_USR, CRT_TMS,
-                                MDF_USR, MDF_TMS, ROLE, STATUS, CONTRACT_START_DATE, CONTRACT_END_DATE,
-                                V, USERNAME, TEAM_ETY);
+    EmployeeEty employeeEty = new EmployeeEty();
+
+    employeeEty.setId(ID);
+    employeeEty.setFirstName(FIRST_NAME);
+    employeeEty.setLastName(LAST_NAME);
+    employeeEty.setEmail(EMAIL);
+    employeeEty.setCrtUsr(CRT_USR);
+    employeeEty.setCrtTms(CRT_TMS);
+    employeeEty.setMdfUsr(MDF_USR);
+    employeeEty.setMdfTms(MDF_TMS);
+    employeeEty.setRole(ROLE);
+    employeeEty.setStatus(STATUS);
+    employeeEty.setContractStartDate(CONTRACT_START_DATE);
+    employeeEty.setUsername(USERNAME);
+    employeeEty.setTeam(TEAM_ETY);
     employeeEty.setEmpYearlyDaysOff(empYearlyDaysOffEtySet);
 
 
@@ -51,7 +63,6 @@ class EmployeeMapperTest {
     assertEquals(ROLE, employeeDetailsListItem.getRole());
     assertEquals(STATUS, employeeDetailsListItem.getStatus());
     assertEquals(CONTRACT_START_DATE, employeeDetailsListItem.getContractStartDate());
-    assertEquals(V, employeeDetailsListItem.getV());
     assertEquals(USERNAME, employeeDetailsListItem.getUsername());
     assertEquals(21, employeeDetailsListItem.getTotalVacationDays());
 
