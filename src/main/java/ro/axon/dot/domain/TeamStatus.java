@@ -1,5 +1,5 @@
 package ro.axon.dot.domain;
 
-public enum Status {
+public enum TeamStatus {
     ACTIVE, DISABLED
 }
