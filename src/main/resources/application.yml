@@ -30,6 +30,12 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+ro.axon.core:
+ roles:
+  - USER
+  - HR
+  - TEAM_LEAD
+
 server.port: 8081
 server:
   servlet:

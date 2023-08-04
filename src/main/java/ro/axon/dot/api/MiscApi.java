@@ -5,21 +5,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ro.axon.dot.model.TeamDetailsList;
-import ro.axon.dot.service.TeamService;
+import ro.axon.dot.model.EmployeeRolesList;
+import ro.axon.dot.service.RolesService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
-public class TeamApi {
+@RequestMapping("/api/v1/misc")
+public class MiscApi {
 
-  private final TeamService teamService;
+  private final RolesService rolesService;
+  @GetMapping("roles")
+  public ResponseEntity<EmployeeRolesList> getEmployeeRolesList() {
 
-  @GetMapping("teams")
-  public ResponseEntity<TeamDetailsList> getTeamDetailsList() {
-
-    return ResponseEntity.ok(teamService.getTeamsDetails());
+    return ResponseEntity.ok(rolesService.getEmployeeRoles());
   }
-
 
 }
