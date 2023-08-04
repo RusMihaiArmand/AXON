@@ -18,7 +18,13 @@ public class EmployeeApi {
 
   @GetMapping(value = {"/employees/{name}", "/employees"})
   public ResponseEntity<EmployeeDetailsList> getEmployeesList(@PathVariable(required = false) String name){
-    return ResponseEntity.ok(employeeService.getEmployeesDetails(name));
+
+    EmployeeDetailsList employeesList = employeeService.getEmployeesDetails(name);
+    if (employeesList == null || employeesList.getItems().isEmpty()) {
+      throw new RuntimeException("No employees found.");
+    }
+
+    return ResponseEntity.ok(employeesList);
   }
 
 }

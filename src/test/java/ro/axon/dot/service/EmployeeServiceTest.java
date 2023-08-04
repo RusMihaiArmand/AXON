@@ -11,13 +11,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 
+@ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
 
   EmployeeService employeeService;
@@ -27,8 +30,6 @@ class EmployeeServiceTest {
 
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.initMocks(this);
-
     employeeService = new EmployeeService(employeeRepository);
 
     TEAM_ETY.setId(1L);

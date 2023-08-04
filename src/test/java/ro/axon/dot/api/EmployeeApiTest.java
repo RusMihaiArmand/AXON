@@ -1,15 +1,15 @@
 package ro.axon.dot.api;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ro.axon.dot.EmployeeTestAttributes.*;
 
+@ExtendWith(MockitoExtension.class)
 class EmployeeApiTest {
   public static final TeamDetailsListItem teamDetails1 = new TeamDetailsListItem();
   public static final TeamDetailsListItem teamDetails2 = new TeamDetailsListItem();
@@ -41,8 +42,6 @@ class EmployeeApiTest {
 
   @BeforeEach
   void setUp() throws Exception{
-    MockitoAnnotations.initMocks(this);
-
     mockMvc = MockMvcBuilders.standaloneSetup(employeeApi).build();
 
     teamDetails1.setName("AxonTeam");
@@ -95,6 +94,14 @@ class EmployeeApiTest {
   }
 
   @Test
+  void getEmployeesListNull() throws Exception{
+    when(employeeService.getEmployeesDetails(null)).thenReturn(null);
+
+    mockMvc.perform(get("/api/v1/employees")
+        .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @Test
   void getEmployeesByName() throws Exception {
     employeesList.setItems(Arrays.asList(employee2));
 
@@ -108,6 +115,7 @@ class EmployeeApiTest {
         .andExpect(jsonPath("$.items[0].lastName").value("Anton"))
         .andExpect(jsonPath("$.items[0].totalVacationDays").value(21))
         .andExpect(jsonPath("$.items[0].teamDetails.name").value("InternshipTeam"));
-
   }
+
+
 }
