@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -132,8 +131,4 @@ class EmployeeApiTest {
         .andExpect(jsonPath("$.items[0].totalVacationDays").value(21))
         .andExpect(jsonPath("$.items[0].teamDetails.name").value("InternshipTeam"));
   }
-
-
-
-
 }

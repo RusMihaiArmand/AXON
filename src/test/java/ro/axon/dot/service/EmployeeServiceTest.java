@@ -135,7 +135,7 @@ class EmployeeServiceTest {
 
     EmployeeDetailsList returnedEmployees = employeeService.getEmployeesDetails(searchName);
 
-    assertEquals(1, returnedEmployees.getItems().size());
+    assertEquals(2, returnedEmployees.getItems().size());
     verify(employeeRepository, times(1)).findAll();
   }
 

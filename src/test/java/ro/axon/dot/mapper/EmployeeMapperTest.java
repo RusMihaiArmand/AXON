@@ -10,7 +10,6 @@ import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 
-
 class EmployeeMapperTest {
 
   EmployeeMapper employeeMapper = EmployeeMapper.INSTANCE;
