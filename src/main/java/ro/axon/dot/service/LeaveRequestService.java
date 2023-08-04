@@ -9,6 +9,7 @@ import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -23,7 +24,7 @@ public class LeaveRequestService {
         Comparator<LeaveRequestEty> leaveRequestStatusComparator = Comparator.comparing(LeaveRequestEty::getStatus);
         Comparator<LeaveRequestEty> leaveRequestCrtTmsComparator = Comparator.comparing(LeaveRequestEty::getCrtTms);
         Iterable<LeaveRequestEty> filteredRepo = leaveRequestRepository.findAll(query);
-        leaveRequestDetailsList.setItems(StreamSupport.stream(filteredRepo.spliterator(), false).sorted(leaveRequestStatusComparator.thenComparing(leaveRequestCrtTmsComparator))
+        leaveRequestDetailsList.setItems(StreamSupport.stream(filteredRepo.spliterator(), false).filter(Objects::nonNull).sorted(leaveRequestStatusComparator.thenComparing(leaveRequestCrtTmsComparator))
                 .map(LeaveRequestMapper.INSTANCE::mapLeaveRequestEtyToLeaveRequestDto).collect(Collectors.toList()));
         return leaveRequestDetailsList;
     }
