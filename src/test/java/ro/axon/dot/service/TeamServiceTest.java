@@ -2,22 +2,21 @@ package ro.axon.dot.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ro.axon.dot.domain.Status;
 import ro.axon.dot.domain.TeamEty;
 import ro.axon.dot.domain.TeamRepository;
-import ro.axon.dot.model.TeamDetailsList;
 import ro.axon.dot.model.TeamDetailsListItem;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
 
     @Mock
@@ -26,7 +25,6 @@ class TeamServiceTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         teamService = new TeamService(teamRepository);
     }
 
@@ -34,11 +32,9 @@ class TeamServiceTest {
     void getActiveTeams() {
         TeamEty team1 = new TeamEty();
         team1.setId(1L);
-        team1.setStatus(Status.ACTIVE);
 
         TeamEty team2 = new TeamEty();
         team2.setId(2L);
-        team2.setStatus(Status.ACTIVE);
 
         when(teamRepository.findByStatus(Status.ACTIVE)).thenReturn(Arrays.asList(team1, team2));
 
