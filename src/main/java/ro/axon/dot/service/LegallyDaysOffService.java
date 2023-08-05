@@ -1,6 +1,5 @@
 package ro.axon.dot.service;
 
-import static java.util.Arrays.asList;
 
 import java.sql.Date;
 import java.time.LocalDate;
@@ -8,11 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.cache.CacheManagerCustomizer;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.stereotype.Service;
 import ro.axon.dot.domain.LegallyDaysOffRepository;
 import ro.axon.dot.mapper.LegallyDaysOffMapper;
