@@ -21,7 +21,7 @@ import ro.axon.dot.model.LegallyDaysOffItem;
 
 @Service
 @RequiredArgsConstructor
-public class LegallyDaysOffService implements CacheManagerCustomizer<ConcurrentMapCacheManager> {
+public class LegallyDaysOffService  {
 
     private final LegallyDaysOffRepository legallyDaysOffRepository;
 
@@ -102,8 +102,4 @@ public class LegallyDaysOffService implements CacheManagerCustomizer<ConcurrentM
         return dayListFinal;
     }
 
-    @Override
-    public void customize(ConcurrentMapCacheManager cacheManager) {
-        cacheManager.setCacheNames(asList("daysOff"));
-    }
 }
