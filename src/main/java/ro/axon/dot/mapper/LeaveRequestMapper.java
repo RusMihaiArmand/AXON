@@ -1,6 +1,7 @@
 package ro.axon.dot.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 import ro.axon.dot.domain.LeaveRequestEty;
@@ -14,6 +15,7 @@ public interface LeaveRequestMapper {
 
     LeaveRequestMapper INSTANCE = Mappers.getMapper(LeaveRequestMapper.class);
 
+    @Mapping(source = "employee.id", target = "employeeId")
     LeaveRequestDetailsListItem mapLeaveRequestEtyToLeaveRequestDto(LeaveRequestEty leaveRequestEty);
 
 }

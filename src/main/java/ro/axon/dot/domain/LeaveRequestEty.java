@@ -19,8 +19,9 @@ public class LeaveRequestEty extends SrgKeyEntityTml<Long> {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "LEAVE_REQUEST_ID_SQ")
     private Long id;
 
-    @Column(name = "EMPLOYEE_ID")
-    private String employeeId;
+    @ManyToOne
+    @JoinColumn(name = "EMPLOYEE_ID")
+    private EmployeeEty employee;
     @Column(name = "CRT_USR")
     private String crtUsr;
     @Column(name = "CRT_TMS")
