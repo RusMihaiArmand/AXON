@@ -49,7 +49,7 @@ class LeaveRequestQueryTest {
     void withEmployeeId() {
         String employeeId = "AB1234";
         leaveRequestQuery.withEmployeeId(employeeId);
-        BooleanExpression expectedExpression = TRUE_EXP.and(root.employeeId.like(employeeId).and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP))));
+        BooleanExpression expectedExpression = TRUE_EXP.and(root.employee.id.like(employeeId).and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP))));
         assertEquals(expectedExpression, leaveRequestQuery.build());
     }
 

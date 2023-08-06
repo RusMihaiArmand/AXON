@@ -20,7 +20,7 @@ public class LeaveRequestQuery {
     }
 
     public LeaveRequestQuery withEmployeeId(String employeeId) {
-        if (employeeId != null) employeeIdExp = root.employeeId.like(employeeId);
+        if (employeeId != null) employeeIdExp = root.employee.id.like(employeeId);
         return this;
     }
 
