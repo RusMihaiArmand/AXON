@@ -29,6 +29,10 @@ public class TeamEty extends SrgKeyEntityTml<Long> {
     @Column(name = "MDF_TMS")
     private Instant mdfTms;
 
+    @Column(name = "STATUS")
+    @Enumerated(value = EnumType.STRING)
+    private Status status;
+
     @Override
     protected Class<? extends SrgKeyEntityTml<Long>> entityRefClass() {
         return TeamEty.class;
