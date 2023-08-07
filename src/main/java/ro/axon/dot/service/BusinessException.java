@@ -1,7 +1,11 @@
 package ro.axon.dot.service;
 
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
 public class BusinessException extends RuntimeException {
-    public BusinessException(String msg) {
-        super(msg);
-    }
+    private final BusinessExceptionElement error;
 }

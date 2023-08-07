@@ -14,12 +14,11 @@ import java.util.Map;
 public class ApiExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorDetail> handleBusinessException(BusinessException exception) {
-        HttpStatus status = HttpStatus.NOT_FOUND;
         ErrorDetail errorDetail = new ErrorDetail();
-        errorDetail.setErrorCode("EDOT0001400");
-        errorDetail.setMessage(exception.getMessage());
-        errorDetail.setContextVariables(new HashMap<>());
-        return ResponseEntity.status(status)
+        errorDetail.setErrorCode(exception.getError().getErrorDescription().getErrorCode());
+        errorDetail.setMessage(exception.getError().getErrorDescription().getDevMsg());
+        errorDetail.setContextVariables(exception.getError().getContextVariables());
+        return ResponseEntity.status(exception.getError().getErrorDescription().getStatus())
                 .body(errorDetail);
     }
 }

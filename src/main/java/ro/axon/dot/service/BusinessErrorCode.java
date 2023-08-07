@@ -1,28 +1,15 @@
 package ro.axon.dot.service;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+
+@Getter
+@AllArgsConstructor
 public enum BusinessErrorCode {;
 
     private final String errorCode;
     private final String devMsg;
     private final HttpStatus status;
-
-    BusinessErrorCode(String errorCode, String devMsg, HttpStatus status) {
-        this.errorCode = errorCode;
-        this.devMsg = devMsg;
-        this.status = status;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
-    }
-
-    public String getDevMsg() {
-        return devMsg;
-    }
-
-    public HttpStatus getStatus() {
-        return status;
-    }
 }
