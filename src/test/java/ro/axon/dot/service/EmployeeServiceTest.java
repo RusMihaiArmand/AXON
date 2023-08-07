@@ -1,6 +1,9 @@
 package ro.axon.dot.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -8,15 +11,19 @@ import static ro.axon.dot.EmployeeTestAttributes.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 
@@ -42,22 +49,7 @@ class EmployeeServiceTest {
   @Test
   void getEmployeesDetails() throws Exception{
 
-    EmployeeEty employee = new EmployeeEty();
-
-    employee.setId(ID);
-    employee.setFirstName(FIRST_NAME);
-    employee.setLastName(LAST_NAME);
-    employee.setEmail(EMAIL);
-    employee.setCrtUsr(CRT_USR);
-    employee.setCrtTms(CRT_TMS);
-    employee.setMdfUsr(MDF_USR);
-    employee.setMdfTms(MDF_TMS);
-    employee.setRole(ROLE);
-    employee.setStatus(STATUS);
-    employee.setContractStartDate(CONTRACT_START_DATE);
-    employee.setContractEndDate(CONTRACT_END_DATE);
-    employee.setUsername(USERNAME);
-    employee.setTeam(TEAM_ETY);
+    EmployeeEty employee = initEmployee();
 
     List<EmployeeEty> employees = Arrays.asList(employee, new EmployeeEty(), new EmployeeEty());
 
@@ -92,39 +84,11 @@ class EmployeeServiceTest {
   void getEmployeeByName() {
     String searchName = "Cris";
 
-    EmployeeEty employee1 = new EmployeeEty();
-
-    employee1.setId(ID);
+    EmployeeEty employee1 = initEmployee();
     employee1.setFirstName("Cristian");
-    employee1.setLastName(LAST_NAME);
-    employee1.setEmail(EMAIL);
-    employee1.setCrtUsr(CRT_USR);
-    employee1.setCrtTms(CRT_TMS);
-    employee1.setMdfUsr(MDF_USR);
-    employee1.setMdfTms(MDF_TMS);
-    employee1.setRole(ROLE);
-    employee1.setStatus(STATUS);
-    employee1.setContractStartDate(CONTRACT_START_DATE);
-    employee1.setContractEndDate(CONTRACT_END_DATE);
-    employee1.setUsername(USERNAME);
-    employee1.setTeam(TEAM_ETY);
 
-    EmployeeEty employee2 = new EmployeeEty();
-
-    employee2.setId(ID);
-    employee2.setFirstName(FIRST_NAME);
+    EmployeeEty employee2 = initEmployee();
     employee2.setLastName("Cristurean");
-    employee2.setEmail(EMAIL);
-    employee2.setCrtUsr(CRT_USR);
-    employee2.setCrtTms(CRT_TMS);
-    employee2.setMdfUsr(MDF_USR);
-    employee2.setMdfTms(MDF_TMS);
-    employee2.setRole(ROLE);
-    employee2.setStatus(STATUS);
-    employee2.setContractStartDate(CONTRACT_START_DATE);
-    employee2.setContractEndDate(CONTRACT_END_DATE);
-    employee2.setUsername(USERNAME);
-    employee2.setTeam(TEAM_ETY);
 
     List<EmployeeEty> employees = Arrays.asList(employee1, employee2);
 
@@ -139,4 +103,55 @@ class EmployeeServiceTest {
     verify(employeeRepository, times(1)).findAll();
   }
 
+  @Test
+  void inactivateEmployeeSuccess(){
+    EmployeeEty employee = initEmployee();
+
+    when(employeeRepository.findById(ID)).thenReturn(Optional.of(employee));
+
+    Boolean inactivated = employeeService.inactivateEmployee(ID);
+
+    assertTrue(inactivated);
+    assertEquals("INACTIVE", employee.getStatus());
+    assertEquals("ADMIN", employee.getMdfUsr());
+  }
+
+  @Test
+  void inactivateEmployeeFail(){
+
+    Authentication authentication = mock(Authentication.class);
+
+    when(authentication.getName()).thenReturn("currentUsr");
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+    when(employeeRepository.findById(ID)).thenReturn(Optional.empty());
+
+    BusinessException exception = assertThrows(BusinessException.class,
+        () -> employeeService.inactivateEmployee(ID));
+
+    assertEquals(BusinessErrorCode.EMPLOYEE_NOT_FOUND, exception.getError().getErrorDescription());
+    verify(employeeRepository, never()).save(any());
+  }
+
+  private EmployeeEty initEmployee(){
+
+    EmployeeEty employee = new EmployeeEty();
+
+    employee.setId(ID);
+    employee.setFirstName(FIRST_NAME);
+    employee.setLastName(LAST_NAME);
+    employee.setEmail(EMAIL);
+    employee.setCrtUsr(CRT_USR);
+    employee.setCrtTms(CRT_TMS);
+    employee.setMdfUsr(MDF_USR);
+    employee.setMdfTms(MDF_TMS);
+    employee.setRole(ROLE);
+    employee.setStatus(STATUS);
+    employee.setContractStartDate(CONTRACT_START_DATE);
+    employee.setContractEndDate(CONTRACT_END_DATE);
+    employee.setUsername(USERNAME);
+    employee.setTeam(TEAM_ETY);
+
+    return employee;
+  }
 }
