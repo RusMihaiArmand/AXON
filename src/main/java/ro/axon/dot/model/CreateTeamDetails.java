@@ -1,14 +1,12 @@
 package ro.axon.dot.model;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 import lombok.Data;
 
 @Data
 public class CreateTeamDetails {
 
-  @NotNull
-  @NotBlank
+  @NotEmpty(message = "Team name cannot be empty or null")
   private String name;
 
 }

@@ -1,4 +1,4 @@
-package ro.axon.dot.service;
+package ro.axon.dot.exceptions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
