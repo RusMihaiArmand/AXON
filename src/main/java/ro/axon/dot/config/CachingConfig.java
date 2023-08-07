@@ -16,7 +16,7 @@ public class CachingConfig {
   public CacheManager cacheManager() {
     SimpleCacheManager cacheManager = new SimpleCacheManager();
     cacheManager.setCaches(Arrays.asList(
-        new ConcurrentMapCache("daysOff") ));
+        new ConcurrentMapCache("legallyDaysOff") ));
     return cacheManager;
   }
 }

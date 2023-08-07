@@ -3,9 +3,7 @@ package ro.axon.dot.domain;
 import java.sql.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-
 import javax.persistence.Id;
-
 import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,7 +30,7 @@ public class LegallyDaysOffEty extends SrgKeyEntityTml<Date> {
     @Override
     protected Class<? extends SrgKeyEntityTml<Date>> entityRefClass() {
 
-        return null;
+        return LegallyDaysOffEty.class;
     }
 
 }

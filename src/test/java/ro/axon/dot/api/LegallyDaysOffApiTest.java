@@ -117,35 +117,24 @@ class LegallyDaysOffApiTest {
 
 
     List<String> period = new ArrayList<>();
-    period.add("2023-04");
+    period.add("2023-04"); period.add("2023-06");
     List<String> years = new ArrayList<>();
 
+
     days = legallyDaysOffService.getOffDays(period,years);
-    assertEquals(3,days.getDays().size());
+    assertEquals(5,days.getDays().size());
 
 
-    period = new ArrayList<>();
-    period.add("2023-04");period.add("2023-05");
-    years = new ArrayList<>();
-    days = legallyDaysOffService.getOffDays(period,years);
-    assertEquals(4,days.getDays().size());
-
-
-
-    period = new ArrayList<>();
-    period.add("2023-04");period.add("2023-05");
-    years = new ArrayList<>();
     years.add("2022");
     days = legallyDaysOffService.getOffDays(period,years);
     assertEquals(0,days.getDays().size());
 
-
-    period = new ArrayList<>();
-    period.add("2023-04");period.add("2023-05");
-    years = new ArrayList<>();
-    years.add("2022");
     years.add("2023");
     days = legallyDaysOffService.getOffDays(period,years);
+    assertEquals(14,days.getDays().size());
+
+
+    days = legallyDaysOffService.getOffDays(null,years);
     assertEquals(14,days.getDays().size());
 
 
