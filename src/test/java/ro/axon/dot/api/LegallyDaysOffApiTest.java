@@ -4,7 +4,7 @@ package ro.axon.dot.api;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +27,7 @@ class LegallyDaysOffApiTest {
 
   @Mock
   LegallyDaysOffRepository legallyDaysOffRepository;
+
   LegallyDaysOffService legallyDaysOffService;
 
   LegallyDaysOffList days;
@@ -39,6 +40,7 @@ class LegallyDaysOffApiTest {
     days.setDays(new ArrayList<>());
 
     MockitoAnnotations.openMocks(this);
+
     legallyDaysOffService = new LegallyDaysOffService(legallyDaysOffRepository);
   }
 
@@ -50,63 +52,63 @@ class LegallyDaysOffApiTest {
     LegallyDaysOffEty[] legallyDaysOffEty = new LegallyDaysOffEty[15];
 
     legallyDaysOffEty[0] = new LegallyDaysOffEty();
-    legallyDaysOffEty[0].setDate(Date.valueOf("2023-01-01"));
+    legallyDaysOffEty[0].setDate( LocalDate.parse("2023-01-01") );
     legallyDaysOffEty[0].setDesc("An nou");
 
     legallyDaysOffEty[1] = new LegallyDaysOffEty();
-    legallyDaysOffEty[1].setDate(Date.valueOf("2023-01-02"));
+    legallyDaysOffEty[1].setDate(LocalDate.parse("2023-01-02"));
     legallyDaysOffEty[1].setDesc("An nou");
 
     legallyDaysOffEty[2] = new LegallyDaysOffEty();
-    legallyDaysOffEty[2].setDate(Date.valueOf("2023-01-24"));
+    legallyDaysOffEty[2].setDate(LocalDate.parse("2023-01-24"));
     legallyDaysOffEty[2].setDesc("Ziua Unirii");
 
     legallyDaysOffEty[3] = new LegallyDaysOffEty();
-    legallyDaysOffEty[3].setDate(Date.valueOf("2023-04-22"));
+    legallyDaysOffEty[3].setDate(LocalDate.parse("2023-04-22"));
     legallyDaysOffEty[3].setDesc("Pastele");
 
     legallyDaysOffEty[4] = new LegallyDaysOffEty();
-    legallyDaysOffEty[4].setDate(Date.valueOf("2023-04-24"));
+    legallyDaysOffEty[4].setDate(LocalDate.parse("2023-04-24"));
     legallyDaysOffEty[4].setDesc("Pastele");
 
     legallyDaysOffEty[5] = new LegallyDaysOffEty();
-    legallyDaysOffEty[5].setDate(Date.valueOf("2023-04-25"));
+    legallyDaysOffEty[5].setDate(LocalDate.parse("2023-04-25"));
     legallyDaysOffEty[5].setDesc("Pastele");
 
     legallyDaysOffEty[6] = new LegallyDaysOffEty();
-    legallyDaysOffEty[6].setDate(Date.valueOf("2023-05-01"));
+    legallyDaysOffEty[6].setDate(LocalDate.parse("2023-05-01"));
     legallyDaysOffEty[6].setDesc("Ziua Muncii");
 
     legallyDaysOffEty[7] = new LegallyDaysOffEty();
-    legallyDaysOffEty[7].setDate(Date.valueOf("2023-06-01"));
+    legallyDaysOffEty[7].setDate(LocalDate.parse("2023-06-01"));
     legallyDaysOffEty[7].setDesc("Ziua Copilului");
 
     legallyDaysOffEty[8] = new LegallyDaysOffEty();
-    legallyDaysOffEty[8].setDate(Date.valueOf("2023-06-13"));
+    legallyDaysOffEty[8].setDate(LocalDate.parse("2023-06-13"));
     legallyDaysOffEty[8].setDesc("Rusalii");
 
     legallyDaysOffEty[9] = new LegallyDaysOffEty();
-    legallyDaysOffEty[9].setDate(Date.valueOf("2023-08-15"));
+    legallyDaysOffEty[9].setDate(LocalDate.parse("2023-08-15"));
     legallyDaysOffEty[9].setDesc("Adormirea...");
 
     legallyDaysOffEty[10] = new LegallyDaysOffEty();
-    legallyDaysOffEty[10].setDate(Date.valueOf("2023-11-30"));
+    legallyDaysOffEty[10].setDate(LocalDate.parse("2023-11-30"));
     legallyDaysOffEty[10].setDesc("Sf Andrei");
 
     legallyDaysOffEty[11] = new LegallyDaysOffEty();
-    legallyDaysOffEty[11].setDate(Date.valueOf("2023-12-01"));
+    legallyDaysOffEty[11].setDate(LocalDate.parse("2023-12-01"));
     legallyDaysOffEty[11].setDesc("Romania");
 
     legallyDaysOffEty[12] = new LegallyDaysOffEty();
-    legallyDaysOffEty[12].setDate(Date.valueOf("2023-12-25"));
+    legallyDaysOffEty[12].setDate(LocalDate.parse("2023-12-25"));
     legallyDaysOffEty[12].setDesc("Craciunul");
 
     legallyDaysOffEty[13] = new LegallyDaysOffEty();
-    legallyDaysOffEty[13].setDate(Date.valueOf("2023-12-26"));
+    legallyDaysOffEty[13].setDate(LocalDate.parse("2023-12-26"));
     legallyDaysOffEty[13].setDesc("Craciunul");
 
     legallyDaysOffEty[14] = new LegallyDaysOffEty();
-    legallyDaysOffEty[14].setDate(Date.valueOf("2024-01-01"));
+    legallyDaysOffEty[14].setDate(LocalDate.parse("2024-01-01"));
     legallyDaysOffEty[14].setDesc("2024");
 
 

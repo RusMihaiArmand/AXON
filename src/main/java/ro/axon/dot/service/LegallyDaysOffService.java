@@ -1,27 +1,30 @@
 package ro.axon.dot.service;
 
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ro.axon.dot.config.LegallyDaysOffPersistenceManager;
 import ro.axon.dot.domain.LegallyDaysOffRepository;
 import ro.axon.dot.mapper.LegallyDaysOffMapper;
 import ro.axon.dot.model.LegallyDaysOffList;
-import ro.axon.dot.model.LegallyDaysOffItem;
 
 @Service
-@RequiredArgsConstructor
 public class LegallyDaysOffService  {
 
-    private final LegallyDaysOffRepository legallyDaysOffRepository;
+    private final LegallyDaysOffPersistenceManager legallyDaysOffPersistenceManager;
 
-    public LegallyDaysOffList GetAllOffDays()
+    public LegallyDaysOffService(LegallyDaysOffRepository legallyDaysOffRepository)
+    {
+        legallyDaysOffPersistenceManager = new LegallyDaysOffPersistenceManager(legallyDaysOffRepository);
+    }
+
+
+    public LegallyDaysOffList getAllLegallyOffDays()
     {
         var offDaysList = new LegallyDaysOffList();
-        offDaysList.setDays( legallyDaysOffRepository.findAll().stream().map(LegallyDaysOffMapper.INSTANCE::mapTeamEtyToTeamDto)
+
+        offDaysList.setDays( legallyDaysOffPersistenceManager.getAllLegallyDaysOffFromDb().stream().map(LegallyDaysOffMapper.INSTANCE::mapTeamEtyToTeamDto)
             .collect(Collectors.toList()));
 
         return offDaysList;
@@ -31,38 +34,30 @@ public class LegallyDaysOffService  {
     private LegallyDaysOffList GetOffDaysFromMonths(List<String> periods)
     {
         LegallyDaysOffList dayListFinal = new LegallyDaysOffList();
-        dayListFinal.setDays( new ArrayList<>());
 
-        LegallyDaysOffList allOffDays = this.GetAllOffDays();
 
-        for (LegallyDaysOffItem day: allOffDays.getDays()) {
+        dayListFinal.setDays( legallyDaysOffPersistenceManager.getAllLegallyDaysOffFromDb().stream().
+            filter(
+                legallyDaysOff ->
+                    periods.contains( legallyDaysOff.getDate().toString().substring(0,7) )
+            ).map(LegallyDaysOffMapper.INSTANCE::mapTeamEtyToTeamDto)
+            .collect(Collectors.toList()));
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM");
-            String date = simpleDateFormat.format(day.getDate());
-            if(periods.contains(date))
-            {
-                dayListFinal.addDay(day);
-            }
-        }
+
         return dayListFinal;
     }
 
     private LegallyDaysOffList GetOffDaysFromYears(List<String> years)
     {
         LegallyDaysOffList dayListFinal = new LegallyDaysOffList();
-        dayListFinal.setDays( new ArrayList<>());
 
-        LegallyDaysOffList allOffDays = this.GetAllOffDays();
+        dayListFinal.setDays( legallyDaysOffPersistenceManager.getAllLegallyDaysOffFromDb().stream().
+            filter(
+                legallyDaysOff ->
+                    years.contains( legallyDaysOff.getDate().toString().substring(0,4)  )
+            ).map(LegallyDaysOffMapper.INSTANCE::mapTeamEtyToTeamDto)
+            .collect(Collectors.toList()));
 
-        for (LegallyDaysOffItem day: allOffDays.getDays()) {
-
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy");
-            String date = simpleDateFormat.format(day.getDate());
-            if(years.contains(date))
-            {
-                dayListFinal.addDay(day);
-            }
-        }
         return dayListFinal;
     }
 
@@ -80,7 +75,7 @@ public class LegallyDaysOffService  {
 
         if(periods==null && years==null)
         {
-            return this.GetAllOffDays();
+            return this.getAllLegallyOffDays();
         }
         else
         {
@@ -92,7 +87,6 @@ public class LegallyDaysOffService  {
                 return this.GetOffDaysFromMonths(periods);
             }
         }
-
     }
 
 }

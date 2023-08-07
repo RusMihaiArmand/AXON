@@ -1,6 +1,6 @@
 package ro.axon.dot.domain;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -12,25 +12,19 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "LEGALLY_DAYS_OFF")
-public class LegallyDaysOffEty extends SrgKeyEntityTml<Date> {
+public class LegallyDaysOffEty  {
 
 
     @Id
     @Column(name = "DATE")
-    private Date date;
+    private LocalDate date;
 
     @Column(name = "DESCRIPTION")
     private String desc;
 
-    @Override
-    public Date getId() {
+    public LocalDate getId() {
         return date;
     }
 
-    @Override
-    protected Class<? extends SrgKeyEntityTml<Date>> entityRefClass() {
-
-        return LegallyDaysOffEty.class;
-    }
 
 }
