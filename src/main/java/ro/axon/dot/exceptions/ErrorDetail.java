@@ -1,4 +1,4 @@
-package ro.axon.dot.api;
+package ro.axon.dot.exceptions;
 
 import lombok.Data;
 
