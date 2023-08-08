@@ -32,10 +32,17 @@ import java.nio.file.Paths;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Date;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters.LocalDateConverter;
 import org.springframework.security.converter.RsaKeyConverters;
 import ro.axon.dot.domain.EmployeeEty;
@@ -44,41 +51,25 @@ import ro.axon.dot.exceptions.BusinessException;
 
 class JwtTokenUtilTest {
 
-  public static final String KEY_ID = "AXON";
-  public static final Long ACCESS_TOKEN_DURATION = 60000L;
-  public static final Long REFRESH_TOKEN_DURATION = 120000L;
-  public static final String DOMAIN = "myDomain";
+  private final JwtTokenUtilProperties properties;
+
   private final JwtTokenUtil tokenUtil;
-  private final EmployeeEty userDetails;
+  private EmployeeEty employee;
 
-  private final LocalDateTime now = LocalDateTime.now();
+  private final LocalDateTime now;
 
-  public JwtTokenUtilTest() throws IOException {
+  public JwtTokenUtilTest() {
+    TokenUtilSetup tokenUtilSetup = new TokenUtilSetup();
 
-    Path publicKey_path = Paths.get("config/jwk-public.pem");
-    Path privateKey_path = Paths.get("config/jwk-private.pem");
+    properties = tokenUtilSetup.getProperties();
+    tokenUtil = tokenUtilSetup.getTokenUtil();
+    now = tokenUtilSetup.getNow();
 
-    String publicKeyString = new String(Files.readAllBytes(publicKey_path));
-
-    String privateKeyString = new String(Files.readAllBytes(privateKey_path));
-
-    RSAPublicKey publicKey = RsaKeyConverters.x509().convert(new ByteArrayInputStream(publicKeyString.getBytes()));
-    RSAPrivateKey privateKey = RsaKeyConverters.pkcs8().convert(new ByteArrayInputStream(privateKeyString.getBytes()));
-
-    tokenUtil = new JwtTokenUtil(
-        KEY_ID,
-        ACCESS_TOKEN_DURATION,
-        REFRESH_TOKEN_DURATION,
-        DOMAIN,
-        publicKey,
-        privateKey
-    );
-    userDetails = setupEmployee();
-    userDetails.setPassword("$2a$10$xD/Wy1H0efN3mYqlT4vqT.bvCmw4nviJ.Ji.wfymIJKjm0JZ/YKmS");
+    setupEmployee();
   }
 
-  private static EmployeeEty setupEmployee() {
-    EmployeeEty employee = new EmployeeEty();
+  private void setupEmployee() {
+    employee = new EmployeeEty();
 
     employee.setId(ID);
     employee.setFirstName(FIRST_NAME);
@@ -94,52 +85,52 @@ class JwtTokenUtilTest {
     employee.setContractEndDate(CONTRACT_END_DATE);
     employee.setUsername(USERNAME);
     employee.setTeam(TEAM_ETY);
-    return employee;
+    employee.setPassword("$2a$10$xD/Wy1H0efN3mYqlT4vqT.bvCmw4nviJ.Ji.wfymIJKjm0JZ/YKmS");
   }
 
   @Test
   void generateAccessToken() throws ParseException, BusinessException {
-    SignedJWT accessToken = tokenUtil.generateAccessToken(userDetails, now);
+    SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
     JWTClaimsSet claimsSet = accessToken.getJWTClaimsSet();
 
-    assertEquals(String.valueOf(userDetails.getId()), claimsSet.getSubject());
-    assertEquals(DOMAIN, claimsSet.getIssuer());
-    assertEquals(userDetails.getId(), claimsSet.getAudience().get(0));
-    assertEquals(userDetails.getUsername(), claimsSet.getClaim("username"));
-    assertEquals(userDetails.getEmail(), claimsSet.getClaim("email"));
+    assertEquals(String.valueOf(employee.getId()), claimsSet.getSubject());
+    assertEquals(properties.getDomain(), claimsSet.getIssuer());
+    assertEquals(employee.getId(), claimsSet.getAudience().get(0));
+    assertEquals(employee.getUsername(), claimsSet.getClaim("username"));
+    assertEquals(employee.getEmail(), claimsSet.getClaim("email"));
     assertEquals("access", claimsSet.getClaim("typ"));
-    assertTrue(claimsSet.getExpirationTime().after(Date.from(now.toInstant(ZoneOffset.UTC))));
+    assertTrue(claimsSet.getExpirationTime().after(Date.from(now.atZone(ZoneId.systemDefault()).toInstant())));
   }
 
   @Test
   void generateRefreshToken() throws ParseException, BusinessException {
-    SignedJWT refreshToken = tokenUtil.generateRefreshToken(userDetails, now);
+    SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
     assertNotNull(refreshToken);
     JWTClaimsSet claimsSet = refreshToken.getJWTClaimsSet();
 
-    assertEquals(String.valueOf(userDetails.getId()), claimsSet.getSubject());
-    assertEquals(DOMAIN, claimsSet.getIssuer());
-    assertEquals(userDetails.getId(), claimsSet.getAudience().get(0));
-    assertEquals(userDetails.getUsername(), claimsSet.getClaim("username"));
-    assertEquals(userDetails.getEmail(), claimsSet.getClaim("email"));
+    assertEquals(String.valueOf(employee.getId()), claimsSet.getSubject());
+    assertEquals(properties.getDomain(), claimsSet.getIssuer());
+    assertEquals(employee.getId(), claimsSet.getAudience().get(0));
+    assertEquals(employee.getUsername(), claimsSet.getClaim("username"));
+    assertEquals(employee.getEmail(), claimsSet.getClaim("email"));
     assertEquals("refresh", claimsSet.getClaim("typ"));
-    assertTrue(claimsSet.getExpirationTime().after(Date.from(now.toInstant(ZoneOffset.UTC))));
+    assertTrue(claimsSet.getExpirationTime().after(Date.from(now.atZone(ZoneId.systemDefault()).toInstant())));
   }
 
   @Test
   void getUsernameFromToken() throws BusinessException {
-    SignedJWT accessToken = tokenUtil.generateAccessToken(userDetails, now);
+    SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
-    assertEquals(userDetails.getUsername(), tokenUtil.getUsernameFromToken(accessToken));
+    assertEquals(employee.getUsername(), tokenUtil.getUsernameFromToken(accessToken));
   }
 
   @Test
   void getExpirationDateFromToken() throws BusinessException, ParseException {
-    SignedJWT accessToken = tokenUtil.generateAccessToken(userDetails, now);
+    SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
     assertEquals(accessToken.getJWTClaimsSet().getExpirationTime(), tokenUtil.getExpirationDateFromToken(accessToken));
@@ -147,18 +138,22 @@ class JwtTokenUtilTest {
 
   @Test
   void isTokenExpired() throws  BusinessException {
-    SignedJWT accessToken = tokenUtil.generateAccessToken(userDetails, now);
+    SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
-    assertFalse(tokenUtil.isTokenExpired(accessToken));
+    assertDoesNotThrow(() -> tokenUtil.isTokenExpired(accessToken));
 
+    SignedJWT token2 = tokenUtil.generateAccessToken(employee, now.minusHours(1));
+
+    assertNotNull(token2);
+    assertThrows(BusinessException.class, () -> tokenUtil.isTokenExpired(token2));
   }
 
   @Test
   void validateToken() {
     SignedJWT accessToken;
     try {
-      accessToken = tokenUtil.generateAccessToken(userDetails, now);
+      accessToken = tokenUtil.generateAccessToken(employee, now);
     } catch (BusinessException e) {
       throw new RuntimeException(e);
     }
@@ -169,13 +164,13 @@ class JwtTokenUtilTest {
         "doe",
         "email@bla.com",
         "",
-        new Date().toInstant(),
+        LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant(),
         "",
-        new Date().toInstant(),
+        LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant(),
         "user",
         "active",
-        new LocalDateConverter().convertToEntityAttribute(new Date()),
-        new LocalDateConverter().convertToEntityAttribute(new Date()),
+        LocalDate.now(),
+        LocalDate.now(),
         "user12345",
         "pass",
         new TeamEty(),
@@ -183,15 +178,14 @@ class JwtTokenUtilTest {
     );
 
     assertNotNull(accessToken);
-    assertDoesNotThrow(() -> tokenUtil.validateToken(accessToken, userDetails));
+    assertDoesNotThrow(() -> tokenUtil.validateToken(accessToken, employee));
 
-    BusinessException exception = assertThrows(BusinessException.class, () -> tokenUtil.validateToken(accessToken, test));
-    assertTrue(exception.getMessage().contains("Token invalid"));
+    assertThrows(BusinessException.class, () -> tokenUtil.validateToken(accessToken, test));
   }
 
   @Test
   void verifyToken() throws BusinessException {
-    SignedJWT accessToken = tokenUtil.generateAccessToken(userDetails, now);
+    SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
 

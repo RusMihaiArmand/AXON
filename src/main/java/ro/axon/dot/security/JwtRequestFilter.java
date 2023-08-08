@@ -37,6 +37,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 		SignedJWT token = jwtTokenUtil.parseToken(requestTokenHeader.substring(7));
 
 		jwtTokenUtil.verifyToken(token);
+		jwtTokenUtil.isTokenExpired(token);
 		jwtTokenUtil.validateClaimSet(token);
 
 		String username = jwtTokenUtil.getUsernameFromToken(token);
@@ -45,7 +46,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 		if (securityContext.getAuthentication() == null) {
 			EmployeeEty employee = employeeService.loadEmployeeByUsername(username);
-			validateToken(token, employee);
+			jwtTokenUtil.validateToken(token, employee);
 
 			UsernamePasswordAuthenticationToken usernamePasswordAuthToken = new UsernamePasswordAuthenticationToken(employee, null, null);
 			usernamePasswordAuthToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -66,13 +67,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 					.contextVariables(variables).build());
 
 		}
-	}
-
-	private void validateToken(SignedJWT token, EmployeeEty employee){
-		jwtTokenUtil.isTokenExpired(token);
-		jwtTokenUtil.validateToken(token, employee);
-
-
 	}
 
 }

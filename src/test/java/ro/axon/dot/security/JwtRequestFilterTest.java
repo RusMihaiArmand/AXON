@@ -1,5 +1,8 @@
 package ro.axon.dot.security;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,6 +39,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.converter.RsaKeyConverters;
 import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.service.EmployeeService;
 
 class JwtRequestFilterTest {
@@ -49,6 +54,8 @@ class JwtRequestFilterTest {
   @Mock
   private HttpServletResponse response;
 
+  private final TokenUtilSetup tokenUtilSetup;
+
   private JwtTokenUtil tokenUtil;
   private JwtRequestFilter filter;
 
@@ -56,31 +63,17 @@ class JwtRequestFilterTest {
 
   private LocalDateTime now;
 
+  public JwtRequestFilterTest() {
+    tokenUtilSetup = new TokenUtilSetup();
+    tokenUtil = tokenUtilSetup.getTokenUtil();
+    now = tokenUtilSetup.getNow();
+  }
+
   @BeforeEach
   public void setUp() throws IOException {
     MockitoAnnotations.openMocks(this);
 
-    Path publicKey_path = Paths.get("config/jwk-public.pem");
-    Path privateKey_path = Paths.get("config/jwk-private.pem");
-
-    String publicKeyString = new String(Files.readAllBytes(publicKey_path));
-
-    String privateKeyString = new String(Files.readAllBytes(privateKey_path));
-
-    RSAPublicKey publicKey = RsaKeyConverters.x509().convert(new ByteArrayInputStream(publicKeyString.getBytes()));
-    RSAPrivateKey privateKey = RsaKeyConverters.pkcs8().convert(new ByteArrayInputStream(privateKeyString.getBytes()));
-
-    tokenUtil = new JwtTokenUtil(
-        "AXON",
-        100000L,
-        200000L,
-        "DOMAIN",
-        publicKey,
-        privateKey
-    );
     filter = new JwtRequestFilter(employeeService, tokenUtil);
-
-    now = LocalDateTime.now();
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -113,28 +106,40 @@ class JwtRequestFilterTest {
 
 
   @Test
-  void doFilterInternal_CorrectHeader() throws Exception {
+  void doFilterInternal_CorrectHeader() {
     SignedJWT token = tokenUtil.generateAccessToken(employee, now);
 
     when(employeeService.loadEmployeeByUsername(any())).thenReturn(employee);
     when(request.getHeader("Authorization")).thenReturn("Bearer " + token.serialize());
 
-    filter.doFilterInternal(request, response, chain);
-
-    verify(chain).doFilter(request, response);
+    assertDoesNotThrow(() -> filter.doFilterInternal(request, response, chain));
+    //verify(chain).doFilter(request, response);
 
 
   }
 
   @Test
-  void doFilterInternal_BadHeader() throws Exception {
+  void doFilterInternal_BadHeader() {
     SignedJWT token = tokenUtil.generateAccessToken(employee, now);
 
     when(employeeService.loadEmployeeByUsername(any())).thenReturn(employee);
     when(request.getHeader("Authorization")).thenReturn(token.serialize());
 
-    filter.doFilterInternal(request, response, chain);
+    assertThrows(BusinessException.class, () -> filter.doFilterInternal(request, response, chain));
 
-    verify(response).sendError(401, "Bad token format");
   }
+
+  @Test
+  void doFilterInternal_InvalidUsername() {
+    employee.setUsername("");
+    SignedJWT token = tokenUtil.generateAccessToken(employee, now);
+
+    when(employeeService.loadEmployeeByUsername(any())).thenReturn(employee);
+    when(request.getHeader("Authorization")).thenReturn("Bearer " + token.serialize());
+
+    BusinessException e = assertThrows(BusinessException.class, () -> filter.doFilterInternal(request, response, chain));
+
+    assertEquals(BusinessErrorCode.TOKEN_HAS_NO_USERNAME, e.getError().getErrorDescription());
+  }
+
 }

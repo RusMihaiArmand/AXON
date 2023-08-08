@@ -31,7 +31,7 @@ import org.mockito.MockitoAnnotations;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.RefreshTokenEty;
 import ro.axon.dot.domain.RefreshTokenRepository;
-import ro.axon.dot.security.TokenStatus;
+import ro.axon.dot.domain.TokenStatus;
 
 
 class RefreshTokenServiceTest {

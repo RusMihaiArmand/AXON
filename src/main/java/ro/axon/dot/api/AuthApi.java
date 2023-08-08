@@ -42,12 +42,12 @@ public class AuthApi {
   private RefreshTokenService refreshTokenService;
 
   @PostMapping(value = "/register")
-  public ResponseEntity<?> registerEmployee(@RequestBody @Valid EmployeeDetailsListItem employee) {
+  public ResponseEntity<?> register(@RequestBody @Valid EmployeeDetailsListItem employee) {
     return ResponseEntity.ok(employeeService.createEmployee(employee));
   }
 
   @PostMapping(value = "/login")
-  public ResponseEntity<?> createLoginToken(@RequestBody @Valid LoginRequest loginRequest) {
+  public ResponseEntity<?> login(@RequestBody @Valid LoginRequest loginRequest) {
 
     EmployeeEty employee = employeeService.loadEmployeeByUsername(loginRequest.getUsername());
 

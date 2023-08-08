@@ -21,7 +21,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
-import ro.axon.dot.domain.TeamRepository;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.EmployeeMapperImpl;
 import ro.axon.dot.exceptions.BusinessErrorCode;
@@ -35,13 +34,8 @@ class EmployeeServiceTest {
   PasswordEncoder passwordEncoder;
   @Mock
   EmployeeRepository employeeRepository;
-  @Mock
-  TeamRepository teamRepository;
-
   EmployeeService employeeService;
-
   EmployeeMapper employeeMapper;
-
   EmployeeEty testEmployee;
   @BeforeEach
   void setUp() {
@@ -49,7 +43,7 @@ class EmployeeServiceTest {
     passwordEncoder = new BCryptPasswordEncoder();
     employeeMapper = new EmployeeMapperImpl();
 
-    employeeService = new EmployeeService(employeeRepository, passwordEncoder, teamRepository);
+    employeeService = new EmployeeService(employeeRepository, passwordEncoder);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -59,6 +53,7 @@ class EmployeeServiceTest {
 
     testEmployee = initEmployee();
     testEmployee.setPassword("$2a$10$5d4MyhXzP1n6kq6ysW2kle00a0nZmWM1UF5qtFum25Ipi/umATCoe");
+
   }
 
   @Test
@@ -167,7 +162,6 @@ class EmployeeServiceTest {
   void createEmployee() {
 
     when(employeeRepository.save(any())).thenReturn(testEmployee);
-    when(teamRepository.findById(any())).thenReturn(Optional.of(TEAM_ETY));
 
 
     EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(employeeMapper.mapEmployeeEtyToEmployeeDto(testEmployee));
@@ -196,7 +190,6 @@ class EmployeeServiceTest {
   void loadEmployeeByUsername() {
 
     when(employeeRepository.findEmployeeByUsername(any())).thenReturn(Optional.of(testEmployee));
-    when(teamRepository.findById(any())).thenReturn(Optional.of(TEAM_ETY));
 
     EmployeeEty loadedEmployee;
 
