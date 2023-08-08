@@ -13,7 +13,6 @@ import java.time.Instant;
 @Table(name = "TEAM")
 public class TeamEty extends SrgKeyEntityTml<Long> {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TEAM_ID_SQ")
     private Long id;
@@ -28,6 +27,9 @@ public class TeamEty extends SrgKeyEntityTml<Long> {
     private String mdfUsr;
     @Column(name = "MDF_TMS")
     private Instant mdfTms;
+    @Column(name = "STATUS")
+    @Enumerated(value = EnumType.STRING)
+    private TeamStatus status;
 
     @Override
     protected Class<? extends SrgKeyEntityTml<Long>> entityRefClass() {
