@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ro.axon.dot.domain.RefreshTokenEty;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.exceptions.BusinessExceptionElement;
+import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.RefreshRequest;
 import ro.axon.dot.security.TokenStatus;
@@ -44,43 +44,23 @@ public class AuthApi {
 
   @PostMapping(value = "/register")
   public ResponseEntity<?> registerEmployee(@RequestBody @Valid EmployeeDetailsListItem employee) {
-    try {
-      return ResponseEntity.ok(employeeService.createEmployee(employee));
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body(e.getMessage());
-    }
+    return ResponseEntity.ok(employeeService.createEmployee(employee));
   }
 
   @PostMapping(value = "/login")
   public ResponseEntity<?> createLoginToken(@RequestBody @Valid LoginRequest loginRequest) {
 
-    EmployeeEty employee;
+    EmployeeEty employee = employeeService.loadEmployeeByUsername(loginRequest.getUsername());
 
-    //Verify employee exists
-    employee = employeeService.loadEmployeeByUsername(loginRequest.getUsername());
+    verifyPassword(loginRequest.getPassword(), employee);
 
-
-    //Verify password
-    verifyPassword(loginRequest, employee);
-
-    //Generate tokens
     final LocalDateTime now = LocalDateTime.now();
 
     final SignedJWT accessToken = jwtTokenUtil.generateAccessToken(employee, now);
     final SignedJWT refreshToken = jwtTokenUtil.generateRefreshToken(employee, now);
 
-    //Create refresh token entity
-    RefreshTokenEty  refreshTokenEty = new RefreshTokenEty(refreshToken.getHeader().getKeyID(),
-          TokenStatus.ACTIVE,
-          employee,
-          now.toInstant(ZoneOffset.UTC),
-          now.toInstant(ZoneOffset.UTC),
-          jwtTokenUtil.getExpirationDateFromToken(refreshToken).toInstant());
+    saveRefreshToken(refreshToken, employee, now);
 
-    //Save refresh token to db
-    refreshTokenService.saveRefreshToken(refreshTokenEty);
-
-    //Good return
     return ResponseEntity.ok(new LoginResponse(
         accessToken.serialize(),
         refreshToken.serialize(),
@@ -94,68 +74,97 @@ public class AuthApi {
     final LocalDateTime now = LocalDateTime.now();
 
     SignedJWT refreshToken = parseToken(refreshRequest.getRefreshToken());
-    String keyId = refreshToken.getHeader().getKeyID();
 
-
-    //checks if token exists
-    RefreshTokenEty fromDB;
-    try {
-      fromDB = refreshTokenService.findTokenByKeyId(keyId);
-    } catch (BusinessException e) {
-      throw new BusinessException(e, e.getError());
-    }
-
+    RefreshTokenEty fromDB = refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID());
     EmployeeEty employee = fromDB.getEmployee();
 
-    //if audience matches
-    try {
-      if(jwtTokenUtil.getAudienceFromToken(refreshToken).equals(employee.getId())){
-        //if status is active
-        if(fromDB.getStatus().equals(TokenStatus.ACTIVE)){
-          //if is not expired
-          if(fromDB.getExpTms().isAfter(new Date().toInstant())){
+    checkAudience(refreshToken, employee);
+    checkStatus(fromDB);
+    checkIfExpired(fromDB);
 
-            refreshToken = jwtTokenUtil.regenerateRefreshToken(employee, refreshToken, now);
-            fromDB.setMdfTms(now.toInstant(ZoneOffset.UTC));
-            fromDB.setExpTms(jwtTokenUtil.getExpirationDateFromToken(refreshToken).toInstant());
+    refreshToken = regenerateToken(refreshToken, fromDB, employee, now);
 
-            refreshTokenService.saveRefreshToken(fromDB);
+    SignedJWT accessToken = jwtTokenUtil.generateAccessToken(employee, now);
 
-            SignedJWT accessToken = jwtTokenUtil.generateAccessToken(employee, now);
-
-            //Good return
-            return ResponseEntity.ok(new LoginResponse(
-                accessToken.serialize(),
-                refreshToken.serialize(),
-                jwtTokenUtil.getExpirationDateFromToken(accessToken),
-                jwtTokenUtil.getExpirationDateFromToken(refreshToken)));
-          }
-          else
-            return ResponseEntity.badRequest().body("Token expired");
-        }
-        else
-          return ResponseEntity.badRequest().body("Token is revoked");
-      }
-      else
-        return ResponseEntity.badRequest().body("Audience doesn't match");
-    }
-    catch (BusinessException e) {
-      throw new BusinessException(e, e.getError());
-    }
-
+    return ResponseEntity.ok(new LoginResponse(
+        accessToken.serialize(),
+        refreshToken.serialize(),
+        jwtTokenUtil.getExpirationDateFromToken(accessToken),
+        jwtTokenUtil.getExpirationDateFromToken(refreshToken)));
   }
+
 
   private SignedJWT parseToken(String token){
     return jwtTokenUtil.parseToken(token);
   }
 
-  private void verifyPassword(LoginRequest loginRequest, EmployeeEty employee){
-    if(!passwordEncoder.matches(loginRequest.getPassword(), employee.getPassword())){
-      BusinessErrorCode errorCode = BusinessErrorCode.PASSWORD_NOT_MATCHING;
+  private void verifyPassword(String password, EmployeeEty employee){
+    if(!passwordEncoder.matches(password, employee.getPassword())){
       Map<String, Object> variables = new HashMap<>();
       variables.put("username", employee.getUsername());
 
-      throw new BusinessException(new RuntimeException(), new BusinessExceptionElement(errorCode, variables));
+      throw new BusinessException(BusinessExceptionElement
+          .builder()
+          .errorDescription(BusinessErrorCode.PASSWORD_NOT_MATCHING)
+          .contextVariables(variables).build());
     }
   }
+
+  private void checkAudience(SignedJWT refreshToken, EmployeeEty employee){
+    if(!jwtTokenUtil.getAudienceFromToken(refreshToken).equals(employee.getId())){
+      Map<String, Object> variables = new HashMap<>();
+      variables.put("token", refreshToken.serialize());
+      variables.put("username", employee.getUsername());
+
+      throw new BusinessException(BusinessExceptionElement
+          .builder()
+          .errorDescription(BusinessErrorCode.AUDIENCE_DOES_NOT_MATCH)
+          .contextVariables(variables).build());
+    }
+  }
+
+  private void checkStatus(RefreshTokenEty refreshToken){
+    if(!refreshToken.getStatus().equals(TokenStatus.ACTIVE)){
+      Map<String, Object> variables = new HashMap<>();
+      variables.put("token", refreshToken.getId());
+
+      throw new BusinessException(BusinessExceptionElement
+          .builder()
+          .errorDescription(BusinessErrorCode.TOKEN_REVOKED)
+          .contextVariables(variables).build());
+    }
+  }
+
+  private void checkIfExpired(RefreshTokenEty token) {
+    if(!token.getExpTms().isAfter(new Date().toInstant())){
+      Map<String, Object> variables = new HashMap<>();
+      variables.put("token", token.getId());
+
+      throw new BusinessException(BusinessExceptionElement
+          .builder()
+          .errorDescription(BusinessErrorCode.TOKEN_EXPIRED)
+          .contextVariables(variables).build());
+    }
+  }
+
+  private SignedJWT regenerateToken(SignedJWT token, RefreshTokenEty tokenEty, EmployeeEty employee, LocalDateTime now){
+    tokenEty.setMdfTms(now.toInstant(ZoneOffset.UTC));
+    tokenEty.setExpTms(jwtTokenUtil.getExpirationDateFromToken(token).toInstant());
+    refreshTokenService.saveRefreshToken(tokenEty);
+
+    return jwtTokenUtil.regenerateRefreshToken(employee, token, now);
+  }
+
+  private void saveRefreshToken(SignedJWT refreshToken, EmployeeEty employee, LocalDateTime now){
+
+    RefreshTokenEty  refreshTokenEty = new RefreshTokenEty(refreshToken.getHeader().getKeyID(),
+        TokenStatus.ACTIVE,
+        employee,
+        now.toInstant(ZoneOffset.UTC),
+        now.toInstant(ZoneOffset.UTC),
+        jwtTokenUtil.getExpirationDateFromToken(refreshToken).toInstant());
+
+    refreshTokenService.saveRefreshToken(refreshTokenEty);
+  }
+
 }

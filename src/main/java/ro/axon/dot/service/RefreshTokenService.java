@@ -8,7 +8,7 @@ import ro.axon.dot.domain.RefreshTokenEty;
 import ro.axon.dot.domain.RefreshTokenRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.exceptions.BusinessExceptionElement;
+import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 
 @Service
 @RequiredArgsConstructor

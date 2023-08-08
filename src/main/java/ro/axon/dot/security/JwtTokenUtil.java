@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.exceptions.BusinessExceptionElement;
+import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 
 @Component
 public class JwtTokenUtil {
