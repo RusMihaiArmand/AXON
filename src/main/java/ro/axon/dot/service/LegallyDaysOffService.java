@@ -1,11 +1,12 @@
 package ro.axon.dot.service;
 
 
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import ro.axon.dot.config.LegallyDaysOffPersistenceManager;
-import ro.axon.dot.domain.LegallyDaysOffRepository;
 import ro.axon.dot.mapper.LegallyDaysOffMapper;
 import ro.axon.dot.model.LegallyDaysOffList;
 
@@ -14,11 +15,10 @@ public class LegallyDaysOffService  {
 
     private final LegallyDaysOffPersistenceManager legallyDaysOffPersistenceManager;
 
-    public LegallyDaysOffService(LegallyDaysOffRepository legallyDaysOffRepository)
-    {
-        legallyDaysOffPersistenceManager = new LegallyDaysOffPersistenceManager(legallyDaysOffRepository);
-    }
 
+    public LegallyDaysOffService(LegallyDaysOffPersistenceManager legallyDaysOffPersistenceManager) {
+        this.legallyDaysOffPersistenceManager = legallyDaysOffPersistenceManager;
+    }
 
     public LegallyDaysOffList getAllLegallyOffDays()
     {
@@ -30,6 +30,15 @@ public class LegallyDaysOffService  {
         return offDaysList;
     }
 
+    private String convertToYearMonth(LocalDate date){
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        return date.format(dateTimeFormatter);
+    }
+
+    private String convertToYear(LocalDate date){
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy");
+        return date.format(dateTimeFormatter);
+    }
 
     private LegallyDaysOffList GetOffDaysFromMonths(List<String> periods)
     {
@@ -39,7 +48,7 @@ public class LegallyDaysOffService  {
         dayListFinal.setDays( legallyDaysOffPersistenceManager.getAllLegallyDaysOffFromDb().stream().
             filter(
                 legallyDaysOff ->
-                    periods.contains( legallyDaysOff.getDate().toString().substring(0,7) )
+                    periods.contains(convertToYearMonth(legallyDaysOff.getDate()))
             ).map(LegallyDaysOffMapper.INSTANCE::mapTeamEtyToTeamDto)
             .collect(Collectors.toList()));
 
@@ -54,7 +63,7 @@ public class LegallyDaysOffService  {
         dayListFinal.setDays( legallyDaysOffPersistenceManager.getAllLegallyDaysOffFromDb().stream().
             filter(
                 legallyDaysOff ->
-                    years.contains( legallyDaysOff.getDate().toString().substring(0,4)  )
+                    years.contains(convertToYear(legallyDaysOff.getDate()))
             ).map(LegallyDaysOffMapper.INSTANCE::mapTeamEtyToTeamDto)
             .collect(Collectors.toList()));
 

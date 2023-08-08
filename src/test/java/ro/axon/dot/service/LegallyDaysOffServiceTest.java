@@ -1,7 +1,6 @@
-package ro.axon.dot.api;
+package ro.axon.dot.service;
 
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -15,21 +14,21 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import ro.axon.dot.config.LegallyDaysOffPersistenceManager;
 import ro.axon.dot.domain.LegallyDaysOffEty;
 import ro.axon.dot.domain.LegallyDaysOffRepository;
 import ro.axon.dot.model.LegallyDaysOffList;
-import ro.axon.dot.service.LegallyDaysOffService;
 
 
 @ExtendWith(MockitoExtension.class)
-class LegallyDaysOffApiTest {
+class LegallyDaysOffServiceTest {
 
 
   @Mock
   LegallyDaysOffRepository legallyDaysOffRepository;
 
+  LegallyDaysOffPersistenceManager legallyDaysOffPersistenceManager;
   LegallyDaysOffService legallyDaysOffService;
-
   LegallyDaysOffList days;
 
   MockMvc mockMvc;
@@ -41,7 +40,8 @@ class LegallyDaysOffApiTest {
 
     MockitoAnnotations.openMocks(this);
 
-    legallyDaysOffService = new LegallyDaysOffService(legallyDaysOffRepository);
+    legallyDaysOffPersistenceManager = new LegallyDaysOffPersistenceManager(legallyDaysOffRepository);
+    legallyDaysOffService = new LegallyDaysOffService(legallyDaysOffPersistenceManager);
   }
 
 
