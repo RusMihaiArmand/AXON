@@ -211,6 +211,7 @@
 
     </changeSet>
 
+
     <changeSet author="raluca.serban" id="002">
         <comment>Initial Load Team details</comment>
         <loadData file="includes/data-team-initial-load.csv" tableName="TEAM"
