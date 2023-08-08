@@ -1,4 +1,4 @@
-package ro.axon.dot.security;
+package ro.axon.dot.domain;
 
 public enum TokenStatus {
   ACTIVE,

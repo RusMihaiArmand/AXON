@@ -8,10 +8,10 @@ import lombok.Getter;
 @AllArgsConstructor
 public class LoginResponse {
 
-	private final String accessToken;
-	private final String refreshToken;
-	private final Date accessTokenExpirationTime;
-	private final Date refreshTokenExpirationTime;
+  private final String accessToken;
+  private final String refreshToken;
+  private final Date accessTokenExpirationTime;
+  private final Date refreshTokenExpirationTime;
 
 
 }

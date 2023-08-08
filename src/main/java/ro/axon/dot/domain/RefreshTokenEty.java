@@ -13,7 +13,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ro.axon.dot.security.TokenStatus;
 
 @Entity
 @Getter
@@ -21,7 +20,7 @@ import ro.axon.dot.security.TokenStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "REFRESH_TOKEN")
-public class RefreshTokenEty{
+public class RefreshTokenEty {
 
   @Id
   @Column(name = "ID", unique = true)
@@ -39,7 +38,6 @@ public class RefreshTokenEty{
   private Instant crtTms;
   @Column(name = "MDF_TMS")
   private Instant mdfTms;
-
   @Column(name = "EXP_TMS")
   private Instant expTms;
 

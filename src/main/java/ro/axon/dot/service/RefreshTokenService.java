@@ -2,6 +2,7 @@ package ro.axon.dot.service;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ro.axon.dot.domain.RefreshTokenEty;
@@ -16,6 +17,7 @@ public class RefreshTokenService {
 
   private final RefreshTokenRepository refreshTokenRepository;
 
+  @Transactional
   public RefreshTokenEty saveRefreshToken(RefreshTokenEty refreshTokenEty) {
     return refreshTokenRepository.save(refreshTokenEty);
   }
