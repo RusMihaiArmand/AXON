@@ -3,6 +3,7 @@ package ro.axon.dot.domain;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 @Table(name = "EMPLOYEE")
@@ -51,7 +53,7 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @Column(name = "PASSWORD")
   private String password;
 
-  @ManyToOne
+  @ManyToOne(cascade = CascadeType.MERGE)
   private TeamEty team;
 
   @OneToMany(fetch = FetchType.EAGER)

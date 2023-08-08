@@ -29,6 +29,11 @@ spring:
     default-property-inclusion: non_absent
     serialization:
       write-dates-as-timestamps: false
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          public-key-location: 'file:config/jwk-public.pem'
 
 ro.axon.core:
  roles:
@@ -40,3 +45,11 @@ server.port: 8081
 server:
   servlet:
     contextPath: /core
+
+axon:
+  app:
+    domain: 'https://localhost:8081/'
+    keyID: 'AXON'
+    accessTokenDuration: 10 #minutes
+    refreshTokenDuration: 20 #minutes
+    private-key-location: 'file:config/jwk-private.pem'

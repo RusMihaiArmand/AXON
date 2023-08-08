@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+/config/jwk-public.pem
+/config/jwk-private.pem

@@ -2,7 +2,6 @@ package ro.axon.dot.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -18,10 +17,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.domain.TeamRepository;
+import ro.axon.dot.mapper.EmployeeMapper;
+import ro.axon.dot.mapper.EmployeeMapperImpl;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.model.EmployeeDetailsList;
@@ -30,20 +32,33 @@ import ro.axon.dot.model.EmployeeDetailsListItem;
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
 
-  EmployeeService employeeService;
-
+  PasswordEncoder passwordEncoder;
   @Mock
   EmployeeRepository employeeRepository;
+  @Mock
+  TeamRepository teamRepository;
 
+  EmployeeService employeeService;
+
+  EmployeeMapper employeeMapper;
+
+  EmployeeEty testEmployee;
   @BeforeEach
   void setUp() {
-    employeeService = new EmployeeService(employeeRepository);
+
+    passwordEncoder = new BCryptPasswordEncoder();
+    employeeMapper = new EmployeeMapperImpl();
+
+    employeeService = new EmployeeService(employeeRepository, passwordEncoder, teamRepository);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
     TEAM_ETY.setCrtTms(CRT_TMS);
     TEAM_ETY.setMdfUsr(MDF_USR);
     TEAM_ETY.setMdfTms(MDF_TMS);
+
+    testEmployee = initEmployee();
+    testEmployee.setPassword("$2a$10$5d4MyhXzP1n6kq6ysW2kle00a0nZmWM1UF5qtFum25Ipi/umATCoe");
   }
 
   @Test
@@ -147,5 +162,63 @@ class EmployeeServiceTest {
     employee.setTeam(TEAM_ETY);
 
     return employee;
+  }
+  @Test
+  void createEmployee() {
+
+    when(employeeRepository.save(any())).thenReturn(testEmployee);
+    when(teamRepository.findById(any())).thenReturn(Optional.of(TEAM_ETY));
+
+
+    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(employeeMapper.mapEmployeeEtyToEmployeeDto(testEmployee));
+
+    EmployeeEty returned = employeeMapper.mapEmployeeDtoToEmployeeEty(returnedEmployee);
+
+    assertNotNull(returned);
+    assertEquals(testEmployee.getId(), returned.getId());
+    assertEquals(testEmployee.getFirstName(), returned.getFirstName());
+    assertEquals(testEmployee.getLastName(), returned.getLastName());
+    assertEquals(testEmployee.getEmail(), returned.getEmail());
+    assertEquals(testEmployee.getCrtUsr(), returned.getCrtUsr());
+    assertEquals(testEmployee.getCrtTms(), returned.getCrtTms());
+    assertEquals(testEmployee.getMdfUsr(), returned.getMdfUsr());
+    assertEquals(testEmployee.getMdfTms(), returned.getMdfTms());
+    assertEquals(testEmployee.getRole(), returned.getRole());
+    assertEquals(testEmployee.getStatus(), returned.getStatus());
+    assertEquals(testEmployee.getContractStartDate(), returned.getContractStartDate());
+    assertEquals(testEmployee.getUsername(), returned.getUsername());
+    assertEquals(testEmployee.getTeam(), returned.getTeam());
+    assertTrue(passwordEncoder.matches("axon_" + returned.getUsername(), testEmployee.getPassword()));
+
+  }
+
+  @Test
+  void loadEmployeeByUsername() {
+
+    when(employeeRepository.findEmployeeByUsername(any())).thenReturn(Optional.of(testEmployee));
+    when(teamRepository.findById(any())).thenReturn(Optional.of(TEAM_ETY));
+
+    EmployeeEty loadedEmployee;
+
+    try {
+      loadedEmployee = employeeService.loadEmployeeByUsername("test.user2");
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    assertNotNull(loadedEmployee);
+    assertEquals(testEmployee.getId(), loadedEmployee.getId());
+    assertEquals(testEmployee.getFirstName(), loadedEmployee.getFirstName());
+    assertEquals(testEmployee.getLastName(), loadedEmployee.getLastName());
+    assertEquals(testEmployee.getEmail(), loadedEmployee.getEmail());
+    assertEquals(testEmployee.getCrtUsr(), loadedEmployee.getCrtUsr());
+    assertEquals(testEmployee.getCrtTms(), loadedEmployee.getCrtTms());
+    assertEquals(testEmployee.getMdfUsr(), loadedEmployee.getMdfUsr());
+    assertEquals(testEmployee.getMdfTms(), loadedEmployee.getMdfTms());
+    assertEquals(testEmployee.getRole(), loadedEmployee.getRole());
+    assertEquals(testEmployee.getStatus(), loadedEmployee.getStatus());
+    assertEquals(testEmployee.getContractStartDate(), loadedEmployee.getContractStartDate());
+    assertEquals(testEmployee.getUsername(), loadedEmployee.getUsername());
+    assertEquals(testEmployee.getTeam(), loadedEmployee.getTeam());
   }
 }

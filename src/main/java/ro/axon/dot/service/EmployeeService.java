@@ -1,19 +1,23 @@
 package ro.axon.dot.service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.domain.TeamRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
+import ro.axon.dot.domain.TeamEty;
 import ro.axon.dot.mapper.EmployeeMapper;
+import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.EmployeeDetailsList;
 
 @Service
@@ -21,6 +25,10 @@ import ro.axon.dot.model.EmployeeDetailsList;
 public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
+
+  private final PasswordEncoder passwordEncoder;
+
+  private final TeamRepository teamRepository;
 
   public EmployeeDetailsList getEmployeesDetails(String name) {
     var employeeDetailsList = new EmployeeDetailsList();
@@ -58,6 +66,59 @@ public class EmployeeService {
       employee.setMdfUsr("User"); //todo change when login ready
 
       employeeRepository.save(employee);
+  }
+
+
+  public EmployeeDetailsListItem createEmployee(EmployeeDetailsListItem employee) throws BusinessException {
+    EmployeeEty toSave = EmployeeMapper.INSTANCE.mapEmployeeDtoToEmployeeEty(employee);
+
+    //check if user exists
+    if(userExists(employee.getUsername())){
+      BusinessErrorCode errorCode = BusinessErrorCode.EMPLOYEE_ALREADY_EXISTS;
+      Map<String, Object> variables = new HashMap<>();
+      variables.put("username", employee.getUsername());
+
+      throw new BusinessException(new RuntimeException(),
+          new BusinessExceptionElement(errorCode, variables));
+    }
+
+    //find and set team
+    TeamEty team = teamRepository.findById(toSave.getTeam().getId())
+        .orElseThrow(() -> {
+          BusinessErrorCode errorCode = BusinessErrorCode.TEAM_NOT_FOUND;
+          Map<String, Object> variables = new HashMap<>();
+          variables.put("id", toSave.getTeam().getId());
+          variables.put("name", toSave.getTeam().getName());
+
+          return new BusinessException(new RuntimeException(),
+              new BusinessExceptionElement(errorCode, variables));
+        });
+
+    toSave.setTeam(team);
+
+    //password format: "axon_username"
+    toSave.setPassword(passwordEncoder.encode("axon_" + toSave.getUsername()));
+
+    EmployeeEty saved = employeeRepository.save(toSave);
+
+    return EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(saved);
+  }
+
+  public EmployeeEty loadEmployeeByUsername(String username) throws BusinessException {
+
+    return employeeRepository.findEmployeeByUsername(username)
+        .orElseThrow(() -> {
+          BusinessErrorCode errorCode = BusinessErrorCode.EMPLOYEE_NOT_FOUND;
+          Map<String, Object> variables = new HashMap<>();
+          variables.put("username", username);
+
+          return new BusinessException(new RuntimeException(),
+              new BusinessExceptionElement(errorCode, variables));
+        });
+  }
+
+  private boolean userExists(String username){
+    return employeeRepository.findEmployeeByUsername(username).isPresent();
   }
 
 }

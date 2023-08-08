@@ -1,6 +1,8 @@
 package ro.axon.dot.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
@@ -10,6 +12,8 @@ import java.time.Instant;
 @SequenceGenerator(name = "TEAM_ID_SQ", sequenceName = "TEAM_ID_SQ", allocationSize = 1)
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "TEAM")
 public class TeamEty extends SrgKeyEntityTml<Long> {
 
@@ -30,6 +34,10 @@ public class TeamEty extends SrgKeyEntityTml<Long> {
     @Column(name = "STATUS")
     @Enumerated(value = EnumType.STRING)
     private TeamStatus status;
+
+    //TODO could change to enum
+    @Column(name = "STATUS")
+    private String status;
 
     @Override
     protected Class<? extends SrgKeyEntityTml<Long>> entityRefClass() {
