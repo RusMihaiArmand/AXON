@@ -61,40 +61,6 @@ public class LeaveRequestApi {
         //Any invalid/inexistent parameter takes on a null value
         LeaveRequestQuery leaveRequestQuery = new LeaveRequestQuery();
         return ResponseEntity.ok(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withStatus(status)
-                .withEmployeeId(search).withType(type).withStartDate(startDate).withEndDate(endDate).build()));
+                .withEmployeeName(search).withType(type).withStartDate(startDate).withEndDate(endDate).build()));
     }
-
-//    @GetMapping("requests")
-//    public ResponseEntity<LeaveRequestDetailsList> getLeaveRequestDetailsList(@RequestParam(required=false) Map<String,String> queryParameters) throws Exception {
-//        QLeaveRequestEty request = QLeaveRequestEty.leaveRequestEty;
-//        LeaveRequestEtyStatusEnum status = LeaveRequestEtyStatusEnum.valueOf(queryParameters.get("status").toUpperCase());
-//        String search = queryParameters.get("search");
-//        LeaveRequestEtyTypeEnum type = LeaveRequestEtyTypeEnum.valueOf(queryParameters.get("type").toUpperCase());
-//        LocalDate startDate;
-//        try {
-//            startDate = LocalDate.parse(queryParameters.get("startDate"));
-//        }
-//        catch (Exception e) {
-//            startDate = null;
-//        }
-//        LocalDate endDate;
-//        try {
-//            endDate = LocalDate.parse(queryParameters.get("endDate"));
-//        }
-//        catch (Exception e) {
-//            endDate = null;
-//        }
-//        //Any invalid/inexistent parameter takes on a null value
-//        BooleanExpression requestHasStatus = Expressions.TRUE.isTrue();
-//        BooleanExpression requestHasEmployeeId = Expressions.TRUE.isTrue();
-//        BooleanExpression requestHasType = Expressions.TRUE.isTrue();
-//        BooleanExpression requestOldestDate = Expressions.TRUE.isTrue();
-//        BooleanExpression requestNewestDate = Expressions.TRUE.isTrue();
-//        if (status != null) requestHasStatus = request.status.eq(status);
-//        if (search != null) requestHasEmployeeId = request.employeeId.like(search);
-//        if (type != null) requestHasType = request.type.eq(type);
-//        if (startDate != null) requestOldestDate = request.startDate.after(startDate);
-//        if (endDate != null) requestNewestDate = request.endDate.before(endDate);
-//        return ResponseEntity.ok(leaveRequestService.getLeaveRequestsDetailsSorted(requestHasStatus.and(requestHasEmployeeId.and(requestHasType.and(requestOldestDate.and(requestNewestDate))))));
-//    }
 }

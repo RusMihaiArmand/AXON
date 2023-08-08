@@ -9,7 +9,7 @@ public class LeaveRequestQuery {
 
     private static final QLeaveRequestEty root = QLeaveRequestEty.leaveRequestEty;
     private BooleanExpression statusExp = Expressions.TRUE.isTrue();
-    private BooleanExpression employeeIdExp = Expressions.TRUE.isTrue();
+    private BooleanExpression employeeNameExp = Expressions.TRUE.isTrue();
     private BooleanExpression typeExp = Expressions.TRUE.isTrue();
     private BooleanExpression startDateExp = Expressions.TRUE.isTrue();
     private BooleanExpression endDateExp = Expressions.TRUE.isTrue();
@@ -19,8 +19,8 @@ public class LeaveRequestQuery {
         return this;
     }
 
-    public LeaveRequestQuery withEmployeeId(String employeeId) {
-        if (employeeId != null) employeeIdExp = root.employee.id.like(employeeId);
+    public LeaveRequestQuery withEmployeeName(String nameSearch) {
+        if (nameSearch != null) employeeNameExp = root.employee.firstName.containsIgnoreCase(nameSearch).or(root.employee.lastName.containsIgnoreCase(nameSearch));
         return this;
     }
 
@@ -40,6 +40,6 @@ public class LeaveRequestQuery {
     }
 
     public BooleanExpression build() {
-        return statusExp.and(employeeIdExp.and(typeExp.and(startDateExp.and(endDateExp))));
+        return statusExp.and(employeeNameExp.and(typeExp.and(startDateExp.and(endDateExp))));
     }
 }

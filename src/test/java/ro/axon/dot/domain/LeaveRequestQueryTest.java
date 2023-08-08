@@ -38,18 +38,18 @@ class LeaveRequestQueryTest {
     }
 
     @Test
-    void withEmployeeIdNull() {
-        String employeeId = null;
-        leaveRequestQuery.withEmployeeId(employeeId);
+    void withEmployeeNameNull() {
+        String employeeName = null;
+        leaveRequestQuery.withEmployeeName(employeeName);
         BooleanExpression expectedExpression = TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP))));
         assertEquals(expectedExpression, leaveRequestQuery.build());
     }
 
     @Test
     void withEmployeeId() {
-        String employeeId = "AB1234";
-        leaveRequestQuery.withEmployeeId(employeeId);
-        BooleanExpression expectedExpression = TRUE_EXP.and(root.employee.id.like(employeeId).and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP))));
+        String employeeName = "John";
+        leaveRequestQuery.withEmployeeName(employeeName);
+        BooleanExpression expectedExpression = TRUE_EXP.and(root.employee.firstName.containsIgnoreCase(employeeName).or(root.employee.lastName.containsIgnoreCase(employeeName)).and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP))));
         assertEquals(expectedExpression, leaveRequestQuery.build());
     }
 
