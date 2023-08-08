@@ -11,7 +11,7 @@ import java.time.Instant;
 public class LeaveRequestDetailsListItem {
 
     private Long id;
-    private String employeeId;
+    private EmployeeIdentificationDetailsListItem employeeDetails;
     private String crtUsr;
     private Instant crtTms;
     private String mdfUsr;

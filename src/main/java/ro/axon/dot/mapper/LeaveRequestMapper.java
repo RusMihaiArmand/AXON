@@ -10,12 +10,12 @@ import ro.axon.dot.model.LeaveRequestDetailsListItem;
 /**
  * Mapper used for converting LeaveRequestEty object to LeaveRequestDto object
  */
-@Mapper(unmappedTargetPolicy = ReportingPolicy.ERROR)
+@Mapper(uses = EmployeeIdentificationMapper.class, unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface LeaveRequestMapper {
 
     LeaveRequestMapper INSTANCE = Mappers.getMapper(LeaveRequestMapper.class);
 
-    @Mapping(source = "employee.id", target = "employeeId")
+    @Mapping(source = "employee", target = "employeeDetails")
     LeaveRequestDetailsListItem mapLeaveRequestEtyToLeaveRequestDto(LeaveRequestEty leaveRequestEty);
 
 }
