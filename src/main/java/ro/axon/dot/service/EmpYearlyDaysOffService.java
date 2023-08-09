@@ -21,63 +21,37 @@ public class EmpYearlyDaysOffService {
   public EmpYearlyDaysOffDetailsList getEmployeesYearlyDaysOffDetails(String id, int year) {
     var EmpYearlyDaysOffDetailsList = new EmpYearlyDaysOffDetailsList();
 
-    List<EmpYearlyDaysOffEty> empYearlyDaysOffEties;
-
+    List<EmpYearlyDaysOffEty> empYearlyDaysOffEtyList;
 
 
     if (year>0) {
-      empYearlyDaysOffEties = empYearlyDaysOffRepository.findAll().stream()
+      empYearlyDaysOffEtyList = empYearlyDaysOffRepository.findAll().stream()
           .filter( empYearlyDaysOffEty ->
               empYearlyDaysOffEty.getEmployeeId().equals(id))
           .filter(empYearlyDaysOffEty ->
               empYearlyDaysOffEty.getYear().equals(year))
           .collect(Collectors.toList());
     } else {
-      empYearlyDaysOffEties = empYearlyDaysOffRepository.findAll().stream()
+      empYearlyDaysOffEtyList = empYearlyDaysOffRepository.findAll().stream()
           .filter( empYearlyDaysOffEty ->
               empYearlyDaysOffEty.getEmployeeId().equals(id))
           .collect(Collectors.toList());
     }
-    EmpYearlyDaysOffDetailsList.setItems(empYearlyDaysOffEties.stream()
+    EmpYearlyDaysOffDetailsList.setItems(empYearlyDaysOffEtyList.stream()
         .map(EmpYearlyDaysOffMapper.INSTANCE::mapEmpYearlyDaysOffToEmpYearlyDaysOffDto)
         .collect(Collectors.toList()));
 
     return EmpYearlyDaysOffDetailsList;
 
-
-
-
-//    List<EmployeeEty> employees;
-//
-//    Optional<String> searchName = Optional.ofNullable(name);
-//
-//    if (searchName.isPresent() && !searchName.get().isEmpty()) {
-//      employees = employeeRepository.findAll().stream()
-//          .filter(employee ->
-//              employee.getFirstName().toLowerCase().contains(searchName.get().toLowerCase()) ||
-//              employee.getLastName().toLowerCase().contains(searchName.get().toLowerCase()))
-//          .collect(Collectors.toList());
-//    } else {
-//      employees = employeeRepository.findAll();
-//    }
-//
-//    employeeDetailsList.setItems(employees.stream()
-//        .map(EmployeeMapper.INSTANCE::mapEmployeeEtyToEmployeeDto)
-//        .collect(Collectors.toList()));
-//
-//    return employeeDetailsList;
   }
 
   public EmpYearlyDaysOffDetailsList getEmployeesYearlyDaysOffDetails() {
     var EmpYearlyDaysOffDetailsList = new EmpYearlyDaysOffDetailsList();
 
-    List<EmpYearlyDaysOffEty> empYearlyDaysOffEties;
+    List<EmpYearlyDaysOffEty> empYearlyDaysOffEtyList = empYearlyDaysOffRepository.findAll().stream()
+          .toList();
 
-
-      empYearlyDaysOffEties = empYearlyDaysOffRepository.findAll().stream()
-          .collect(Collectors.toList());
-
-    EmpYearlyDaysOffDetailsList.setItems(empYearlyDaysOffEties.stream()
+    EmpYearlyDaysOffDetailsList.setItems(empYearlyDaysOffEtyList.stream()
         .map(EmpYearlyDaysOffMapper.INSTANCE::mapEmpYearlyDaysOffToEmpYearlyDaysOffDto)
         .collect(Collectors.toList()));
 
@@ -100,20 +74,18 @@ public class EmpYearlyDaysOffService {
 
     EmpYearlyDaysOffEty empYearlyDaysOffEty;
 
-    List<EmpYearlyDaysOffEty> empYearlyDaysOffEties;
+    List<EmpYearlyDaysOffEty> empYearlyDaysOffEtyList;
 
     for (String empId: vacationDaysModifyDetails.getEmployeeIds()) {
 
-      empYearlyDaysOffEties = null;
-
-      empYearlyDaysOffEties = empYearlyDaysOffRepository.findAll().stream()
+      empYearlyDaysOffEtyList = empYearlyDaysOffRepository.findAll().stream()
           .filter(ety -> ety.getEmployeeId().equals(empId))
           .filter(ety -> ety.getYear().equals(currentYear))
           .collect(Collectors.toList());
 
-      if(!(empYearlyDaysOffEties == null || empYearlyDaysOffEties.size()==0))
+      if(empYearlyDaysOffEtyList.size()!=0)
       {
-        empYearlyDaysOffEty = empYearlyDaysOffEties.get(0);
+        empYearlyDaysOffEty = empYearlyDaysOffEtyList.get(0);
 
         empYearlyDaysOffEty.setTotalNoDays( empYearlyDaysOffEty.getTotalNoDays() + dayChanger  );
 
@@ -126,17 +98,11 @@ public class EmpYearlyDaysOffService {
 
     }
 
-
-
-    //EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(employeeRepository.save(employeeEty));
-
     if(daysWentNegative)
       return 400;
     else
       return 204;
   }
-
-
 
 }
 

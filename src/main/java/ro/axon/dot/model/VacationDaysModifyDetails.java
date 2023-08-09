@@ -8,13 +8,13 @@ import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 @Data
 public class VacationDaysModifyDetails {
 
-  //@NotEmpty(message = "At least 1 employee ID is required")
+  @NotEmpty
   private List<String> employeeIds;
 
-  // @NotEmpty(message = "Number of days required")
+  @NotEmpty
   private int noDays;
 
-  // @NotEmpty(message = "Type required")
+  @NotEmpty
   private VacationDaysChangeTypeEnum type;
 
   private String description;
