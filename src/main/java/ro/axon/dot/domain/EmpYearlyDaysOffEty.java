@@ -40,4 +40,9 @@ public class EmpYearlyDaysOffEty{
   @OneToMany(mappedBy = "empYearlyDaysOffEty")
   private Set<EmpYearlyDaysOffHistEty> empYearlyDaysOffHistEtySet = new HashSet<>();
 
+  @Column(name = "EMPLOYEE_ID")
+  private String employeeId;
+
+
+
 }
