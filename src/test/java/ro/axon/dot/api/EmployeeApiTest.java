@@ -2,6 +2,9 @@ package ro.axon.dot.api;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -14,12 +17,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
+import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.service.EmployeeService;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ro.axon.dot.EmployeeTestAttributes.*;
@@ -42,8 +49,10 @@ class EmployeeApiTest {
   MockMvc mockMvc;
 
   @BeforeEach
-  void setUp() throws Exception{
-    mockMvc = MockMvcBuilders.standaloneSetup(employeeApi).build();
+  void setUp(){
+    mockMvc = MockMvcBuilders.standaloneSetup(employeeApi)
+        .setControllerAdvice(new ApiExceptionHandler())
+            .build();
 
     teamDetails1.setName("AxonTeam");
     teamDetails2.setName("InternshipTeam");
@@ -130,5 +139,27 @@ class EmployeeApiTest {
         .andExpect(jsonPath("$.items[0].lastName").value("Anton"))
         .andExpect(jsonPath("$.items[0].totalVacationDays").value(21))
         .andExpect(jsonPath("$.items[0].teamDetails.name").value("InternshipTeam"));
+  }
+
+  @Test
+  void inactivateEmployeeSuccess() throws Exception {
+    String employeeId = ID;
+
+    mockMvc.perform(patch("/api/v1/employees/" + employeeId + "/inactivate"))
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
+  void inactivateEmployeeThrowsBusinessException() throws Exception {
+    String employeeId = ID;
+
+    doThrow(new BusinessException(BusinessExceptionElement
+        .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()
+    )).when(employeeService).inactivateEmployee(employeeId);
+
+    mockMvc.perform(patch("/api/v1/employees/{employeeId}/inactivate", employeeId))
+        .andExpect(status().isBadRequest());
+
+    verify(employeeService, times(1)).inactivateEmployee(employeeId);
   }
 }

@@ -1,12 +1,18 @@
 package ro.axon.dot.service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
+import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.model.EmployeeDetailsList;
 
@@ -37,6 +43,21 @@ public class EmployeeService {
         .collect(Collectors.toList()));
 
     return employeeDetailsList;
+  }
+
+  public void inactivateEmployee(String employeeId){
+
+    EmployeeEty employee = employeeRepository.findById(employeeId).orElseThrow(
+        () -> new BusinessException(BusinessExceptionElement
+        .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
+
+      employee.setStatus("INACTIVE");
+
+      employee.setMdfTms(Instant.now());
+
+      employee.setMdfUsr("User"); //todo change when login ready
+
+      employeeRepository.save(employee);
   }
 
 }

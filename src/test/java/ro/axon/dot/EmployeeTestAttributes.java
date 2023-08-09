@@ -16,7 +16,7 @@ public class EmployeeTestAttributes {
   public static final String MDF_USR = "user2";
   public static final Instant MDF_TMS = LocalDateTime.now().toInstant(ZoneOffset.ofHours(0));
   public static final String  ROLE = "HR";
-  public static final String STATUS = "status";
+  public static final String STATUS = "ACTIVE";
   public static final LocalDate CONTRACT_START_DATE = LocalDate.now();
   public static final LocalDate CONTRACT_END_DATE = LocalDate.now( );
   public static final Long V = 2L;
