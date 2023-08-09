@@ -3,7 +3,6 @@ package ro.axon.dot.api;
 import com.nimbusds.jwt.SignedJWT;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
@@ -47,18 +46,18 @@ public class AuthApi {
   }
 
   @PostMapping(value = "/login")
-  public ResponseEntity<?> login(@RequestBody @Valid LoginRequest loginRequest) {
+  public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) {
 
-    EmployeeEty employee = employeeService.loadEmployeeByUsername(loginRequest.getUsername());
+    EmployeeEty employee = employeeService.loadEmployeeByUsername(request.getUsername());
 
-    verifyPassword(loginRequest.getPassword(), employee);
+    verifyPassword(request.getPassword(), employee);
 
     final LocalDateTime now = LocalDateTime.now();
 
     final SignedJWT accessToken = jwtTokenUtil.generateAccessToken(employee, now);
     final SignedJWT refreshToken = jwtTokenUtil.generateRefreshToken(employee, now);
 
-    saveRefreshToken(refreshToken, employee, now);
+    createRefreshToken(refreshToken, employee, now);
 
     return ResponseEntity.ok(new LoginResponse(
         accessToken.serialize(),
@@ -68,29 +67,44 @@ public class AuthApi {
   }
 
   @PostMapping(value = "/refresh")
-  public ResponseEntity<?> refresh(@RequestBody @Valid RefreshRequest refreshRequest) {
+  public ResponseEntity<?> refresh(@RequestBody @Valid RefreshRequest request) {
 
     final LocalDateTime now = LocalDateTime.now();
 
-    SignedJWT refreshToken = jwtTokenUtil.parseToken(refreshRequest.getRefreshToken());
+    SignedJWT refreshToken = jwtTokenUtil.parseToken(request.getRefreshToken());
 
     RefreshTokenEty fromDB = refreshTokenService.findTokenByKeyId(
         refreshToken.getHeader().getKeyID());
-    EmployeeEty employee = fromDB.getEmployee();
 
-    checkAudience(refreshToken, employee);
-    checkStatus(fromDB);
-    checkIfExpired(fromDB);
+    checkAudience(refreshToken, fromDB);
 
-    refreshToken = regenerateToken(refreshToken, fromDB, employee, now);
-
-    SignedJWT accessToken = jwtTokenUtil.generateAccessToken(employee, now);
+    refreshToken = regenerateToken(refreshToken, fromDB, now);
 
     return ResponseEntity.ok(new LoginResponse(
-        accessToken.serialize(),
         refreshToken.serialize(),
-        jwtTokenUtil.getExpirationDateFromToken(accessToken),
+        refreshToken.serialize(),
+        jwtTokenUtil.getExpirationDateFromToken(refreshToken),
         jwtTokenUtil.getExpirationDateFromToken(refreshToken)));
+  }
+
+  @PostMapping(value = "/logout")
+  public ResponseEntity<?> logout(@RequestBody @Valid RefreshRequest request) {
+
+    final LocalDateTime now = LocalDateTime.now();
+
+    SignedJWT refreshToken = jwtTokenUtil.parseToken(request.getRefreshToken());
+
+    RefreshTokenEty fromDB = refreshTokenService.findTokenByKeyId(
+        refreshToken.getHeader().getKeyID());
+
+    checkAudience(refreshToken, fromDB);
+
+    fromDB.setMdfTms(now.atZone(ZoneId.systemDefault()).toInstant());
+    fromDB.setStatus(TokenStatus.REVOKED);
+
+    refreshTokenService.saveRefreshToken(fromDB);
+
+    return ResponseEntity.noContent().build();
   }
 
   private void verifyPassword(String password, EmployeeEty employee) {
@@ -105,11 +119,11 @@ public class AuthApi {
     }
   }
 
-  private void checkAudience(SignedJWT refreshToken, EmployeeEty employee) {
-    if (!jwtTokenUtil.getAudienceFromToken(refreshToken).equals(employee.getId())) {
+  private void checkAudience(SignedJWT refreshToken, RefreshTokenEty refreshTokenEty) {
+    if (!jwtTokenUtil.getAudienceFromToken(refreshToken).equals(refreshTokenEty.getEmployee().getId())) {
       Map<String, Object> variables = new HashMap<>();
       variables.put("token", refreshToken.serialize());
-      variables.put("username", employee.getUsername());
+      variables.put("username", refreshTokenEty.getEmployee().getUsername());
 
       throw new BusinessException(BusinessExceptionElement
           .builder()
@@ -118,40 +132,18 @@ public class AuthApi {
     }
   }
 
-  private void checkStatus(RefreshTokenEty refreshToken) {
-    if (!refreshToken.getStatus().equals(TokenStatus.ACTIVE)) {
-      Map<String, Object> variables = new HashMap<>();
-      variables.put("token", refreshToken.getId());
+  private SignedJWT regenerateToken(SignedJWT token, RefreshTokenEty tokenEty, LocalDateTime now) {
 
-      throw new BusinessException(BusinessExceptionElement
-          .builder()
-          .errorDescription(BusinessErrorCode.TOKEN_REVOKED)
-          .contextVariables(variables).build());
-    }
-  }
+    SignedJWT toReturn = jwtTokenUtil.regenerateRefreshToken(tokenEty.getEmployee(), token, now);
 
-  private void checkIfExpired(RefreshTokenEty token) {
-    if (!token.getExpTms().isAfter(new Date().toInstant())) {
-      Map<String, Object> variables = new HashMap<>();
-      variables.put("token", token.getId());
-
-      throw new BusinessException(BusinessExceptionElement
-          .builder()
-          .errorDescription(BusinessErrorCode.TOKEN_EXPIRED)
-          .contextVariables(variables).build());
-    }
-  }
-
-  private SignedJWT regenerateToken(SignedJWT token, RefreshTokenEty tokenEty, EmployeeEty employee,
-      LocalDateTime now) {
     tokenEty.setMdfTms(now.atZone(ZoneId.systemDefault()).toInstant());
-    tokenEty.setExpTms(jwtTokenUtil.getExpirationDateFromToken(token).toInstant());
+    tokenEty.setExpTms(jwtTokenUtil.getExpirationDateFromToken(toReturn).toInstant());
     refreshTokenService.saveRefreshToken(tokenEty);
 
-    return jwtTokenUtil.regenerateRefreshToken(employee, token, now);
+    return toReturn;
   }
 
-  private void saveRefreshToken(SignedJWT refreshToken, EmployeeEty employee, LocalDateTime now) {
+  private void createRefreshToken(SignedJWT refreshToken, EmployeeEty employee, LocalDateTime now) {
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty(refreshToken.getHeader().getKeyID(),
         TokenStatus.ACTIVE,

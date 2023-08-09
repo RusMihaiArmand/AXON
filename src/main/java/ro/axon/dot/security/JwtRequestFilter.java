@@ -15,14 +15,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.domain.RefreshTokenEty;
+import ro.axon.dot.domain.TokenStatus;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.service.EmployeeService;
+import ro.axon.dot.service.RefreshTokenService;
 
 @RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
 
+	private final RefreshTokenService refreshTokenService;
 	private final EmployeeService employeeService;
 	private final JwtTokenUtil jwtTokenUtil;
 
@@ -38,6 +42,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 		jwtTokenUtil.verifyToken(token);
 		jwtTokenUtil.isTokenExpired(token);
+		isTokenRevoked(token);
 		jwtTokenUtil.validateClaimSet(token);
 
 		String username = jwtTokenUtil.getUsernameFromToken(token);
@@ -54,6 +59,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 		}
 
 		chain.doFilter(request, response);
+	}
+
+	private void isTokenRevoked(SignedJWT token) {
+
+		RefreshTokenEty refreshTokenEty = refreshTokenService.findTokenByKeyId(token.getHeader().getKeyID());
+
+		if(refreshTokenEty.getStatus().equals(TokenStatus.REVOKED)){
+			throw new BusinessException(BusinessExceptionElement
+					.builder()
+					.errorDescription(BusinessErrorCode.TOKEN_REVOKED)
+					.build());
+		}
 	}
 
 	private void verifyRequestHeader(String requestTokenHeader){

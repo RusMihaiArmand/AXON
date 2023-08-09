@@ -18,11 +18,15 @@ import ro.axon.dot.security.JwtRequestFilter;
 import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.service.EmployeeService;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
+import ro.axon.dot.service.RefreshTokenService;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+  @Autowired
+  private RefreshTokenService refreshTokenService;
 
   @Autowired
   @Lazy
@@ -49,7 +53,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
     httpSecurity.addFilterBefore(
-        new JwtRequestFilter(employeeService, jwtTokenUtil),
+        new JwtRequestFilter(refreshTokenService, employeeService, jwtTokenUtil),
         UsernamePasswordAuthenticationFilter.class);
 
     httpSecurity.addFilterBefore(new FilterExceptionHandler(), JwtRequestFilter.class);
