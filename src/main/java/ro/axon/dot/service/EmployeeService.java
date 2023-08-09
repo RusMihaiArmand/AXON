@@ -45,23 +45,19 @@ public class EmployeeService {
     return employeeDetailsList;
   }
 
-  public Boolean inactivateEmployee(String employeeId){
+  public void inactivateEmployee(String employeeId){
 
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    String currentUsr = authentication.getName();
+    EmployeeEty employee = employeeRepository.findById(employeeId).orElseThrow(
+        () -> new BusinessException(BusinessExceptionElement
+        .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
 
-    return employeeRepository.findById(employeeId).map(employee -> {
       employee.setStatus("INACTIVE");
 
       employee.setMdfTms(Instant.now());
 
-      employee.setMdfUsr(currentUsr);
+      employee.setMdfUsr("User"); //todo change when login ready
 
       employeeRepository.save(employee);
-      return true;
-    }).orElseThrow(() -> new BusinessException(BusinessExceptionElement
-        .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()
-    ));
   }
 
 }

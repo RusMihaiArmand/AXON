@@ -109,11 +109,10 @@ class EmployeeServiceTest {
 
     when(employeeRepository.findById(ID)).thenReturn(Optional.of(employee));
 
-    Boolean inactivated = employeeService.inactivateEmployee(ID);
+    employeeService.inactivateEmployee(ID);
 
-    assertTrue(inactivated);
     assertEquals("INACTIVE", employee.getStatus());
-    assertEquals("ADMIN", employee.getMdfUsr());
+    assertEquals("User", employee.getMdfUsr());
   }
 
   @Test
