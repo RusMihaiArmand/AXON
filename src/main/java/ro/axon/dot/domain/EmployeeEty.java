@@ -50,6 +50,16 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @Column(name = "PASSWORD")
   private String password;
 
+  private Long v;
+  @Override
+  public Long getV() {
+      return v;
+  }
+
+  public void setV(Long v) {
+      this.v = v;
+  }
+
   @ManyToOne
   private TeamEty team;
 

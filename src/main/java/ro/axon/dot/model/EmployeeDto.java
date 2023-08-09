@@ -17,6 +17,10 @@ public class EmployeeDto {
   private TeamDetailsListItem teamDetails;
   private String username;
 
+  public EmployeeDto() {
+    
+}
+
   public EmployeeDto(String id, String firstName, String lastName, String email, String crtUsr,
       String mdfUsr, String role, Long v, Integer totalVacationDays,
       TeamDetailsListItem teamDetails,
