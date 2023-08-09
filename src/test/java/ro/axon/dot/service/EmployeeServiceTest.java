@@ -118,11 +118,6 @@ class EmployeeServiceTest {
   @Test
   void inactivateEmployeeFail(){
 
-    Authentication authentication = mock(Authentication.class);
-
-    when(authentication.getName()).thenReturn("currentUsr");
-    SecurityContextHolder.getContext().setAuthentication(authentication);
-
     when(employeeRepository.findById(ID)).thenReturn(Optional.empty());
 
     BusinessException exception = assertThrows(BusinessException.class,
