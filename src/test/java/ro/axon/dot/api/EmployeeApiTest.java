@@ -33,12 +33,9 @@ import static ro.axon.dot.EmployeeTestAttributes.*;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeApiTest {
+
   public static final TeamDetailsListItem teamDetails1 = new TeamDetailsListItem();
   public static final TeamDetailsListItem teamDetails2 = new TeamDetailsListItem();
-  public static final EmployeeDetailsListItem employee1 = new EmployeeDetailsListItem();
-  public static final EmployeeDetailsListItem employee2 = new EmployeeDetailsListItem();
-  public static final EmployeeDetailsList employeesList = new EmployeeDetailsList();
-
 
   @Mock
   EmployeeService employeeService;
@@ -57,29 +54,20 @@ class EmployeeApiTest {
     teamDetails1.setName("AxonTeam");
     teamDetails2.setName("InternshipTeam");
 
-    employee1.setFirstName(FIRST_NAME);
-    employee1.setLastName(LAST_NAME);
-    employee1.setEmail(EMAIL);
-    employee1.setCrtUsr(CRT_USR);
-    employee1.setCrtTms(CRT_TMS);
-    employee1.setMdfUsr(MDF_USR);
-    employee1.setMdfTms(MDF_TMS);
-    employee1.setRole(ROLE);
-    employee1.setStatus(STATUS);
-    employee1.setV(V);
-    employee1.setUsername(USERNAME);
-    employee1.setTeamDetails(teamDetails1);
-    employee1.setTotalVacationDays(21);
+  }
 
+  @Test
+  void getEmployeesList() throws Exception{
+
+    EmployeeDetailsListItem employee1 = initEmployee();
+
+    EmployeeDetailsListItem employee2 = initEmployee();
     employee2.setFirstName("Maria");
     employee2.setLastName("Anton");
     employee2.setTeamDetails(teamDetails2);
     employee2.setTotalVacationDays(21);
 
-  }
-
-  @Test
-  void getEmployeesList() throws Exception{
+    EmployeeDetailsList employeesList = new EmployeeDetailsList();
 
     employeesList.setItems(Arrays.asList(employee1,employee2));
 
@@ -99,12 +87,19 @@ class EmployeeApiTest {
         .andExpect(jsonPath("$.items[0].teamDetails.name").value("AxonTeam"))
         .andExpect(jsonPath("$.items[1].firstName").value("Maria"))
         .andExpect(jsonPath("$.items[1].lastName").value("Anton"))
+        .andExpect(jsonPath("$.items[1].crtUsr").value(CRT_USR))
+        .andExpect(jsonPath("$.items[1].mdfUsr").value(MDF_USR))
+        .andExpect(jsonPath("$.items[1].v").value(V))
+        .andExpect(jsonPath("$.items[1].username").value(USERNAME))
         .andExpect(jsonPath("$.items[1].totalVacationDays").value(21))
         .andExpect(jsonPath("$.items[1].teamDetails.name").value("InternshipTeam"));
   }
 
   @Test
   void getEmployeesListNull() throws Exception{
+
+    EmployeeDetailsList employeesList = new EmployeeDetailsList();
+
     when(employeeService.getEmployeesDetails(null)).thenReturn(employeesList);
 
     mockMvc.perform(get("/api/v1/employees")
@@ -114,6 +109,8 @@ class EmployeeApiTest {
   }
   @Test
   void getEmployeesByNameNotFound() throws Exception {
+
+    EmployeeDetailsList employeesList = new EmployeeDetailsList();
 
     when(employeeService.getEmployeesDetails(anyString())).thenReturn(employeesList);
 
@@ -126,7 +123,16 @@ class EmployeeApiTest {
 
   @Test
   void getEmployeesByName() throws Exception {
-    employeesList.setItems(Arrays.asList(employee2));
+
+    EmployeeDetailsListItem employee = initEmployee();
+    employee.setFirstName("Maria");
+    employee.setLastName("Anton");
+    employee.setTeamDetails(teamDetails2);
+    employee.setTotalVacationDays(21);
+
+    EmployeeDetailsList employeesList = new EmployeeDetailsList();
+
+    employeesList.setItems(Arrays.asList(employee));
 
     when(employeeService.getEmployeesDetails(anyString())).thenReturn(employeesList);
 
@@ -161,5 +167,26 @@ class EmployeeApiTest {
         .andExpect(status().isBadRequest());
 
     verify(employeeService, times(1)).inactivateEmployee(employeeId);
+  }
+
+  private EmployeeDetailsListItem initEmployee(){
+
+    EmployeeDetailsListItem employee = new EmployeeDetailsListItem();
+    employee.setId(ID);
+    employee.setFirstName(FIRST_NAME);
+    employee.setLastName(LAST_NAME);
+    employee.setEmail(EMAIL);
+    employee.setCrtUsr(CRT_USR);
+    employee.setCrtTms(CRT_TMS);
+    employee.setMdfUsr(MDF_USR);
+    employee.setMdfTms(MDF_TMS);
+    employee.setRole(ROLE);
+    employee.setStatus(STATUS);
+    employee.setV(V);
+    employee.setUsername(USERNAME);
+    employee.setTeamDetails(teamDetails1);
+    employee.setTotalVacationDays(21);
+
+    return employee;
   }
 }

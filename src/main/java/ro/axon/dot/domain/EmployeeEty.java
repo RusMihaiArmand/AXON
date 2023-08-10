@@ -58,6 +58,10 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @JoinColumn(name = "EMPLOYEE_ID")
   private Set<EmpYearlyDaysOffEty> empYearlyDaysOff = new HashSet<>();
 
+  @OneToMany(fetch = FetchType.EAGER)
+  @JoinColumn(name = "EMPLOYEE_ID")
+  private Set<LeaveRequestEty> leaveRequests = new HashSet<>();
+
   @Override
   protected Class<? extends SrgKeyEntityTml<String>> entityRefClass() {
     return EmployeeEty.class;
