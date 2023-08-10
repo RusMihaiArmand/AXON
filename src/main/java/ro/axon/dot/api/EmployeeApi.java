@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.RemainingDaysOff;
-import ro.axon.dot.service.EmployeeRemainingDaysOffService;
 import ro.axon.dot.service.EmployeeService;
 
 @RestController
@@ -14,7 +13,6 @@ import ro.axon.dot.service.EmployeeService;
 public class EmployeeApi {
 
   private final EmployeeService employeeService;
-  private final EmployeeRemainingDaysOffService employeeRemainingDaysOffService;
 
   @GetMapping(value = {"/employees/{name}", "/employees"})
   public ResponseEntity<EmployeeDetailsList> getEmployeesList(@RequestParam(required = false) String name){
@@ -27,7 +25,7 @@ public class EmployeeApi {
   @GetMapping(value = {"/employees/{employeeId}/remaining-days-off"})
   public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(@PathVariable String employeeId){
 
-    RemainingDaysOff remainingDaysOff = employeeRemainingDaysOffService.getEmployeeRemainingDaysOff(employeeId);
+    RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(employeeId);
 
     return ResponseEntity.ok(remainingDaysOff);
   }

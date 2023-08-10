@@ -1,24 +1,27 @@
 package ro.axon.dot.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static ro.axon.dot.EmployeeTestAttributes.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.domain.*;
+import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.model.RemainingDaysOff;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
@@ -137,6 +140,60 @@ class EmployeeServiceTest {
 
     assertEquals(2, returnedEmployees.getItems().size());
     verify(employeeRepository, times(1)).findAll();
+  }
+
+  @Test
+  void getEmployeeRemainingDaysOffIdNotFound() {
+    EmployeeEty employee = new EmployeeEty();
+    EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
+    daysOff.setId(1L);
+    daysOff.setTotalNoDays(20);
+    daysOff.setYear(2023);
+    employee.setId(ID);
+    employee.setEmpYearlyDaysOff(Collections.singleton(daysOff));
+
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.empty());
+
+    try {
+      RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(ID);
+    } catch (BusinessException businessException) {
+      assertEquals("The employee with the given ID does not exist.", businessException.getError().getErrorDescription().getDevMsg());
+      return;
+    }
+    fail();
+  }
+
+  @Test
+  void getEmployeeRemainingDaysOffNotSet() {
+    EmployeeEty employee = new EmployeeEty();
+    employee.setId(ID);
+
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+
+    try {
+      RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(ID);
+    } catch (BusinessException businessException) {
+      assertEquals("The vacation days for this employee have not been set for this year.", businessException.getError().getErrorDescription().getDevMsg());
+      return;
+    }
+    fail();
+  }
+
+  @Test
+  void getEmployeeRemainingDaysOff() {
+    EmployeeEty employee = new EmployeeEty();
+    EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
+    daysOff.setId(1L);
+    daysOff.setTotalNoDays(20);
+    daysOff.setYear(2023);
+    employee.setId(ID);
+    employee.setEmpYearlyDaysOff(Collections.singleton(daysOff));
+
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+
+    RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(ID);
+
+    assertEquals(20, remainingDaysOff.getRemainingDays());
   }
 
 }

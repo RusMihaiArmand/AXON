@@ -19,7 +19,6 @@ import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
-import ro.axon.dot.service.EmployeeRemainingDaysOffService;
 import ro.axon.dot.service.EmployeeService;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,9 +36,6 @@ class EmployeeApiTest {
   public static final EmployeeDetailsList employeesList = new EmployeeDetailsList();
   @Mock
   EmployeeService employeeService;
-
-  @Mock
-  EmployeeRemainingDaysOffService employeeRemainingDaysOffService;
 
   @InjectMocks
   EmployeeApi employeeApi;
@@ -149,7 +145,7 @@ class EmployeeApiTest {
     RemainingDaysOff remainingDaysOff = new RemainingDaysOff();
     remainingDaysOff.setRemainingDays(employee3.getTotalVacationDays());
 
-    when(employeeRemainingDaysOffService.getEmployeeRemainingDaysOff(anyString())).thenReturn(remainingDaysOff);
+    when(employeeService.getEmployeeRemainingDaysOff(anyString())).thenReturn(remainingDaysOff);
 
     mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
             .contentType(MediaType.APPLICATION_JSON))
