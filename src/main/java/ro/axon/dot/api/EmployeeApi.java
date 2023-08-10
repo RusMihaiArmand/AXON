@@ -2,11 +2,10 @@ package ro.axon.dot.api;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ro.axon.dot.model.EmployeeDetailsList;
+import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.service.EmployeeRemainingDaysOffService;
 import ro.axon.dot.service.EmployeeService;
 
 @RestController
@@ -15,6 +14,7 @@ import ro.axon.dot.service.EmployeeService;
 public class EmployeeApi {
 
   private final EmployeeService employeeService;
+  private final EmployeeRemainingDaysOffService employeeRemainingDaysOffService;
 
   @GetMapping(value = {"/employees/{name}", "/employees"})
   public ResponseEntity<EmployeeDetailsList> getEmployeesList(@RequestParam(required = false) String name){
@@ -22,5 +22,13 @@ public class EmployeeApi {
     EmployeeDetailsList employeesList = employeeService.getEmployeesDetails(name);
 
     return ResponseEntity.ok(employeesList);
+  }
+
+  @GetMapping(value = {"/employees/{employeeId}/remaining-days-off"})
+  public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(@PathVariable String employeeId){
+
+    RemainingDaysOff remainingDaysOff = employeeRemainingDaysOffService.getEmployeeRemainingDaysOff(employeeId);
+
+    return ResponseEntity.ok(remainingDaysOff);
   }
 }

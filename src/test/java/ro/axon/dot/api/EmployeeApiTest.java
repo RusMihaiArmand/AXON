@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +17,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
+import ro.axon.dot.service.EmployeeRemainingDaysOffService;
 import ro.axon.dot.service.EmployeeService;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -30,15 +33,16 @@ class EmployeeApiTest {
   public static final TeamDetailsListItem teamDetails2 = new TeamDetailsListItem();
   public static final EmployeeDetailsListItem employee1 = new EmployeeDetailsListItem();
   public static final EmployeeDetailsListItem employee2 = new EmployeeDetailsListItem();
+  public static final EmployeeDetailsListItem employee3 = new EmployeeDetailsListItem();
   public static final EmployeeDetailsList employeesList = new EmployeeDetailsList();
-
-
   @Mock
   EmployeeService employeeService;
 
+  @Mock
+  EmployeeRemainingDaysOffService employeeRemainingDaysOffService;
+
   @InjectMocks
   EmployeeApi employeeApi;
-
   MockMvc mockMvc;
 
   @BeforeEach
@@ -67,6 +71,11 @@ class EmployeeApiTest {
     employee2.setTeamDetails(teamDetails2);
     employee2.setTotalVacationDays(21);
 
+    employee3.setId(ID);
+    employee3.setFirstName("John");
+    employee3.setLastName("Doe");
+    employee3.setTeamDetails(teamDetails1);
+    employee3.setTotalVacationDays(20);
   }
 
   @Test
@@ -96,6 +105,8 @@ class EmployeeApiTest {
 
   @Test
   void getEmployeesListNull() throws Exception{
+    employeesList.setItems(null);
+
     when(employeeService.getEmployeesDetails(null)).thenReturn(employeesList);
 
     mockMvc.perform(get("/api/v1/employees")
@@ -105,6 +116,7 @@ class EmployeeApiTest {
   }
   @Test
   void getEmployeesByNameNotFound() throws Exception {
+    employeesList.setItems(null);
 
     when(employeeService.getEmployeesDetails(anyString())).thenReturn(employeesList);
 
@@ -130,5 +142,18 @@ class EmployeeApiTest {
         .andExpect(jsonPath("$.items[0].lastName").value("Anton"))
         .andExpect(jsonPath("$.items[0].totalVacationDays").value(21))
         .andExpect(jsonPath("$.items[0].teamDetails.name").value("InternshipTeam"));
+  }
+
+  @Test
+  void getRemainingDaysOff() throws Exception {
+    RemainingDaysOff remainingDaysOff = new RemainingDaysOff();
+    remainingDaysOff.setRemainingDays(employee3.getTotalVacationDays());
+
+    when(employeeRemainingDaysOffService.getEmployeeRemainingDaysOff(anyString())).thenReturn(remainingDaysOff);
+
+    mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.remainingDays").value(20));
   }
 }
