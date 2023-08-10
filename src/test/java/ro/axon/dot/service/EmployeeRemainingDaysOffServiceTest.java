@@ -7,14 +7,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ro.axon.dot.domain.*;
 import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.model.LegallyDaysOffList;
 import ro.axon.dot.model.RemainingDaysOff;
 
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static ro.axon.dot.EmployeeTestAttributes.ID;
 
@@ -27,14 +26,11 @@ class EmployeeRemainingDaysOffServiceTest {
     EmployeeRepository employeeRepository;
 
     @Mock
-    LegallyDaysOffService legallyDaysOffService;
-
-    @Mock
     LeaveRequestRepository leaveRequestRepository;
 
     @BeforeEach
     void setUp() {
-        employeeRemainingDaysOffService = new EmployeeRemainingDaysOffService(employeeRepository, legallyDaysOffService, leaveRequestRepository);
+        employeeRemainingDaysOffService = new EmployeeRemainingDaysOffService(employeeRepository, leaveRequestRepository);
     }
 
     @Test
@@ -47,7 +43,7 @@ class EmployeeRemainingDaysOffServiceTest {
         employee.setId(ID);
         employee.setEmpYearlyDaysOff(Collections.singleton(daysOff));
 
-        when(employeeRepository.findAll()).thenReturn(null);
+        when(employeeRepository.findById(anyString())).thenReturn(Optional.empty());
 
         try {
             RemainingDaysOff remainingDaysOff = employeeRemainingDaysOffService.getEmployeeRemainingDaysOff(ID);
@@ -61,14 +57,9 @@ class EmployeeRemainingDaysOffServiceTest {
     @Test
     void getEmployeeRemainingDaysOffNotSet() {
         EmployeeEty employee = new EmployeeEty();
-        EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
-        daysOff.setId(1L);
-        daysOff.setTotalNoDays(0);
-        daysOff.setYear(2023);
         employee.setId(ID);
-        employee.setEmpYearlyDaysOff(Collections.singleton(daysOff));
 
-        when(employeeRepository.findAll()).thenReturn(List.of(employee));
+        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
 
         try {
             RemainingDaysOff remainingDaysOff = employeeRemainingDaysOffService.getEmployeeRemainingDaysOff(ID);
@@ -89,13 +80,13 @@ class EmployeeRemainingDaysOffServiceTest {
         employee.setId(ID);
         employee.setEmpYearlyDaysOff(Collections.singleton(daysOff));
 
-        when(employeeRepository.findAll()).thenReturn(List.of(employee));
-
-        when(legallyDaysOffService.getOffDays(null, List.of(String.valueOf(Calendar.getInstance().get(Calendar.YEAR))))).thenReturn(new LegallyDaysOffList());
+        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
 
         QLeaveRequestEty root = QLeaveRequestEty.leaveRequestEty;
         LeaveRequestQuery query = new LeaveRequestQuery();
-        when(leaveRequestRepository.findAll(root.employee.id.eq(employee.getId()).and(query.withStatus(LeaveRequestEtyStatusEnum.APPROVED).withType(LeaveRequestEtyTypeEnum.VACATION).build()))).thenReturn(Collections.emptyList());
+        when(leaveRequestRepository.findAll(root.employee.id.eq(employee.getId())
+                .and(query.withStatus(LeaveRequestEtyStatusEnum.APPROVED).withType(LeaveRequestEtyTypeEnum.VACATION).build())
+                .or(query.withStatus(LeaveRequestEtyStatusEnum.PENDING).withType(LeaveRequestEtyTypeEnum.VACATION).build()))).thenReturn(Collections.emptyList());
 
         RemainingDaysOff remainingDaysOff = employeeRemainingDaysOffService.getEmployeeRemainingDaysOff(ID);
 
