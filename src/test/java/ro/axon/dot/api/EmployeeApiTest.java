@@ -22,6 +22,7 @@ import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.service.EmployeeService;
 
@@ -37,6 +38,7 @@ class EmployeeApiTest {
   public static final TeamDetailsListItem teamDetails2 = new TeamDetailsListItem();
   public static final EmployeeDetailsListItem employee1 = new EmployeeDetailsListItem();
   public static final EmployeeDetailsListItem employee2 = new EmployeeDetailsListItem();
+  public static final EmployeeDetailsListItem employee3 = new EmployeeDetailsListItem();
   public static final EmployeeDetailsList employeesList = new EmployeeDetailsList();
 
 
@@ -76,6 +78,11 @@ class EmployeeApiTest {
     employee2.setTeamDetails(teamDetails2);
     employee2.setTotalVacationDays(21);
 
+    employee3.setId(ID);
+    employee3.setFirstName("John");
+    employee3.setLastName("Doe");
+    employee3.setTeamDetails(teamDetails1);
+    employee3.setTotalVacationDays(20);
   }
 
   @Test
@@ -161,5 +168,18 @@ class EmployeeApiTest {
         .andExpect(status().isBadRequest());
 
     verify(employeeService, times(1)).inactivateEmployee(employeeId);
+  }
+
+  @Test
+  void getRemainingDaysOff() throws Exception {
+    RemainingDaysOff remainingDaysOff = new RemainingDaysOff();
+    remainingDaysOff.setRemainingDays(employee3.getTotalVacationDays());
+
+    when(employeeService.getEmployeeRemainingDaysOff(anyString())).thenReturn(remainingDaysOff);
+
+    mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.remainingDays").value(20));
   }
 }
