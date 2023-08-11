@@ -51,6 +51,22 @@ public class EmployeeService {
     return employeeDetailsList;
   }
 
+  Integer getTotalYearlyDaysOffFromEmployee(EmployeeEty employee) {
+    Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
+    //  stream that returns an employee's total yearly days off (from the current year)
+    return employee.getEmpYearlyDaysOff()
+            .stream().filter(daysOffEntry -> daysOffEntry.getYear().equals(currentYear))
+            .findFirst().map(EmpYearlyDaysOffEty::getTotalNoDays)
+            .orElseThrow(() -> new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()));
+  }
+
+  List<LeaveRequestEty> getVacationLeaveRequests(EmployeeEty employee) {
+    //  stream that returns an employee's leave requests that are considered to use days off (only VACATION marked ones that aren't REJECTED)
+    return employee.getLeaveRequests().stream()
+            .filter(request -> request.getType().equals(LeaveRequestEtyTypeEnum.VACATION)
+                    && !(request.getStatus().equals(LeaveRequestEtyStatusEnum.REJECTED))).toList();
+  }
+
   public RemainingDaysOff getEmployeeRemainingDaysOff(String employeeId) {
     var remainingDaysOff = new RemainingDaysOff();
     EmployeeEty employee;
@@ -58,17 +74,13 @@ public class EmployeeService {
     employee = employeeRepository.findById(employeeId)
             .orElseThrow(() -> new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
 
-    Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
-    Integer totalDaysOff = employee.getEmpYearlyDaysOff()
-            .stream().filter(daysOffEntry -> daysOffEntry.getYear().equals(currentYear))
-            .findFirst().map(EmpYearlyDaysOffEty::getTotalNoDays)
-            .orElseThrow(() -> new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()));
+    Integer totalDaysOff = getTotalYearlyDaysOffFromEmployee(employee);
 
-    List<LeaveRequestEty> approvedVacationLeaveRequests = employee.getLeaveRequests().stream()
-            .filter(request -> request.getType().equals(LeaveRequestEtyTypeEnum.VACATION) && (request.getStatus().equals(LeaveRequestEtyStatusEnum.PENDING) || request.getStatus().equals(LeaveRequestEtyStatusEnum.APPROVED))).toList();
+    List<LeaveRequestEty> approvedVacationLeaveRequests = getVacationLeaveRequests(employee);
 
     Integer spentDaysOff;
-
+    //  we assume that we can take the spent days off from the leave requests directly without checking for valid dates
+    //  i.e. weekends/legal days off (validated on data input)
     spentDaysOff = approvedVacationLeaveRequests.stream().mapToInt(LeaveRequestEty::getNoDays).reduce(0, Integer::sum);
     remainingDaysOff.setRemainingDays(totalDaysOff - spentDaysOff);
     return remainingDaysOff;
