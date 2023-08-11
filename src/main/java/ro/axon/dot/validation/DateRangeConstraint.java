@@ -11,7 +11,7 @@ import javax.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = DateRangeValidator.class)
 public @interface DateRangeConstraint {
-  String message() default "Start date must be before end date and cannot be older than the current month";
+  String message() default "Start date cannot be after end date";
   Class<?>[] groups() default {};
   Class<? extends Payload>[] payload() default {};
 

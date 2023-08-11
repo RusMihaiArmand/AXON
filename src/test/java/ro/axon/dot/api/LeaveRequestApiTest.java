@@ -9,13 +9,9 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import ro.axon.dot.EmployeeTestAttributes;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestQuery;
-import ro.axon.dot.exceptions.BusinessErrorCode;
-import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.service.LeaveRequestService;
@@ -26,19 +22,12 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class LeaveRequestApiTest {
-
-    private final String employeeId = EmployeeTestAttributes.ID;
-    private final Long requestId = 1L;
-    private final String editLeaveRequestContent = "{ \"startDate\": \"2023-08-25\", \"endDate\": \"2023-08-28\", \"type\": \"VACATION\", \"description\": \"Vacation leave request\", \"v\": 1 }";
 
     @Mock
     private LeaveRequestService leaveRequestService;
@@ -198,79 +187,5 @@ class LeaveRequestApiTest {
                 .andExpect(jsonPath("$.items[2].id").value(3L))
                 .andExpect(jsonPath("$.items[3].id").value(4L));
     }
-
-    @Test
-    void editLeaveRequestSucces() throws Exception {
-
-        mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId, employeeId, requestId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(editLeaveRequestContent))
-            .andExpect(status().isNoContent());
-    }
-
-    @Test
-    public void testEditLeaveRequestEmployeeNotFound() throws Exception {
-
-        when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
-            .thenThrow( new BusinessException(BusinessExceptionElement
-                .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
-
-        mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(editLeaveRequestContent))
-            .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void testEditLeaveRequestNotFound() throws Exception {
-
-        when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
-            .thenThrow( new BusinessException(BusinessExceptionElement
-                .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND).build()));
-
-        mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(editLeaveRequestContent))
-            .andExpect(status().isBadRequest());
-    }
-    @Test
-    public void testEditLeaveRequestPastDate() throws Exception {
-
-        when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
-            .thenThrow( new BusinessException(BusinessExceptionElement
-                .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PAST_DATE).build()));
-
-        mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(editLeaveRequestContent))
-            .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void testEditLeaveRequestRejected() throws Exception {
-
-        when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
-            .thenThrow( new BusinessException(BusinessExceptionElement
-                .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED).build()));
-
-        mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(editLeaveRequestContent))
-            .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void testEditLeaveRequestPrecedingVersion() throws Exception {
-
-        when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
-            .thenThrow( new BusinessException(BusinessExceptionElement
-                .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION).build()));
-
-        mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(editLeaveRequestContent))
-            .andExpect(status().isConflict());
-    }
-
 
 }

@@ -80,17 +80,17 @@ public class LeaveRequestService {
     }
     private void validateLeaveRequest(LeaveRequestEty leaveRequest, EditLeaveRequestDetails editLeaveRequestDetails){
 
+        if(editLeaveRequestDetails.getV() < leaveRequest.getV()){
+            throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
+                BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION).build());
+        }
         if(leaveRequest.getStatus().equals(LeaveRequestEtyStatusEnum.REJECTED)){
             throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
                 BusinessErrorCode.LEAVE_REQUEST_REJECTED).build());
         }
-        if(leaveRequest.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))){
+        if(editLeaveRequestDetails.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))){
             throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
                 BusinessErrorCode.LEAVE_REQUEST_PAST_DATE).build());
-        }
-        if(editLeaveRequestDetails.getV() < leaveRequest.getV()){
-            throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
-                BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION).build());
         }
     }
 

@@ -22,11 +22,7 @@ public class DateRangeValidator implements ConstraintValidator<DateRangeConstrai
       return false;
     }
 
-    return isValidDateRange(startDate, endDate);
-  }
-
-  private boolean isValidDateRange(LocalDate startDate, LocalDate endDate){
-    return startDate.isBefore(endDate) && startDate.isAfter(LocalDate.now().withDayOfMonth(1));
+    return startDate.isBefore(endDate);
   }
 
   private void sentNullDateErrorMessage(ConstraintValidatorContext context){
