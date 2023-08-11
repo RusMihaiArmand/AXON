@@ -68,4 +68,5 @@ public class LeaveRequestApi {
         return ResponseEntity.ok(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withStatus(status)
                 .withEmployeeName(search).withType(type).withStartDate(startDate).withEndDate(endDate).build()));
     }
+
 }

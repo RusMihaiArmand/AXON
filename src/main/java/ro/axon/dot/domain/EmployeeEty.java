@@ -54,7 +54,7 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @ManyToOne
   private TeamEty team;
 
-  @OneToMany(fetch = FetchType.EAGER)
+  @OneToMany
   @JoinColumn(name = "EMPLOYEE_ID")
   private Set<EmpYearlyDaysOffEty> empYearlyDaysOff = new HashSet<>();
 

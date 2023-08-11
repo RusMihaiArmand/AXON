@@ -51,6 +51,8 @@ public abstract class SrgKeyEntityTml<T> {
         return v;
     }
 
+    public void setV(Long v){ this.v = v; }
+
     /**
      * @return {@code true} if this entity is a persisted one, {@code false} otherwise
      */
