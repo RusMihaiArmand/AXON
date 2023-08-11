@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ro.axon.dot.domain.EmployeeEty;
@@ -165,13 +166,8 @@ class EmployeeServiceTest {
 
     when(employeeRepository.findById(anyString())).thenReturn(Optional.empty());
 
-    try {
-      RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(ID);
-    } catch (BusinessException businessException) {
-      assertEquals(BusinessErrorCode.EMPLOYEE_NOT_FOUND, businessException.getError().getErrorDescription());
-      return;
-    }
-    fail();
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.getEmployeeRemainingDaysOff(ID);});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.EMPLOYEE_NOT_FOUND);
   }
 
   @Test
@@ -181,13 +177,8 @@ class EmployeeServiceTest {
 
     when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
 
-    try {
-      RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(ID);
-    } catch (BusinessException businessException) {
-      assertEquals(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET, businessException.getError().getErrorDescription());
-      return;
-    }
-    fail();
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.getEmployeeRemainingDaysOff(ID);});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET);
   }
 
   @Test
