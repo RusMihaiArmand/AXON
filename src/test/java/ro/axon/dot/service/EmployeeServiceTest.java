@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static ro.axon.dot.EmployeeTestAttributes.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,14 +20,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.model.RemainingDaysOff;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
@@ -148,4 +153,49 @@ class EmployeeServiceTest {
 
     return employee;
   }
+
+  @Test
+  void getEmployeeRemainingDaysOffIdNotFound() {
+    EmployeeEty employee = new EmployeeEty();
+    EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
+    daysOff.setId(1L);
+    daysOff.setTotalNoDays(20);
+    daysOff.setYear(2023);
+    employee.setId(ID);
+    employee.setEmpYearlyDaysOff(Collections.singleton(daysOff));
+
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.empty());
+
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.getEmployeeRemainingDaysOff(ID);});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.EMPLOYEE_NOT_FOUND);
+  }
+
+  @Test
+  void getEmployeeRemainingDaysOffNotSet() {
+    EmployeeEty employee = new EmployeeEty();
+    employee.setId(ID);
+
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.getEmployeeRemainingDaysOff(ID);});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET);
+  }
+
+  @Test
+  void getEmployeeRemainingDaysOff() {
+    EmployeeEty employee = new EmployeeEty();
+    EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
+    daysOff.setId(1L);
+    daysOff.setTotalNoDays(20);
+    daysOff.setYear(2023);
+    employee.setId(ID);
+    employee.setEmpYearlyDaysOff(Collections.singleton(daysOff));
+
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+
+    RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(ID);
+
+    assertEquals(20, remainingDaysOff.getRemainingDays());
+  }
+
 }
