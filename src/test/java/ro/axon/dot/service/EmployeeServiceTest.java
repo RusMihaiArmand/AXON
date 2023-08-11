@@ -168,7 +168,7 @@ class EmployeeServiceTest {
     try {
       RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(ID);
     } catch (BusinessException businessException) {
-      assertEquals("The employee with the given ID does not exist.", businessException.getError().getErrorDescription().getDevMsg());
+      assertEquals(BusinessErrorCode.EMPLOYEE_NOT_FOUND, businessException.getError().getErrorDescription());
       return;
     }
     fail();
@@ -184,7 +184,7 @@ class EmployeeServiceTest {
     try {
       RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(ID);
     } catch (BusinessException businessException) {
-      assertEquals("The vacation days for this employee have not been set for this year.", businessException.getError().getErrorDescription().getDevMsg());
+      assertEquals(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET, businessException.getError().getErrorDescription());
       return;
     }
     fail();
