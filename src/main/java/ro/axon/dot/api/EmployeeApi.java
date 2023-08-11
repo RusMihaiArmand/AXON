@@ -44,7 +44,7 @@ public class EmployeeApi {
       @PathVariable Long requestId,
       @Valid @RequestBody EditLeaveRequestDetails leaveRequestDetails){
 
-    leaveRequestService.editLeaveRequest(employeeId, requestId, leaveRequestDetails);
+    employeeService.editLeaveRequest(employeeId, requestId, leaveRequestDetails);
 
     return ResponseEntity.noContent().build();
   }

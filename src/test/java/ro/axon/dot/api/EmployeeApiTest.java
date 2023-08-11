@@ -214,7 +214,7 @@ class EmployeeApiTest {
   @Test
   public void testEditLeaveRequestEmployeeNotFound() throws Exception {
 
-    when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
+    when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow( new BusinessException(BusinessExceptionElement
             .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
 
@@ -227,7 +227,7 @@ class EmployeeApiTest {
   @Test
   public void testEditLeaveRequestNotFound() throws Exception {
 
-    when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
+    when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow( new BusinessException(BusinessExceptionElement
             .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND).build()));
 
@@ -239,7 +239,7 @@ class EmployeeApiTest {
   @Test
   public void testEditLeaveRequestPastDate() throws Exception {
 
-    when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
+    when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow( new BusinessException(BusinessExceptionElement
             .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PAST_DATE).build()));
 
@@ -252,7 +252,7 @@ class EmployeeApiTest {
   @Test
   public void testEditLeaveRequestRejected() throws Exception {
 
-    when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
+    when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow( new BusinessException(BusinessExceptionElement
             .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED).build()));
 
@@ -265,7 +265,7 @@ class EmployeeApiTest {
   @Test
   public void testEditLeaveRequestPrecedingVersion() throws Exception {
 
-    when(leaveRequestService.editLeaveRequest(anyString(), anyLong(), any()))
+    when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow( new BusinessException(BusinessExceptionElement
             .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION).build()));
 
