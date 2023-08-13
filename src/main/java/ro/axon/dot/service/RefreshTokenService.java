@@ -24,14 +24,9 @@ public class RefreshTokenService {
 
   public RefreshTokenEty findTokenByKeyId(String keyId) throws BusinessException {
     return refreshTokenRepository.findById(keyId)
-        .orElseThrow(() -> {
-          Map<String, Object> variables = new HashMap<>();
-          variables.put("keyId", keyId);
-
-          return new BusinessException(BusinessExceptionElement
-              .builder()
-              .errorDescription(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND)
-              .contextVariables(variables).build());
-        });
+        .orElseThrow(() -> new BusinessException(BusinessExceptionElement
+            .builder()
+            .errorDescription(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND)
+            .build()));
   }
 }

@@ -25,7 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.domain.RefreshTokenEty;
 import ro.axon.dot.domain.TeamEty;
 import ro.axon.dot.domain.TokenStatus;
@@ -34,7 +33,7 @@ import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.LoginRequest;
 import ro.axon.dot.model.LoginResponse;
-import ro.axon.dot.model.RefreshRequest;
+import ro.axon.dot.model.TokenRequest;
 import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.security.TokenUtilSetup;
 import ro.axon.dot.service.EmployeeService;
@@ -190,7 +189,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -200,7 +199,7 @@ class AuthApiTest {
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
 
-    ResponseEntity<?> responseEntity = api.refresh(refreshRequest);
+    ResponseEntity<?> responseEntity = api.refresh(tokenRequest);
 
     assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     assertNotNull(responseEntity.getBody());
@@ -235,7 +234,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -245,7 +244,8 @@ class AuthApiTest {
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
 
-    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(refreshRequest));
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(
+        tokenRequest));
 
     assertEquals(BusinessErrorCode.TOKEN_REVOKED, exception.getError().getErrorDescription());
   }
@@ -276,7 +276,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -286,7 +286,8 @@ class AuthApiTest {
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
 
-    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(refreshRequest));
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(
+        tokenRequest));
 
     assertEquals(BusinessErrorCode.TOKEN_EXPIRED, exception.getError().getErrorDescription());
 
@@ -338,7 +339,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -348,7 +349,8 @@ class AuthApiTest {
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
 
-    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(refreshRequest));
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(
+        tokenRequest));
 
     assertEquals(BusinessErrorCode.AUDIENCE_DOES_NOT_MATCH, exception.getError().getErrorDescription());
 
@@ -379,7 +381,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -389,7 +391,7 @@ class AuthApiTest {
 
     when(refreshTokenService.findTokenByKeyId(any())).thenReturn(refreshTokenEty);
 
-    ResponseEntity<?> responseEntity = api.logout(refreshRequest);
+    ResponseEntity<?> responseEntity = api.logout(tokenRequest);
 
     assertEquals(HttpStatus.NO_CONTENT, responseEntity.getStatusCode());
     assertNull(responseEntity.getBody());
@@ -442,7 +444,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -452,7 +454,8 @@ class AuthApiTest {
 
     when(refreshTokenService.findTokenByKeyId(any())).thenReturn(refreshTokenEty);
 
-    BusinessException exception = assertThrows(BusinessException.class, () -> api.logout(refreshRequest));
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.logout(
+        tokenRequest));
     assertEquals(BusinessErrorCode.AUDIENCE_DOES_NOT_MATCH, exception.getError().getErrorDescription());
   }
 
@@ -482,7 +485,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -492,7 +495,8 @@ class AuthApiTest {
 
     when(refreshTokenService.findTokenByKeyId(any())).thenReturn(refreshTokenEty);
 
-    BusinessException exception = assertThrows(BusinessException.class, () -> api.logout(refreshRequest));
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.logout(
+        tokenRequest));
     assertEquals(BusinessErrorCode.TOKEN_EXPIRED, exception.getError().getErrorDescription());
   }
 }

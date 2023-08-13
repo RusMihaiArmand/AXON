@@ -4,12 +4,18 @@ import com.nimbusds.jwt.SignedJWT;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +27,9 @@ import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.LoginRequest;
 import ro.axon.dot.model.LoginResponse;
-import ro.axon.dot.model.RefreshRequest;
+import ro.axon.dot.model.TokenRequest;
+import ro.axon.dot.model.TeamDetails;
+import ro.axon.dot.model.UserDetailsResponse;
 import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.domain.TokenStatus;
 import ro.axon.dot.service.EmployeeService;
@@ -59,9 +67,9 @@ public class AuthApi {
   }
 
   @PostMapping(value = "/refresh")
-  public ResponseEntity<?> refresh(@RequestBody @Valid RefreshRequest request) {
+  public ResponseEntity<?> refresh(@RequestBody @Valid TokenRequest request) {
 
-    Pair<SignedJWT, RefreshTokenEty> tokenEtyPair = parseAndCheckToken(request);
+    Pair<SignedJWT, RefreshTokenEty> tokenEtyPair = parseAndCheckToken(request.getRefreshToken());
 
     SignedJWT refreshToken = tokenEtyPair.getFirst();
     RefreshTokenEty fromDB = tokenEtyPair.getSecond();
@@ -81,9 +89,9 @@ public class AuthApi {
   }
 
   @PostMapping(value = "/logout")
-  public ResponseEntity<?> logout(@RequestBody @Valid RefreshRequest request) {
+  public ResponseEntity<?> logout(@RequestBody @Valid TokenRequest request) {
 
-    Pair<SignedJWT, RefreshTokenEty> tokenEtyPair = parseAndCheckToken(request);
+    Pair<SignedJWT, RefreshTokenEty> tokenEtyPair = parseAndCheckToken(request.getRefreshToken());
 
     RefreshTokenEty fromDB = tokenEtyPair.getSecond();
     fromDB.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
@@ -94,9 +102,29 @@ public class AuthApi {
     return ResponseEntity.noContent().build();
   }
 
-  private Pair<SignedJWT, RefreshTokenEty> parseAndCheckToken(RefreshRequest request){
+  @GetMapping(value = "/user")
+  public ResponseEntity<?> getUserDetails(@RequestBody @Valid TokenRequest request) {
 
     SignedJWT token = jwtTokenUtil.parseToken(request.getRefreshToken());
+
+    EmployeeEty employee = employeeService.loadEmployeeByUsername(
+        jwtTokenUtil.getUsernameFromToken(token));
+    
+    return ResponseEntity.ok(
+        UserDetailsResponse.builder()
+            .employeeId(employee.getId())
+            .username(employee.getUsername())
+            .roles(List.of(employee.getRole()))
+            .teamDetails(TeamDetails.builder()
+                .teamId(employee.getTeam().getId())
+                .name(employee.getTeam().getName())
+                .build())
+            .build());
+  }
+
+  private Pair<SignedJWT, RefreshTokenEty> parseAndCheckToken(String tokenString){
+
+    SignedJWT token = jwtTokenUtil.parseToken(tokenString);
     RefreshTokenEty tokenEty = refreshTokenService.findTokenByKeyId(token.getHeader().getKeyID());
 
     checkAudience(token, tokenEty);
