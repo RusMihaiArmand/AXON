@@ -451,7 +451,7 @@ class EmployeeApiTest {
                     .param("email", EMAIL)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.errorCode").value("EDOT0001409"));
+            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.USERNAME_DUPLICATE.getErrorCode()));
   }
 
   @Test
@@ -465,7 +465,7 @@ class EmployeeApiTest {
                     .param("email", EMAIL)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.errorCode").value("EDOT0002409"));
+            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMAIL_DUPLICATE.getErrorCode()));
   }
 
     @Test
