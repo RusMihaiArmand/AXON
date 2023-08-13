@@ -109,7 +109,7 @@ public class AuthApi {
 
     EmployeeEty employee = employeeService.loadEmployeeByUsername(
         jwtTokenUtil.getUsernameFromToken(token));
-    
+
     return ResponseEntity.ok(
         UserDetailsResponse.builder()
             .employeeId(employee.getId())
