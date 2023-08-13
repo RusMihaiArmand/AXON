@@ -4,7 +4,6 @@ import com.querydsl.core.types.dsl.Expressions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
@@ -17,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 class LeaveRequestServiceTest {
 
@@ -32,7 +32,7 @@ class LeaveRequestServiceTest {
 
     @Test
     void getLeaveRequestsDetailsEmptyList() {
-        Mockito.when(leaveRequestRepository.findAll(Expressions.TRUE.isTrue())).thenReturn(List.of());
+        when(leaveRequestRepository.findAll(Expressions.TRUE.isTrue())).thenReturn(List.of());
 
         LeaveRequestDetailsList leaveRequestDetailsList = leaveRequestService.getLeaveRequestsDetailsSorted(Expressions.TRUE.isTrue());
         List<LeaveRequestDetailsListItem> leaveRequests = leaveRequestDetailsList.getItems();
@@ -65,7 +65,7 @@ class LeaveRequestServiceTest {
         leaveRequest4.setStatus(LeaveRequestEtyStatusEnum.PENDING);
         leaveRequest4.setCrtTms(Instant.ofEpochSecond(3));
 
-        Mockito.when(leaveRequestRepository.findAll(Expressions.TRUE.isTrue())).thenReturn(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));
+        when(leaveRequestRepository.findAll(Expressions.TRUE.isTrue())).thenReturn(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));
 
         LeaveRequestDetailsList leaveRequestDetailsList = leaveRequestService.getLeaveRequestsDetailsSorted(Expressions.TRUE.isTrue());
         List<LeaveRequestDetailsListItem> leaveRequests = leaveRequestDetailsList.getItems();
@@ -100,7 +100,7 @@ class LeaveRequestServiceTest {
         leaveRequest4.setStatus(LeaveRequestEtyStatusEnum.PENDING);
         leaveRequest4.setCrtTms(Instant.ofEpochSecond(3));
 
-        Mockito.when(leaveRequestRepository.findAll(Expressions.TRUE.isTrue())).thenReturn(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));
+        when(leaveRequestRepository.findAll(Expressions.TRUE.isTrue())).thenReturn(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));
 
         LeaveRequestDetailsList leaveRequestDetailsList = leaveRequestService.getLeaveRequestsDetailsSorted(Expressions.TRUE.isTrue());
         List<LeaveRequestDetailsListItem> leaveRequests = leaveRequestDetailsList.getItems();
@@ -111,4 +111,5 @@ class LeaveRequestServiceTest {
         assertEquals(leaveRequest3IdValue, leaveRequests.get(1).getId());
         assertEquals(leaveRequest2IdValue, leaveRequests.get(2).getId());
     }
+
 }
