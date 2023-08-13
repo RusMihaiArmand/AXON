@@ -56,4 +56,13 @@ public class EmployeeApi {
 
     return ResponseEntity.ok(remainingDaysOff);
   }
+
+  @GetMapping(value = "/employee/validation")
+  public ResponseEntity<Void> checkEmployeeUniqueCredentials(@RequestParam(name = "username", required = false) String username,
+                                                          @RequestParam(name = "email", required = false) String email) {
+
+    employeeService.checkEmployeeUniqueCredentials(username, email);
+
+    return ResponseEntity.ok().build();
+  }
 }

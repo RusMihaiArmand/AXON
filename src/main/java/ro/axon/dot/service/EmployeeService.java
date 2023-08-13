@@ -91,6 +91,20 @@ public class EmployeeService {
     return remainingDaysOff;
   }
 
+  public void checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
+    Optional<String> username = Optional.ofNullable(usernameParam);
+    Optional<String> email = Optional.ofNullable(emailParam);
+
+    if (username.isPresent() && !username.get().isEmpty()) {
+      if (employeeRepository.findByUsername(username.get()).size() > 0)
+        throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build());
+    }
+    if (email.isPresent() && !email.get().isEmpty()) {
+      if (employeeRepository.findByEmail(email.get()).size() > 0)
+        throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build());
+    }
+  }
+
   public void inactivateEmployee(String employeeId){
 
     EmployeeEty employee = employeeRepository.findById(employeeId).orElseThrow(
