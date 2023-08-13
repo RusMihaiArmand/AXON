@@ -182,4 +182,70 @@ class EmployeeApiTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.remainingDays").value(20));
   }
+
+  @Test
+  void getRemainingDaysOffEmployeeNotFound() throws Exception {
+    RemainingDaysOff remainingDaysOff = new RemainingDaysOff();
+    remainingDaysOff.setRemainingDays(employee3.getTotalVacationDays());
+
+    doThrow(new BusinessException(BusinessExceptionElement
+            .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()))
+            .when(employeeService).getEmployeeRemainingDaysOff(ID);
+
+    mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
+  }
+
+  @Test
+  void getRemainingDaysOffYearlyDaysOffNotSet() throws Exception {
+    RemainingDaysOff remainingDaysOff = new RemainingDaysOff();
+    remainingDaysOff.setRemainingDays(employee3.getTotalVacationDays());
+
+    doThrow(new BusinessException(BusinessExceptionElement
+            .builder().errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()))
+            .when(employeeService).getEmployeeRemainingDaysOff(ID);
+
+    mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errorCode").value("EDOT0002400"));
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentials() throws Exception {
+    mockMvc.perform(get("/api/v1/employee/validation")
+            .param("username", USERNAME)
+            .param("email", EMAIL))
+            .andExpect(status().isOk());
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentialsDuplicateUsername() throws Exception {
+    doThrow(new BusinessException(BusinessExceptionElement
+            .builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build()
+    )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
+
+    mockMvc.perform(get("/api/v1/employee/validation")
+                    .param("username", USERNAME)
+                    .param("email", EMAIL)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.errorCode").value("EDOT0001409"));
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentialsDuplicateEmail() throws Exception {
+    doThrow(new BusinessException(BusinessExceptionElement
+            .builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build()
+    )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
+
+    mockMvc.perform(get("/api/v1/employee/validation")
+                    .param("username", USERNAME)
+                    .param("email", EMAIL)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.errorCode").value("EDOT0002409"));
+  }
 }

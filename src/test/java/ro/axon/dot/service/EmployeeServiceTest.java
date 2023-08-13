@@ -10,10 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static ro.axon.dot.EmployeeTestAttributes.*;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -198,4 +195,29 @@ class EmployeeServiceTest {
     assertEquals(20, remainingDaysOff.getRemainingDays());
   }
 
+  @Test
+  void checkEmployeeUniqueCredentialsDuplicateUsername() {
+    EmployeeEty employee = new EmployeeEty();
+    when(employeeRepository.findByUsername(USERNAME)).thenReturn(List.of(employee));
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com");});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.USERNAME_DUPLICATE);
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentialsDuplicateEmail() {
+    EmployeeEty employee = new EmployeeEty();
+    when(employeeRepository.findByUsername("unique.name")).thenReturn(new ArrayList<>());
+    when(employeeRepository.findByEmail(EMAIL)).thenReturn(List.of(employee));
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials("unique.name", EMAIL);});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.EMAIL_DUPLICATE);
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentials() {
+    when(employeeRepository.findByUsername("unique.name")).thenReturn(new ArrayList<>());
+    when(employeeRepository.findByEmail("unique@gmail.com")).thenReturn(new ArrayList<>());
+    employeeService.checkEmployeeUniqueCredentials("unique.name", "unique@gmail.com");
+    verify(employeeRepository, times(1)).findByUsername(anyString());
+    verify(employeeRepository, times(1)).findByEmail(anyString());
+  }
 }
