@@ -81,6 +81,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
 
@@ -117,6 +118,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
 
@@ -148,6 +150,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
 
@@ -180,6 +183,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
     LocalDateTime now = LocalDateTime.now();
@@ -224,6 +228,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
     LocalDateTime now = LocalDateTime.now();
@@ -264,6 +269,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
     LocalDateTime now = LocalDateTime.now();
@@ -305,6 +311,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
 
@@ -324,6 +331,7 @@ class AuthApiTest {
         "alex2",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
     LocalDateTime now = LocalDateTime.now();
@@ -364,6 +372,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
     LocalDateTime now = LocalDateTime.now();
@@ -405,6 +414,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
 
@@ -424,6 +434,7 @@ class AuthApiTest {
         "alex2",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
 
@@ -464,6 +475,7 @@ class AuthApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
+        new HashSet<>(),
         new HashSet<>()
     );
     LocalDateTime now = LocalDateTime.now();

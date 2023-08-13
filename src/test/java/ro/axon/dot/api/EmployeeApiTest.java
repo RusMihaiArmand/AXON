@@ -1,6 +1,9 @@
 package ro.axon.dot.api;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -22,7 +25,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -36,6 +41,8 @@ import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.model.LoginRequest;
+import ro.axon.dot.model.LoginResponse;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.service.EmployeeService;
@@ -198,7 +205,7 @@ class EmployeeApiTest {
     )).when(employeeService).inactivateEmployee(employeeId);
 
     mockMvc.perform(patch("/api/v1/employees/{employeeId}/inactivate", employeeId))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isNotFound());
 
     verify(employeeService, times(1)).inactivateEmployee(employeeId);
   }
@@ -235,7 +242,7 @@ class EmployeeApiTest {
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(editLeaveRequestContent))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -310,7 +317,7 @@ class EmployeeApiTest {
   }
 
   @Test
-  void registerNewEmployee() throws Exception {
+  void registerNewEmployee() {
     TeamEty team = new TeamEty();
     team.setId(1L);
     team.setName("Backend");
@@ -336,17 +343,20 @@ class EmployeeApiTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         team,
+        new HashSet<>(),
         new HashSet<>()
     );
 
-    ObjectMapper objectMapper = new ObjectMapper();
+    EmployeeDetailsListItem employeeDto = EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(employee);
 
-    mockMvc.perform(post("/api/v1/employees/register")
-            .contentType(objectMapper.writeValueAsString(EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(employee))))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.username").value(employee.getUsername()));
+    when(employeeService.createEmployee(employeeDto)).thenReturn(employeeDto);
 
-    verify(employeeService, times(1)).createEmployee(EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(employee));
+    ResponseEntity<?> responseEntity = employeeApi.register(employeeDto);
+
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    assertNotNull(responseEntity.getBody());
+
+    EmployeeDetailsListItem response = (EmployeeDetailsListItem) responseEntity.getBody();
+    assertEquals(response.getUsername(), employee.getUsername());
   }
 }

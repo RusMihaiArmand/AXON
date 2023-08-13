@@ -28,6 +28,7 @@ public interface EmployeeMapper {
   @Mapping(target = "contractEndDate", ignore = true)
   @Mapping(target = "password", ignore = true)
   @Mapping(target = "empYearlyDaysOff", ignore = true)
+  @Mapping(target = "leaveRequests", ignore = true)
   EmployeeEty mapEmployeeDtoToEmployeeEty(EmployeeDetailsListItem employeeDto);
 
   default Integer mapTotalVacationDays(Set<EmpYearlyDaysOffEty> empYearlyDaysOff) {

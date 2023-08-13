@@ -37,6 +37,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.HashSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -174,7 +175,8 @@ class JwtTokenUtilTest {
         "user12345",
         "pass",
         new TeamEty(),
-        null
+        new HashSet<>(),
+        new HashSet<>()
     );
 
     assertNotNull(accessToken);

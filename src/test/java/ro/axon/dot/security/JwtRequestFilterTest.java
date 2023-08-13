@@ -32,6 +32,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -77,11 +78,8 @@ class JwtRequestFilterTest {
 
   @BeforeEach
   public void setUp() throws IOException {
-
     filter = new JwtRequestFilter(refreshTokenService, employeeService, tokenUtil);
   }
-
-
 
   @Test
   void doFilterInternal_CorrectHeader() {
@@ -102,7 +100,8 @@ class JwtRequestFilterTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
-        null
+        new HashSet<>(),
+        new HashSet<>()
     );
 
     SignedJWT token = tokenUtil.generateAccessToken(employee, now);
@@ -133,12 +132,12 @@ class JwtRequestFilterTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
-        null
+        new HashSet<>(),
+        new HashSet<>()
     );
 
     SignedJWT token = tokenUtil.generateAccessToken(employee, now);
 
-    when(employeeService.loadEmployeeByUsername(any())).thenReturn(employee);
     when(request.getHeader("Authorization")).thenReturn(token.serialize());
 
     assertThrows(BusinessException.class, () -> filter.doFilterInternal(request, response, chain));
@@ -164,13 +163,13 @@ class JwtRequestFilterTest {
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
-        null
+        new HashSet<>(),
+        new HashSet<>()
     );
 
     employee.setUsername("");
     SignedJWT token = tokenUtil.generateAccessToken(employee, now);
 
-    when(employeeService.loadEmployeeByUsername(any())).thenReturn(employee);
     when(request.getHeader("Authorization")).thenReturn("Bearer " + token.serialize());
 
     BusinessException e = assertThrows(BusinessException.class, () -> filter.doFilterInternal(request, response, chain));
@@ -178,4 +177,36 @@ class JwtRequestFilterTest {
     assertEquals(BusinessErrorCode.TOKEN_HAS_NO_USERNAME, e.getError().getErrorDescription());
   }
 
+  @Test
+  void doFilterInternal_Token_Expired() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>(),
+        new HashSet<>()
+    );
+
+    employee.setUsername("");
+    SignedJWT token = tokenUtil.generateAccessToken(employee, now.minusMinutes(1000));
+
+    when(request.getHeader("Authorization")).thenReturn("Bearer " + token.serialize());
+
+    BusinessException e = assertThrows(BusinessException.class, () -> filter.doFilterInternal(request, response, chain));
+
+    assertEquals(BusinessErrorCode.TOKEN_EXPIRED, e.getError().getErrorDescription());
+  }
 }
