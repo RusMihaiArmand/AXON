@@ -16,13 +16,13 @@ public class TokenUtilSetup {
   private final LocalDateTime now = LocalDateTime.now();
 
   public TokenUtilSetup() {
-    properties = new JwtTokenUtilProperties();
-    properties.setDomain("https://localhost:8081/");
-    properties.setKeyId("AXON");
-    properties.setAccessTokenDuration(10L);
-    properties.setRefreshTokenDuration(20L);
-    properties.setPublicKeyLocation("file:config/jwk-public.pem");
-    properties.setPrivateKeyLocation("file:config/jwk-private.pem");
+    properties = new JwtTokenUtilProperties(
+        "https://localhost:8081/",
+        "TEST",
+        10L,
+        20L,
+        "file:src/test/java/ro/axon/dot/security/keys/public_test_key.pem",
+        "file:src/test/java/ro/axon/dot/security/keys/private_test_key.pem");
 
     tokenUtil = new JwtTokenUtil(properties, new DefaultResourceLoader());
   }

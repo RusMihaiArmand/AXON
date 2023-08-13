@@ -70,31 +70,36 @@ public class EmployeeService {
 
     EmployeeEty toSave = EmployeeMapper.INSTANCE.mapEmployeeDtoToEmployeeEty(employee);
     toSave.setPassword(passwordEncoder.encode("axon_" + toSave.getUsername()));
-
     EmployeeEty saved = employeeRepository.save(toSave);
 
     return EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(saved);
   }
 
   public EmployeeEty loadEmployeeByUsername(String username) {
-
-    return employeeRepository.findEmployeeByUsername(username)
-        .orElseThrow(() ->
-            new BusinessException(BusinessExceptionElement
-                .builder()
-                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-                .build()
-            ));
+    EmployeeEty employee = findEmployeeByUsername(username);
+    if (employee == null) {
+      throw new BusinessException(BusinessExceptionElement
+          .builder()
+          .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+          .build()
+      );
+    }
+    return employee;
   }
 
   private void verifyEmployeeExists(String username) {
-
-    if (employeeRepository.findEmployeeByUsername(username).isPresent()) {
+    EmployeeEty employee = findEmployeeByUsername(username);
+    if (employee != null) {
       throw new BusinessException(BusinessExceptionElement
           .builder()
-          .errorDescription(BusinessErrorCode.EMPLOYEE_ALREADY_EXISTS)
-          .build());
+          .errorDescription(BusinessErrorCode.USERNAME_ALREADY_EXISTS)
+          .build()
+      );
     }
+  }
+
+  private EmployeeEty findEmployeeByUsername(String username) {
+    return employeeRepository.findEmployeeByUsername(username).orElse(null);
   }
 
 }

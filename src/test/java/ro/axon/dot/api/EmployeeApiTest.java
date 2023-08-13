@@ -7,7 +7,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,11 +20,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.TeamStatus;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
+import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.TeamDetailsListItem;
@@ -27,6 +37,8 @@ import ro.axon.dot.service.EmployeeService;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ro.axon.dot.EmployeeTestAttributes.*;
@@ -39,7 +51,8 @@ class EmployeeApiTest {
   public static final EmployeeDetailsListItem employee2 = new EmployeeDetailsListItem();
   public static final EmployeeDetailsList employeesList = new EmployeeDetailsList();
 
-
+  @Mock
+  private PasswordEncoder passwordEncoder;
   @Mock
   EmployeeService employeeService;
 
@@ -161,5 +174,46 @@ class EmployeeApiTest {
         .andExpect(status().isBadRequest());
 
     verify(employeeService, times(1)).inactivateEmployee(employeeId);
+  }
+
+  @Test
+  void registerNewEmployee() throws Exception {
+    TeamEty team = new TeamEty();
+    team.setId(1L);
+    team.setName("Backend");
+    team.setCrtUsr("crtUsr");
+    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfUsr("mdfUsr");
+    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setStatus(TeamStatus.ACTIVE);
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        team,
+        new HashSet<>()
+    );
+
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    mockMvc.perform(post("/api/v1/employees/register")
+            .contentType(objectMapper.writeValueAsString(EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(employee))))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.username").value(employee.getUsername()));
+
+    verify(employeeService, times(1)).createEmployee(EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(employee));
   }
 }

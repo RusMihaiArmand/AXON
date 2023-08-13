@@ -19,7 +19,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,8 +52,8 @@ public class JwtTokenUtil {
 	}
 
 	private void readKeys(ResourceLoader resourceLoader){
-		Resource publicKeyResource = resourceLoader.getResource(properties.getPublicKeyLocation());
-		Resource privateKeyResource = resourceLoader.getResource(properties.getPrivateKeyLocation());
+		Resource publicKeyResource = resourceLoader.getResource(properties.publicKeyLocation());
+		Resource privateKeyResource = resourceLoader.getResource(properties.privateKeyLocation());
 
 		String publicKeyString;
 		String privateKeyString;
@@ -72,23 +72,23 @@ public class JwtTokenUtil {
 
 	public SignedJWT generateAccessToken(EmployeeEty employee, LocalDateTime currentTime)
 			throws BusinessException {
-		JWK jwk = new RSAKey.Builder(publicKey).keyID(properties.getKeyId()).privateKey(privateKey).build();
+		JWK jwk = new RSAKey.Builder(publicKey).keyID(properties.keyId()).privateKey(privateKey).build();
 
-		return setupToken(employee, jwk, "access", properties.getAccessTokenDuration(), currentTime);
+		return setupToken(employee, jwk, "access", properties.accessTokenDuration(), currentTime);
 	}
 
 	public SignedJWT generateRefreshToken(EmployeeEty employee, LocalDateTime currentTime)
 			throws BusinessException {
 		JWK jwk = new RSAKey.Builder(publicKey).keyID(String.valueOf(UUID.randomUUID())).privateKey(privateKey).build();
 
-		return setupToken(employee, jwk, "refresh", properties.getRefreshTokenDuration(), currentTime);
+		return setupToken(employee, jwk, "refresh", properties.refreshTokenDuration(), currentTime);
 	}
 
 	public SignedJWT regenerateRefreshToken(EmployeeEty employee, SignedJWT token, LocalDateTime currentTime)
 			throws BusinessException {
 		JWK jwk = new RSAKey.Builder(publicKey).keyID(token.getHeader().getKeyID()).privateKey(privateKey).build();
 
-		return setupToken(employee, jwk, "refresh", properties.getRefreshTokenDuration(), currentTime);
+		return setupToken(employee, jwk, "refresh", properties.refreshTokenDuration(), currentTime);
 	}
 
 	private SignedJWT setupToken(EmployeeEty employee, JWK jwk, String tokenType, Long tokenDuration, LocalDateTime currentTime)
@@ -101,13 +101,13 @@ public class JwtTokenUtil {
 				new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(rsaJWK.getKeyID()).build(),
 				new JWTClaimsSet.Builder()
 						.subject(String.valueOf(employee.getId()))
-						.issuer(properties.getDomain())
+						.issuer(properties.domain())
 						.audience(String.valueOf(employee.getId()))
 						.claim("username", employee.getUsername())
 						.claim("email", employee.getEmail())
-						.notBeforeTime(Date.from(currentTime.atZone(ZoneId.systemDefault()).toInstant()))
+						.notBeforeTime(Date.from(currentTime.toInstant(ZoneOffset.UTC)))
 						.claim("typ", tokenType)
-						.expirationTime(Date.from(expDate.atZone(ZoneId.systemDefault()).toInstant())).build()
+						.expirationTime(Date.from(expDate.toInstant(ZoneOffset.UTC))).build()
 		);
 
 		return signToken(token, rsaJWK);
@@ -151,22 +151,6 @@ public class JwtTokenUtil {
 		}
 	}
 
-	public void validateClaimSet(SignedJWT token) {
-		DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(
-				new JWTClaimsSet.Builder()
-						.issuer(properties.getDomain())
-						.build(),
-				new HashSet<>(Arrays.asList("sub","aud", "nbf", "typ", "exp", "email", "username")));
-		try {
-			verifier.verify(getClaimSet(token), null);
-		} catch (BadJWTException e) {
-			throw new BusinessException(BusinessExceptionElement
-					.builder()
-					.errorDescription(BusinessErrorCode.CLAIMSET_INVALID)
-					.build());
-		}
-	}
-
 	public SignedJWT parseToken(String token) throws BusinessException {
 		try {
 			return SignedJWT.parse(token);
@@ -179,7 +163,7 @@ public class JwtTokenUtil {
 	}
 
 	public String getAudienceFromToken(SignedJWT token) {
-		return getClaimSet(token).getAudience().get(0);
+		return getClaimSet(token).getSubject();
 	}
 
 	public String getUsernameFromToken(SignedJWT token) {
@@ -196,12 +180,12 @@ public class JwtTokenUtil {
 			return username;
 	}
 
-	public Date getExpirationDateFromToken(SignedJWT token) {
-		return getClaimSet(token).getExpirationTime();
+	public LocalDateTime getExpirationDateFromToken(SignedJWT token) {
+		return getClaimSet(token).getExpirationTime().toInstant().atOffset(ZoneOffset.UTC).toLocalDateTime();
 	}
 
-	public void isTokenExpired(SignedJWT token) {
-		if(getClaimSet(token).getExpirationTime().before(new Date())){
+	public void isTokenExpired(LocalDateTime expTime) {
+		if(expTime.isBefore(LocalDateTime.now())){
 			throw new BusinessException(BusinessExceptionElement
 					.builder()
 					.errorDescription(BusinessErrorCode.TOKEN_EXPIRED)
@@ -220,13 +204,22 @@ public class JwtTokenUtil {
 		}
 	}
 
-	public boolean verifyToken(SignedJWT token) throws BusinessException {
+	public void verifyToken(SignedJWT token) {
 		try {
-			return token.verify(new RSASSAVerifier(publicKey));
+			token.verify(new RSASSAVerifier(publicKey));
 		} catch (JOSEException e) {
 			throw new BusinessException(BusinessExceptionElement
 					.builder()
 					.errorDescription(BusinessErrorCode.TOKEN_CANNOT_BE_VERIFIED)
+					.build());
+		}
+	}
+
+	public void checkNbf(SignedJWT token) {
+		if(LocalDateTime.now().toInstant(ZoneOffset.UTC).isBefore(getClaimSet(token).getNotBeforeTime().toInstant())){
+			throw new BusinessException(BusinessExceptionElement
+					.builder()
+					.errorDescription(BusinessErrorCode.TOKEN_NOT_VALID_YET)
 					.build());
 		}
 	}

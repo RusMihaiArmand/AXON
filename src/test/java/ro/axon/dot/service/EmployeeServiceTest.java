@@ -2,15 +2,21 @@ package ro.axon.dot.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static ro.axon.dot.EmployeeTestAttributes.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,8 +25,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.TeamStatus;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.EmployeeMapperImpl;
 import ro.axon.dot.exceptions.BusinessErrorCode;
@@ -36,13 +45,10 @@ class EmployeeServiceTest {
   EmployeeRepository employeeRepository;
   EmployeeService employeeService;
   EmployeeMapper employeeMapper;
-  EmployeeEty testEmployee;
   @BeforeEach
   void setUp() {
-
     passwordEncoder = new BCryptPasswordEncoder();
     employeeMapper = new EmployeeMapperImpl();
-
     employeeService = new EmployeeService(employeeRepository, passwordEncoder);
 
     TEAM_ETY.setId(1L);
@@ -50,9 +56,6 @@ class EmployeeServiceTest {
     TEAM_ETY.setCrtTms(CRT_TMS);
     TEAM_ETY.setMdfUsr(MDF_USR);
     TEAM_ETY.setMdfTms(MDF_TMS);
-
-    testEmployee = initEmployee();
-    testEmployee.setPassword("$2a$10$5d4MyhXzP1n6kq6ysW2kle00a0nZmWM1UF5qtFum25Ipi/umATCoe");
 
   }
 
@@ -161,35 +164,91 @@ class EmployeeServiceTest {
   @Test
   void createEmployee() {
 
-    when(employeeRepository.save(any())).thenReturn(testEmployee);
+    TeamEty team = new TeamEty();
+    team.setId(1L);
+    team.setName("Backend");
+    team.setCrtUsr("crtUsr");
+    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfUsr("mdfUsr");
+    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setStatus(TeamStatus.ACTIVE);
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        team,
+        new HashSet<>()
+        );
+
+    when(employeeRepository.save(any())).thenReturn(employee);
 
 
-    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(employeeMapper.mapEmployeeEtyToEmployeeDto(testEmployee));
+    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(employeeMapper.mapEmployeeEtyToEmployeeDto(employee));
 
     EmployeeEty returned = employeeMapper.mapEmployeeDtoToEmployeeEty(returnedEmployee);
 
     assertNotNull(returned);
-    assertEquals(testEmployee.getId(), returned.getId());
-    assertEquals(testEmployee.getFirstName(), returned.getFirstName());
-    assertEquals(testEmployee.getLastName(), returned.getLastName());
-    assertEquals(testEmployee.getEmail(), returned.getEmail());
-    assertEquals(testEmployee.getCrtUsr(), returned.getCrtUsr());
-    assertEquals(testEmployee.getCrtTms(), returned.getCrtTms());
-    assertEquals(testEmployee.getMdfUsr(), returned.getMdfUsr());
-    assertEquals(testEmployee.getMdfTms(), returned.getMdfTms());
-    assertEquals(testEmployee.getRole(), returned.getRole());
-    assertEquals(testEmployee.getStatus(), returned.getStatus());
-    assertEquals(testEmployee.getContractStartDate(), returned.getContractStartDate());
-    assertEquals(testEmployee.getUsername(), returned.getUsername());
-    assertEquals(testEmployee.getTeam(), returned.getTeam());
-    assertTrue(passwordEncoder.matches("axon_" + returned.getUsername(), testEmployee.getPassword()));
+    assertEquals(employee.getId(), returned.getId());
+    assertEquals(employee.getFirstName(), returned.getFirstName());
+    assertEquals(employee.getLastName(), returned.getLastName());
+    assertEquals(employee.getEmail(), returned.getEmail());
+    assertEquals(employee.getCrtUsr(), returned.getCrtUsr());
+    assertEquals(employee.getCrtTms(), returned.getCrtTms());
+    assertEquals(employee.getMdfUsr(), returned.getMdfUsr());
+    assertEquals(employee.getMdfTms(), returned.getMdfTms());
+    assertEquals(employee.getRole(), returned.getRole());
+    assertEquals(employee.getStatus(), returned.getStatus());
+    assertEquals(employee.getContractStartDate(), returned.getContractStartDate());
+    assertEquals(employee.getUsername(), returned.getUsername());
+    assertEquals(employee.getTeam(), returned.getTeam());
+    assertTrue(passwordEncoder.matches("axon_" + returned.getUsername(), employee.getPassword()));
 
   }
 
   @Test
   void loadEmployeeByUsername() {
 
-    when(employeeRepository.findEmployeeByUsername(any())).thenReturn(Optional.of(testEmployee));
+    TeamEty team = new TeamEty();
+    team.setId(1L);
+    team.setName("Backend");
+    team.setCrtUsr("crtUsr");
+    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfUsr("mdfUsr");
+    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setStatus(TeamStatus.ACTIVE);
+
+    EmployeeEty employee = new EmployeeEty(
+        "12",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        team,
+        new HashSet<>()
+    );
+
+    when(employeeRepository.findEmployeeByUsername(any())).thenReturn(Optional.of(employee));
 
     EmployeeEty loadedEmployee;
 
@@ -200,18 +259,18 @@ class EmployeeServiceTest {
     }
 
     assertNotNull(loadedEmployee);
-    assertEquals(testEmployee.getId(), loadedEmployee.getId());
-    assertEquals(testEmployee.getFirstName(), loadedEmployee.getFirstName());
-    assertEquals(testEmployee.getLastName(), loadedEmployee.getLastName());
-    assertEquals(testEmployee.getEmail(), loadedEmployee.getEmail());
-    assertEquals(testEmployee.getCrtUsr(), loadedEmployee.getCrtUsr());
-    assertEquals(testEmployee.getCrtTms(), loadedEmployee.getCrtTms());
-    assertEquals(testEmployee.getMdfUsr(), loadedEmployee.getMdfUsr());
-    assertEquals(testEmployee.getMdfTms(), loadedEmployee.getMdfTms());
-    assertEquals(testEmployee.getRole(), loadedEmployee.getRole());
-    assertEquals(testEmployee.getStatus(), loadedEmployee.getStatus());
-    assertEquals(testEmployee.getContractStartDate(), loadedEmployee.getContractStartDate());
-    assertEquals(testEmployee.getUsername(), loadedEmployee.getUsername());
-    assertEquals(testEmployee.getTeam(), loadedEmployee.getTeam());
+    assertEquals(employee.getId(), loadedEmployee.getId());
+    assertEquals(employee.getFirstName(), loadedEmployee.getFirstName());
+    assertEquals(employee.getLastName(), loadedEmployee.getLastName());
+    assertEquals(employee.getEmail(), loadedEmployee.getEmail());
+    assertEquals(employee.getCrtUsr(), loadedEmployee.getCrtUsr());
+    assertEquals(employee.getCrtTms(), loadedEmployee.getCrtTms());
+    assertEquals(employee.getMdfUsr(), loadedEmployee.getMdfUsr());
+    assertEquals(employee.getMdfTms(), loadedEmployee.getMdfTms());
+    assertEquals(employee.getRole(), loadedEmployee.getRole());
+    assertEquals(employee.getStatus(), loadedEmployee.getStatus());
+    assertEquals(employee.getContractStartDate(), loadedEmployee.getContractStartDate());
+    assertEquals(employee.getUsername(), loadedEmployee.getUsername());
+    assertEquals(employee.getTeam(), loadedEmployee.getTeam());
   }
 }

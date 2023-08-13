@@ -41,9 +41,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 		SignedJWT token = jwtTokenUtil.parseToken(requestTokenHeader.substring(7));
 
 		jwtTokenUtil.verifyToken(token);
-		jwtTokenUtil.isTokenExpired(token);
-		isTokenRevoked(token);
-		jwtTokenUtil.validateClaimSet(token);
+		jwtTokenUtil.isTokenExpired(jwtTokenUtil.getExpirationDateFromToken(token));
+		jwtTokenUtil.checkNbf(token);
 
 		String username = jwtTokenUtil.getUsernameFromToken(token);
 
@@ -59,18 +58,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 		}
 
 		chain.doFilter(request, response);
-	}
-
-	private void isTokenRevoked(SignedJWT token) {
-
-		RefreshTokenEty refreshTokenEty = refreshTokenService.findTokenByKeyId(token.getHeader().getKeyID());
-
-		if(refreshTokenEty.getStatus().equals(TokenStatus.REVOKED)){
-			throw new BusinessException(BusinessExceptionElement
-					.builder()
-					.errorDescription(BusinessErrorCode.TOKEN_REVOKED)
-					.build());
-		}
 	}
 
 	private void verifyRequestHeader(String requestTokenHeader){

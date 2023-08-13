@@ -25,12 +25,13 @@ public class RefreshTokenService {
   public RefreshTokenEty findTokenByKeyId(String keyId) throws BusinessException {
     return refreshTokenRepository.findById(keyId)
         .orElseThrow(() -> {
-          BusinessErrorCode errorCode = BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND;
           Map<String, Object> variables = new HashMap<>();
           variables.put("keyId", keyId);
 
-          return new BusinessException(new RuntimeException(),
-              new BusinessExceptionElement(errorCode, variables));
+          return new BusinessException(BusinessExceptionElement
+              .builder()
+              .errorDescription(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND)
+              .contextVariables(variables).build());
         });
   }
 }

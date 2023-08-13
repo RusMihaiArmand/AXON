@@ -1,129 +1,486 @@
 package ro.axon.dot.api;
 
-import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static ro.axon.dot.EmployeeTestAttributes.CONTRACT_END_DATE;
-import static ro.axon.dot.EmployeeTestAttributes.CONTRACT_START_DATE;
-import static ro.axon.dot.EmployeeTestAttributes.CRT_TMS;
-import static ro.axon.dot.EmployeeTestAttributes.CRT_USR;
-import static ro.axon.dot.EmployeeTestAttributes.EMAIL;
-import static ro.axon.dot.EmployeeTestAttributes.FIRST_NAME;
-import static ro.axon.dot.EmployeeTestAttributes.ID;
-import static ro.axon.dot.EmployeeTestAttributes.LAST_NAME;
-import static ro.axon.dot.EmployeeTestAttributes.MDF_TMS;
-import static ro.axon.dot.EmployeeTestAttributes.MDF_USR;
-import static ro.axon.dot.EmployeeTestAttributes.ROLE;
-import static ro.axon.dot.EmployeeTestAttributes.STATUS;
-import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
-import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 
-import java.lang.reflect.Field;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectWriter;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.nimbusds.jwt.SignedJWT;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.mapper.EmployeeMapperImpl;
-import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.domain.RefreshTokenEty;
+import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.TokenStatus;
+import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
+import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
+import ro.axon.dot.model.LoginRequest;
+import ro.axon.dot.model.LoginResponse;
+import ro.axon.dot.model.RefreshRequest;
 import ro.axon.dot.security.JwtTokenUtil;
+import ro.axon.dot.security.TokenUtilSetup;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.RefreshTokenService;
 
 @ExtendWith(MockitoExtension.class)
 class AuthApiTest {
-
   @Mock
   private PasswordEncoder passwordEncoder;
-  @Mock
-  private JwtTokenUtil jwtTokenUtil;
   @Mock
   private EmployeeService employeeService;
   @Mock
   private RefreshTokenService refreshTokenService;
 
-  @InjectMocks
+  private JwtTokenUtil tokenUtil;
   AuthApi api;
 
   MockMvc mockMvc;
 
-  private EmployeeEty employee;
-
   @BeforeEach
   void setUp() {
+    tokenUtil = new TokenUtilSetup().getTokenUtil();
+
+    api = new AuthApi(passwordEncoder, tokenUtil, employeeService, refreshTokenService);
     mockMvc = MockMvcBuilders.standaloneSetup(api).build();
-
-    TEAM_ETY.setId(1L);
-    TEAM_ETY.setName("AxonTeam");
-    TEAM_ETY.setCrtTms(CRT_TMS);
-    TEAM_ETY.setMdfUsr(MDF_USR);
-    TEAM_ETY.setMdfTms(MDF_TMS);
-
-    employee = setupEmployee();
-  }
-
-
-  @Test
-  void registerEmployee() throws Exception {
-    /*ObjectWriter mapper = new ObjectMapper().writer().withDefaultPrettyPrinter();
-
-    EmployeeDetailsListItem employeeDto = new EmployeeMapperImpl().mapEmployeeEtyToEmployeeDto(employee);
-
-    when(employeeService.createEmployee(any())).thenReturn(employeeDto);
-
-    mockMvc.perform(post("/api/v1/register")
-            .content(toJSON(employeeDto))
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.items", hasSize(1)))
-        .andExpect(jsonPath("$.items[0].id").value(employee.getId()))
-        .andExpect(jsonPath("$.items[0].firstName").value(employee.getFirstName()))
-        .andExpect(jsonPath("$.items[0].username").value(employee.getUsername()))
-        .andExpect(jsonPath("$.items[0].teamDetails.id").value(employee.getTeam().getId()))*/
-
-
-
-    ;
   }
 
   @Test
-  void createLoginToken() {
+  void login() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+
+    LoginRequest loginRequest = new LoginRequest(employee.getUsername(), "axon_"+employee.getUsername());
+
+    when(employeeService.loadEmployeeByUsername(employee.getUsername())).thenReturn(employee);
+    when(passwordEncoder.matches(loginRequest.getPassword(), employee.getPassword())).thenReturn(true);
+
+    ResponseEntity<?> responseEntity = api.login(loginRequest);
+
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    assertNotNull(responseEntity.getBody());
+
+    LoginResponse response = (LoginResponse) responseEntity.getBody();
+    assertTrue(response.getAccessTokenExpirationTime().isAfter(LocalDateTime.now()));
+    assertTrue(response.getRefreshTokenExpirationTime().isAfter(LocalDateTime.now()));
+  }
+
+  @Test
+  void login_user_not_found(){
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+
+    LoginRequest loginRequest = new LoginRequest(employee.getUsername(), "axon_"+employee.getUsername());
+
+    when(employeeService.loadEmployeeByUsername(employee.getUsername())).thenThrow(new BusinessException(
+        BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
+
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.login(loginRequest));
+
+    assertEquals(BusinessErrorCode.EMPLOYEE_NOT_FOUND, exception.getError().getErrorDescription());
+  }
+
+  @Test
+  void login_passwords_dont_match(){
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+
+    LoginRequest loginRequest = new LoginRequest(employee.getUsername(), "axon_"+employee.getUsername());
+
+    when(passwordEncoder.matches(loginRequest.getPassword(), employee.getPassword())).thenReturn(false);
+    when(employeeService.loadEmployeeByUsername(employee.getUsername())).thenReturn(employee);
+
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.login(loginRequest));
+
+    assertEquals(BusinessErrorCode.PASSWORD_NOT_MATCHING, exception.getError().getErrorDescription());
   }
 
   @Test
   void refresh() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+    LocalDateTime now = LocalDateTime.now();
+
+    SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
+
+    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+
+    RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
+    refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
+    refreshTokenEty.setEmployee(employee);
+    refreshTokenEty.setStatus(TokenStatus.ACTIVE);
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+
+    when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
+
+    ResponseEntity<?> responseEntity = api.refresh(refreshRequest);
+
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    assertNotNull(responseEntity.getBody());
+
+    LoginResponse response = (LoginResponse) responseEntity.getBody();
+    assertNotEquals(response.getRefreshToken(), refreshToken);
   }
 
-  private static EmployeeEty setupEmployee() {
-    EmployeeEty employee = new EmployeeEty();
+  @Test
+  void refresh_token_revoked() {
 
-    employee.setId(ID);
-    employee.setFirstName(FIRST_NAME);
-    employee.setLastName(LAST_NAME);
-    employee.setEmail(EMAIL);
-    employee.setCrtUsr(CRT_USR);
-    employee.setCrtTms(CRT_TMS);
-    employee.setMdfUsr(MDF_USR);
-    employee.setMdfTms(MDF_TMS);
-    employee.setRole(ROLE);
-    employee.setStatus(STATUS);
-    employee.setContractStartDate(CONTRACT_START_DATE);
-    employee.setContractEndDate(CONTRACT_END_DATE);
-    employee.setUsername(USERNAME);
-    employee.setTeam(TEAM_ETY);
-    return employee;
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+    LocalDateTime now = LocalDateTime.now();
+
+    SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
+
+    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+
+    RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
+    refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
+    refreshTokenEty.setEmployee(employee);
+    refreshTokenEty.setStatus(TokenStatus.REVOKED);
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+
+    when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
+
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(refreshRequest));
+
+    assertEquals(BusinessErrorCode.TOKEN_REVOKED, exception.getError().getErrorDescription());
+  }
+
+  @Test
+  void refresh_token_expired() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+    LocalDateTime now = LocalDateTime.now();
+
+    SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
+
+    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+
+    RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
+    refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
+    refreshTokenEty.setEmployee(employee);
+    refreshTokenEty.setStatus(TokenStatus.ACTIVE);
+    refreshTokenEty.setExpTms(now.minusMinutes(1000).toInstant(ZoneOffset.UTC));
+
+    when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
+
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(refreshRequest));
+
+    assertEquals(BusinessErrorCode.TOKEN_EXPIRED, exception.getError().getErrorDescription());
+
+  }
+
+  @Test
+  void refresh_token_audience_error() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+
+    EmployeeEty employee2 = new EmployeeEty(
+        "222",
+        "alex",
+        "smith",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "alex2",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+    LocalDateTime now = LocalDateTime.now();
+
+    SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
+
+    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+
+    RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
+    refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
+    refreshTokenEty.setEmployee(employee2);
+    refreshTokenEty.setStatus(TokenStatus.ACTIVE);
+    refreshTokenEty.setExpTms(now.minusMinutes(30).toInstant(ZoneOffset.UTC));
+
+    when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
+
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(refreshRequest));
+
+    assertEquals(BusinessErrorCode.AUDIENCE_DOES_NOT_MATCH, exception.getError().getErrorDescription());
+
+  }
+  @Test
+  void logout() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+    LocalDateTime now = LocalDateTime.now();
+
+    SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
+
+    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+
+    RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
+    refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
+    refreshTokenEty.setEmployee(employee);
+    refreshTokenEty.setStatus(TokenStatus.ACTIVE);
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+
+    when(refreshTokenService.findTokenByKeyId(any())).thenReturn(refreshTokenEty);
+
+    ResponseEntity<?> responseEntity = api.logout(refreshRequest);
+
+    assertEquals(HttpStatus.NO_CONTENT, responseEntity.getStatusCode());
+    assertNull(responseEntity.getBody());
+  }
+
+  @Test
+  void logout_audience_error() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+
+    EmployeeEty employee2 = new EmployeeEty(
+        "222",
+        "alex",
+        "smith",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "alex2",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+
+    LocalDateTime now = LocalDateTime.now();
+
+    SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
+
+    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+
+    RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
+    refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
+    refreshTokenEty.setEmployee(employee2);
+    refreshTokenEty.setStatus(TokenStatus.ACTIVE);
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+
+    when(refreshTokenService.findTokenByKeyId(any())).thenReturn(refreshTokenEty);
+
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.logout(refreshRequest));
+    assertEquals(BusinessErrorCode.AUDIENCE_DOES_NOT_MATCH, exception.getError().getErrorDescription());
+  }
+
+  @Test
+  void logout_token_expired() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>()
+    );
+    LocalDateTime now = LocalDateTime.now();
+
+    SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
+
+    RefreshRequest refreshRequest = new RefreshRequest(refreshToken.serialize());
+
+    RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
+    refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
+    refreshTokenEty.setEmployee(employee);
+    refreshTokenEty.setStatus(TokenStatus.ACTIVE);
+    refreshTokenEty.setExpTms(now.minusMinutes(1000).toInstant(ZoneOffset.UTC));
+
+    when(refreshTokenService.findTokenByKeyId(any())).thenReturn(refreshTokenEty);
+
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.logout(refreshRequest));
+    assertEquals(BusinessErrorCode.TOKEN_EXPIRED, exception.getError().getErrorDescription());
   }
 }

@@ -29,97 +29,113 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.converter.RsaKeyConverters;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.domain.TeamEty;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.service.EmployeeService;
+import ro.axon.dot.service.RefreshTokenService;
 
+@ExtendWith(MockitoExtension.class)
 class JwtRequestFilterTest {
 
   @Mock
+  private PasswordEncoder passwordEncoder;
+  @Mock
   private EmployeeService employeeService;
+  @Mock
+  private RefreshTokenService refreshTokenService;
   @Mock
   private FilterChain chain;
   @Mock
   private HttpServletRequest request;
   @Mock
   private HttpServletResponse response;
-
-  private final TokenUtilSetup tokenUtilSetup;
-
-  private JwtTokenUtil tokenUtil;
+  private final JwtTokenUtil tokenUtil;
   private JwtRequestFilter filter;
-
-  private EmployeeEty employee;
-
-  private LocalDateTime now;
+  private final LocalDateTime now;
 
   public JwtRequestFilterTest() {
-    tokenUtilSetup = new TokenUtilSetup();
+    TokenUtilSetup tokenUtilSetup = new TokenUtilSetup();
     tokenUtil = tokenUtilSetup.getTokenUtil();
     now = tokenUtilSetup.getNow();
   }
 
   @BeforeEach
   public void setUp() throws IOException {
-    MockitoAnnotations.openMocks(this);
 
-    filter = new JwtRequestFilter(employeeService, tokenUtil);
-
-    TEAM_ETY.setId(1L);
-    TEAM_ETY.setName("AxonTeam");
-    TEAM_ETY.setCrtTms(CRT_TMS);
-    TEAM_ETY.setMdfUsr(MDF_USR);
-    TEAM_ETY.setMdfTms(MDF_TMS);
-
-    employee = setupEmployee();
+    filter = new JwtRequestFilter(refreshTokenService, employeeService, tokenUtil);
   }
 
-  private static EmployeeEty setupEmployee() {
-    EmployeeEty employee = new EmployeeEty();
-
-    employee.setId(ID);
-    employee.setFirstName(FIRST_NAME);
-    employee.setLastName(LAST_NAME);
-    employee.setEmail(EMAIL);
-    employee.setCrtUsr(CRT_USR);
-    employee.setCrtTms(CRT_TMS);
-    employee.setMdfUsr(MDF_USR);
-    employee.setMdfTms(MDF_TMS);
-    employee.setRole(ROLE);
-    employee.setStatus(STATUS);
-    employee.setContractStartDate(CONTRACT_START_DATE);
-    employee.setContractEndDate(CONTRACT_END_DATE);
-    employee.setUsername(USERNAME);
-    employee.setTeam(TEAM_ETY);
-    return employee;
-  }
 
 
   @Test
   void doFilterInternal_CorrectHeader() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        null
+    );
+
     SignedJWT token = tokenUtil.generateAccessToken(employee, now);
 
     when(employeeService.loadEmployeeByUsername(any())).thenReturn(employee);
     when(request.getHeader("Authorization")).thenReturn("Bearer " + token.serialize());
 
     assertDoesNotThrow(() -> filter.doFilterInternal(request, response, chain));
-    //verify(chain).doFilter(request, response);
-
 
   }
 
   @Test
   void doFilterInternal_BadHeader() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        null
+    );
+
     SignedJWT token = tokenUtil.generateAccessToken(employee, now);
 
     when(employeeService.loadEmployeeByUsername(any())).thenReturn(employee);
@@ -131,6 +147,26 @@ class JwtRequestFilterTest {
 
   @Test
   void doFilterInternal_InvalidUsername() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        null
+    );
+
     employee.setUsername("");
     SignedJWT token = tokenUtil.generateAccessToken(employee, now);
 

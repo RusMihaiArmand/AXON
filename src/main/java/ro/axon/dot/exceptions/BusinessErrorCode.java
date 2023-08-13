@@ -25,9 +25,10 @@ public enum BusinessErrorCode {
     AUDIENCE_DOES_NOT_MATCH("EDOT0013401", "Audience doesn't match", HttpStatus.UNAUTHORIZED),
     REQUEST_HEADER_INVALID("EDOT0014400", "Request header invalid", HttpStatus.BAD_REQUEST),
 
-    EMPLOYEE_ALREADY_EXISTS("EDOT0015404", "Employee already exists", HttpStatus.NOT_FOUND),
+    USERNAME_ALREADY_EXISTS("EDOT0015409", "Username already exists", HttpStatus.CONFLICT),
     EMPLOYEE_NOT_FOUND("EDOT0016404", "Employee not found", HttpStatus.NOT_FOUND),
-    TEAM_NOT_FOUND("EDOT0017404", "Team not found", HttpStatus.NOT_FOUND);
+    TEAM_NOT_FOUND("EDOT0017404", "Team not found", HttpStatus.NOT_FOUND),
+    TOKEN_NOT_VALID_YET("EDOT0018401", "Token not valid yet", HttpStatus.UNAUTHORIZED);
 
     private final String errorCode;
     private final String devMsg;

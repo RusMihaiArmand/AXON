@@ -20,12 +20,12 @@ class JwtTokenUtilPropertiesTest {
   @DisplayName("Should")
   void getValidProperties(){
 
-    assertThat(properties.getDomain()).isEqualTo("https://localhost:8081/");
-    assertThat(properties.getKeyId()).isEqualTo("AXON");
-    assertThat(properties.getAccessTokenDuration()).isEqualTo(10L);
-    assertThat(properties.getRefreshTokenDuration()).isEqualTo(20L);
-    assertThat(properties.getPublicKeyLocation()).isEqualTo("file:config/jwk-public.pem");
-    assertThat(properties.getPrivateKeyLocation()).isEqualTo("file:config/jwk-private.pem");
+    assertThat(properties.domain()).isEqualTo("https://localhost:8081/");
+    assertThat(properties.keyId()).isEqualTo("AXON");
+    assertThat(properties.accessTokenDuration()).isEqualTo(10L);
+    assertThat(properties.refreshTokenDuration()).isEqualTo(20L);
+    assertThat(properties.publicKeyLocation()).isEqualTo("file:config/jwk-public.pem");
+    assertThat(properties.privateKeyLocation()).isEqualTo("file:config/jwk-private.pem");
   }
 
   @EnableConfigurationProperties(JwtTokenUtilProperties.class)

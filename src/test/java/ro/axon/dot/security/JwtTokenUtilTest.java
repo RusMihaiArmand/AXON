@@ -96,7 +96,7 @@ class JwtTokenUtilTest {
     JWTClaimsSet claimsSet = accessToken.getJWTClaimsSet();
 
     assertEquals(String.valueOf(employee.getId()), claimsSet.getSubject());
-    assertEquals(properties.getDomain(), claimsSet.getIssuer());
+    assertEquals(properties.domain(), claimsSet.getIssuer());
     assertEquals(employee.getId(), claimsSet.getAudience().get(0));
     assertEquals(employee.getUsername(), claimsSet.getClaim("username"));
     assertEquals(employee.getEmail(), claimsSet.getClaim("email"));
@@ -112,7 +112,7 @@ class JwtTokenUtilTest {
     JWTClaimsSet claimsSet = refreshToken.getJWTClaimsSet();
 
     assertEquals(String.valueOf(employee.getId()), claimsSet.getSubject());
-    assertEquals(properties.getDomain(), claimsSet.getIssuer());
+    assertEquals(properties.domain(), claimsSet.getIssuer());
     assertEquals(employee.getId(), claimsSet.getAudience().get(0));
     assertEquals(employee.getUsername(), claimsSet.getClaim("username"));
     assertEquals(employee.getEmail(), claimsSet.getClaim("email"));
@@ -133,7 +133,7 @@ class JwtTokenUtilTest {
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
-    assertEquals(accessToken.getJWTClaimsSet().getExpirationTime(), tokenUtil.getExpirationDateFromToken(accessToken));
+    assertEquals(accessToken.getJWTClaimsSet().getExpirationTime().toInstant(), tokenUtil.getExpirationDateFromToken(accessToken).toInstant(ZoneOffset.UTC));
   }
 
   @Test
@@ -141,12 +141,12 @@ class JwtTokenUtilTest {
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
-    assertDoesNotThrow(() -> tokenUtil.isTokenExpired(accessToken));
+    assertDoesNotThrow(() -> tokenUtil.isTokenExpired(tokenUtil.getExpirationDateFromToken(accessToken)));
 
     SignedJWT token2 = tokenUtil.generateAccessToken(employee, now.minusHours(1));
 
     assertNotNull(token2);
-    assertThrows(BusinessException.class, () -> tokenUtil.isTokenExpired(token2));
+    assertThrows(BusinessException.class, () -> tokenUtil.isTokenExpired(tokenUtil.getExpirationDateFromToken(token2)));
   }
 
   @Test
@@ -189,6 +189,6 @@ class JwtTokenUtilTest {
 
     assertNotNull(accessToken);
 
-    assertTrue(tokenUtil.verifyToken(accessToken));
+    assertDoesNotThrow(() -> tokenUtil.verifyToken(accessToken));
   }
 }

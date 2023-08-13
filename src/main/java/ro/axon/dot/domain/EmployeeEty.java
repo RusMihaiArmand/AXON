@@ -53,7 +53,7 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @Column(name = "PASSWORD")
   private String password;
 
-  @ManyToOne(cascade = CascadeType.MERGE)
+  @ManyToOne(cascade = CascadeType.ALL)
   private TeamEty team;
 
   @OneToMany(fetch = FetchType.EAGER)
