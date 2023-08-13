@@ -56,9 +56,12 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @ManyToOne(cascade = CascadeType.ALL)
   private TeamEty team;
 
-  @OneToMany(fetch = FetchType.EAGER)
+  @OneToMany
   @JoinColumn(name = "EMPLOYEE_ID")
   private Set<EmpYearlyDaysOffEty> empYearlyDaysOff = new HashSet<>();
+
+  @OneToMany(mappedBy = "employee")
+  private Set<LeaveRequestEty> leaveRequests = new HashSet<>();
 
   @Override
   protected Class<? extends SrgKeyEntityTml<String>> entityRefClass() {

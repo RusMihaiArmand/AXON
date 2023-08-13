@@ -24,36 +24,41 @@ public class LeaveRequestApi {
 
 
     @GetMapping("requests")
-    public ResponseEntity<LeaveRequestDetailsList> getLeaveRequestDetailsList(@RequestParam(name="status") Optional<String> statusParam,
-                                                                              @RequestParam(name="search") Optional<String> searchParam,
-                                                                              @RequestParam(name="type") Optional<String> typeParam,
-                                                                              @RequestParam(name="startDate") Optional<String> startDateParam,
-                                                                              @RequestParam(name="endDate") Optional<String> endDateParam) throws Exception {
+    public ResponseEntity<LeaveRequestDetailsList> getLeaveRequestDetailsList(@RequestParam(name="status", required = false) String statusParam,
+                                                                              @RequestParam(name="search", required = false) String searchParam,
+                                                                              @RequestParam(name="type", required = false) String typeParam,
+                                                                              @RequestParam(name="startDate", required = false) String startDateParam,
+                                                                              @RequestParam(name="endDate", required = false) String endDateParam) throws Exception {
+        Optional<String> statusParamOpt = Optional.ofNullable(statusParam);
+        Optional<String> searchParamOpt = Optional.ofNullable(searchParam);
+        Optional<String> typeParamOpt = Optional.ofNullable(typeParam);
+        Optional<String> startDateParamOpt = Optional.ofNullable(startDateParam);
+        Optional<String> endDateParamOpt = Optional.ofNullable(endDateParam);
         LeaveRequestEtyStatusEnum status;
         try {
-            status = LeaveRequestEtyStatusEnum.valueOf(statusParam.orElseGet(() -> "n/a").toUpperCase());
+            status = LeaveRequestEtyStatusEnum.valueOf(statusParamOpt.orElseGet(() -> "n/a").toUpperCase());
         }
         catch (Exception e) {
             status = null;
         }
-        String search = searchParam.orElseGet(() -> null);
+        String search = searchParamOpt.orElseGet(() -> null);
         LeaveRequestEtyTypeEnum type;
         try {
-            type = LeaveRequestEtyTypeEnum.valueOf(typeParam.orElseGet(() -> "n/a").toUpperCase());
+            type = LeaveRequestEtyTypeEnum.valueOf(typeParamOpt.orElseGet(() -> "n/a").toUpperCase());
         }
         catch (Exception e) {
             type = null;
         }
         LocalDate startDate;
         try {
-            startDate = LocalDate.parse(startDateParam.orElseGet(() -> "n/a"));
+            startDate = LocalDate.parse(startDateParamOpt.orElseGet(() -> "n/a"));
         }
         catch (Exception e) {
             startDate = null;
         }
         LocalDate endDate;
         try {
-            endDate = LocalDate.parse(endDateParam.orElseGet(() -> "n/a"));
+            endDate = LocalDate.parse(endDateParamOpt.orElseGet(() -> "n/a"));
         }
         catch (Exception e) {
             endDate = null;
@@ -63,4 +68,5 @@ public class LeaveRequestApi {
         return ResponseEntity.ok(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withStatus(status)
                 .withEmployeeName(search).withType(type).withStartDate(startDate).withEndDate(endDate).build()));
     }
+
 }

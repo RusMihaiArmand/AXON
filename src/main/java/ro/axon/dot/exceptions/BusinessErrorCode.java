@@ -26,9 +26,14 @@ public enum BusinessErrorCode {
     REQUEST_HEADER_INVALID("EDOT0014400", "Request header invalid", HttpStatus.BAD_REQUEST),
 
     USERNAME_ALREADY_EXISTS("EDOT0015409", "Username already exists", HttpStatus.CONFLICT),
-    EMPLOYEE_NOT_FOUND("EDOT0016404", "Employee not found", HttpStatus.NOT_FOUND),
+    EMPLOYEE_NOT_FOUND("EDOT0016404", "The employee with the given ID does not exist.", HttpStatus.NOT_FOUND),
     TEAM_NOT_FOUND("EDOT0017404", "Team not found", HttpStatus.NOT_FOUND),
-    TOKEN_NOT_VALID_YET("EDOT0018401", "Token not valid yet", HttpStatus.UNAUTHORIZED);
+    TOKEN_NOT_VALID_YET("EDOT0018401", "Token not valid yet", HttpStatus.UNAUTHORIZED),
+    YEARLY_DAYS_OFF_NOT_SET("EDOT0002400", "The vacation days for this employee have not been set for this year.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_NOT_FOUND("EDOT0003400", "The leave request with the given ID does not exist.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_REJECTED("EDOT0004400", "Leave request already rejected.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_PAST_DATE("EDOT0005400", "Leave request cannot be submitted for past dates.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_PRECEDING_VERSION("EDOT0006409", "Leave request version cannot precede version from database.", HttpStatus.CONFLICT);
 
     private final String errorCode;
     private final String devMsg;

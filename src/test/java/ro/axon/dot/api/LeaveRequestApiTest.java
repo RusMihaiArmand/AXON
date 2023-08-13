@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,6 +22,7 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,7 +39,8 @@ class LeaveRequestApiTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(leaveRequestApi).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(leaveRequestApi)
+            .setControllerAdvice(new ApiExceptionHandler()).build();
     }
 
     @Test
@@ -68,7 +69,7 @@ class LeaveRequestApiTest {
         LeaveRequestDetailsList requests = new LeaveRequestDetailsList();
         requests.setItems(Stream.of(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4).filter(r -> r.getStatus() == LeaveRequestEtyStatusEnum.REJECTED).collect(Collectors.toList()));
 
-        Mockito.when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withStatus(LeaveRequestEtyStatusEnum.REJECTED).build())).thenReturn(requests);
+        when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withStatus(LeaveRequestEtyStatusEnum.REJECTED).build())).thenReturn(requests);
 
         mockMvc.perform(get("/api/v1/requests?status=rejected")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -101,7 +102,7 @@ class LeaveRequestApiTest {
         LeaveRequestDetailsList requests = new LeaveRequestDetailsList();
         requests.setItems(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));
 
-        Mockito.when(leaveRequestService.getLeaveRequestsDetailsSorted(any(BooleanExpression.class))).thenReturn(requests);
+        when(leaveRequestService.getLeaveRequestsDetailsSorted(any(BooleanExpression.class))).thenReturn(requests);
 
         mockMvc.perform(get("/api/v1/requests")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -139,7 +140,7 @@ class LeaveRequestApiTest {
         LeaveRequestDetailsList requests = new LeaveRequestDetailsList();
         requests.setItems(Stream.of(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4).filter(r -> r.getType() == LeaveRequestEtyTypeEnum.MEDICAL).collect(Collectors.toList()));
 
-        Mockito.when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withType(LeaveRequestEtyTypeEnum.MEDICAL).build())).thenReturn(requests);
+        when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withType(LeaveRequestEtyTypeEnum.MEDICAL).build())).thenReturn(requests);
 
         mockMvc.perform(get("/api/v1/requests?type=medical")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -175,7 +176,7 @@ class LeaveRequestApiTest {
         LeaveRequestDetailsList requests = new LeaveRequestDetailsList();
         requests.setItems(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));
 
-        Mockito.when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withType(null).build())).thenReturn(requests);
+        when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withType(null).build())).thenReturn(requests);
 
         mockMvc.perform(get("/api/v1/requests?type=medica")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -186,4 +187,5 @@ class LeaveRequestApiTest {
                 .andExpect(jsonPath("$.items[2].id").value(3L))
                 .andExpect(jsonPath("$.items[3].id").value(4L));
     }
+
 }
