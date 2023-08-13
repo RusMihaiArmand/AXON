@@ -22,8 +22,6 @@ import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.LeaveRequestMapper;
@@ -148,6 +146,29 @@ public class EmployeeService {
         return request;
     }
 
+
+  private boolean isUsernameFound(String usernameParam, EmployeeRepository employeeRepository) {
+    Optional<String> username = Optional.ofNullable(usernameParam);
+    if (username.isPresent() && !username.get().isEmpty()) return employeeRepository.existsByUsername(username.get());
+    return false;
+  }
+
+  private boolean isEmailFound(String emailParam, EmployeeRepository employeeRepository) {
+    Optional<String> email = Optional.ofNullable(emailParam);
+    if (email.isPresent() && !email.get().isEmpty()) return employeeRepository.existsByEmail(email.get());
+    return false;
+  }
+
+  public boolean checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
+
+    if (isUsernameFound(usernameParam, employeeRepository)) {
+      throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build());
+    }
+    if (isEmailFound(emailParam, employeeRepository)) {
+      throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build());
+    }
+    return true;
+  }
 
   public void inactivateEmployee(String employeeId){
 
