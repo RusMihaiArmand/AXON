@@ -314,7 +314,7 @@ public class EmployeeService {
   }
 
   private void verifyEmployeeExists(String username) {
-    if (employeeRepository.findEmployeeByUsername(username).isPresent()) {
+    if (employeeRepository.existsByUsername(username)) {
       throw new BusinessException(BusinessExceptionElement
           .builder()
           .errorDescription(BusinessErrorCode.USERNAME_ALREADY_EXISTS)
