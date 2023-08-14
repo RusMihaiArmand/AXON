@@ -23,6 +23,7 @@ import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.model.EmployeeDto;
 import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.LeaveRequestService;
@@ -120,4 +121,13 @@ public class EmployeeApi {
   {
     employeeService.changeVacationDays(vacationDaysModifyDetails);
   }
+
+  @PatchMapping("/employees/{employeeId}")
+  public ResponseEntity<Void> updateEmployeeDetails(@PathVariable String employeeId,
+                                                    @RequestBody EmployeeDetailsList employeeDetails) {
+
+    employeeService.updateEmployeeDetails(employeeId, new EmployeeDto());
+    return ResponseEntity.noContent().build();
+  }
+
 }

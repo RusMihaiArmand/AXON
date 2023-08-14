@@ -33,6 +33,8 @@ import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.LegallyDaysOffItem;
 import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.model.EmployeeDto;
+
 import ro.axon.dot.model.VacationDaysModifyDetails;
 
 @Service
@@ -495,4 +497,32 @@ public class EmployeeService {
 
     employeeRepository.save(emp);
   }
+  @Transactional
+  public void updateEmployeeDetails(String employeeId, EmployeeDto employeeDto) {
+    EmployeeEty employeeEty = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new BusinessException(
+                    new BusinessExceptionElement(
+                            BusinessErrorCode.EMPLOYEE_NOT_FOUND,
+                            null
+                    )
+            ));
+
+    if (employeeDto.getV() < employeeEty.getV()) {
+      throw new BusinessException(
+              new BusinessExceptionElement(
+                      BusinessErrorCode.EMPLOYEE_VERSION_CONFLICT,
+                      null
+              )
+      );
+    }
+
+    employeeEty.setFirstName(employeeDto.getFirstName());
+    employeeEty.setLastName(employeeDto.getLastName());
+    employeeEty.setEmail(employeeDto.getEmail());
+    employeeEty.setRole(employeeDto.getRole());
+
+
+    employeeRepository.save(employeeEty);
+  }
+
 }

@@ -1,8 +1,6 @@
 package ro.axon.dot.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -23,13 +21,12 @@ import static ro.axon.dot.EmployeeTestAttributes.ROLE;
 import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
-
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,7 +38,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import ro.axon.dot.domain.EmpYearlyDaysOffHistRepository;
 import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
@@ -60,6 +56,7 @@ import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.model.EmployeeDto;
 import ro.axon.dot.model.VacationDaysModifyDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -919,5 +916,53 @@ class EmployeeServiceTest {
   }
 
 
+
+  @Test
+  void updateEmployeeDetails_Success() {
+
+    EmployeeEty existingEmployee = new EmployeeEty();
+    existingEmployee.setId("1");
+    existingEmployee.setV(1L);
+
+
+    EmployeeDto updatedEmployeeDto = new EmployeeDto();
+    updatedEmployeeDto.setFirstName("Updated First Name");
+    updatedEmployeeDto.setLastName("Updated Last Name");
+    updatedEmployeeDto.setEmail("updated@axonsoft.com");
+    updatedEmployeeDto.setRole("USER");
+    updatedEmployeeDto.setV(2L);
+
+
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
+
+
+    assertDoesNotThrow(() -> employeeService.updateEmployeeDetails("1", updatedEmployeeDto));
+
+
+    verify(employeeRepository).save(existingEmployee);
+  }
+  @Test
+  void updateEmployeeDetails_Conflict() {
+
+    EmployeeEty existingEmployee = new EmployeeEty();
+    existingEmployee.setId("1");
+    existingEmployee.setV(2L);
+
+
+    EmployeeDto updatedEmployeeDto = new EmployeeDto();
+    updatedEmployeeDto.setFirstName("Updated First Name");
+    updatedEmployeeDto.setLastName("Updated Last Name");
+    updatedEmployeeDto.setEmail("updated@axonsoft.com");
+    updatedEmployeeDto.setRole("USER");
+    updatedEmployeeDto.setV(1L);
+
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
+
+    assertThrows(BusinessException.class,
+            () -> employeeService.updateEmployeeDetails("1", updatedEmployeeDto),
+            "Expected BusinessException with CONFLICT error code");
+
+    verify(employeeRepository, never()).save(existingEmployee);
+  }
 
 }

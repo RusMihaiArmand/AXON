@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ro.axon.dot.exceptions.BusinessException;
+import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.ErrorDetail;
 
 @RestControllerAdvice
@@ -35,10 +36,19 @@ public class ApiExceptionHandler {
                 .collect(Collectors.joining(","))
 
             );
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetail);
-
-
     }
 
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorDetail> handleConflictException(BusinessException exception) {
+        BusinessErrorCode errorCode = exception.getError().getErrorDescription();
+
+        ErrorDetail errorDetail = new ErrorDetail();
+        errorDetail.setErrorCode(errorCode.getErrorCode());
+        errorDetail.setMessage(errorCode.getDevMsg());
+        errorDetail.setContextVariables(exception.getError().getContextVariables());
+
+        HttpStatus httpStatus = HttpStatus.valueOf(errorCode.getStatus().value());
+        return ResponseEntity.status(httpStatus).body(errorDetail);
+    }
 }
