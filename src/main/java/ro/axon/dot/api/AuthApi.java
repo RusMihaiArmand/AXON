@@ -18,6 +18,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ro.axon.dot.domain.EmployeeEty;
@@ -103,12 +104,12 @@ public class AuthApi {
   }
 
   @GetMapping(value = "/user")
-  public ResponseEntity<?> getUserDetails(@RequestBody @Valid TokenRequest request) {
+  public ResponseEntity<?> getUserDetails(@RequestHeader(name="Authorization") String token) {
 
-    SignedJWT token = jwtTokenUtil.parseToken(request.getRefreshToken());
+    SignedJWT jwtToken = jwtTokenUtil.parseToken(token.substring(7));
 
     EmployeeEty employee = employeeService.loadEmployeeByUsername(
-        jwtTokenUtil.getUsernameFromToken(token));
+        jwtTokenUtil.getUsernameFromToken(jwtToken));
 
     return ResponseEntity.ok(
         UserDetailsResponse.builder()

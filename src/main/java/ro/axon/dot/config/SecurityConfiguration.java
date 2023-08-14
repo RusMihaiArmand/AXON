@@ -80,6 +80,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.GET,"/api/v1/requests").hasAnyRole("HR", "TEAM_LEAD")
         .antMatchers(HttpMethod.GET,"/api/v1/misc/legally-days-off").hasAnyRole("USER", "HR", "TEAM_LEAD")
 
+        //TODO resolve
+        .antMatchers(HttpMethod.GET,"/api/v1/user").hasAnyRole("USER", "HR", "TEAM_LEAD")
         .antMatchers(HttpMethod.GET,"/api/v1/misc/roles").hasAnyRole()
 
         .anyRequest().authenticated().and()
