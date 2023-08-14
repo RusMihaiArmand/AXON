@@ -99,14 +99,13 @@ public class EmployeeService {
     return remainingDaysOff;
   }
 
-
   private void checkEmployeeExists(Long idEmployee) throws BusinessException {
-      Optional<EmployeeEty> employeeOptional = employeeRepository.findById(String.valueOf(idEmployee));
-      if (employeeOptional.isEmpty()) throw new BusinessException(
-              BusinessException.BusinessExceptionElement
-                      .builder()
-                      .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-                      .build());
+        Optional<EmployeeEty> employeeOptional = employeeRepository.findById(String.valueOf(idEmployee));
+        if (employeeOptional.isEmpty()) throw new BusinessException(
+                BusinessException.BusinessExceptionElement
+                        .builder()
+                        .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                        .build());
     }
 
     private LeaveRequestEty checkLeaveRequestExists(Long idRequest) throws BusinessException {
