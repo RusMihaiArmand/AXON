@@ -17,5 +17,6 @@ public interface TeamMapper {
 
     TeamDetailsListItem mapTeamEtyToTeamDto(TeamEty teamEty);
     @Mapping(target = "v", ignore = true)
+    @Mapping(target = "employees", ignore = true)
     TeamEty mapTeamDtoToTeamEty(TeamDetailsListItem teamDto);
 }

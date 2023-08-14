@@ -1,0 +1,11 @@
+EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,CRT_USR,CRT_TMS,MDF_USR,MDF_TMS,ROLE,STATUS,CONTRACT_START_DATE,CONTRACT_END_DATE,USERNAME,PASSWORD,TEAM_ID,V
+1,Gabriel,Salajan,gaby.salajan14@gmail.com,initial.load,2023-08-14,initial.load,2023-08-14,USER,ACTIVE,2023-07-17,,gabriel_salajan,$2a$10$5536/Js3tC.lLo/vNHuG6.rIJsc1GbX4Li.gvZvboDfg72Moi5OoS,1,0
+2,Cristian,Ielciu,ielciu.cristian01@gmail.com,initial.load,2023-08-14,initial.load,2023-08-14,USER,ACTIVE,2023-07-17,,cristian_ielciu,$2a$10$8Ao.xrfVNgG4EMX9KggiaOSmSPA6I.iHJm9v5nexwEyjsT1M1SGqO,1,0
+3,Mihai,Rus,gamerulmihai01@gmail.com,initial.load,2023-08-14,initial.load,2023-08-14,USER,ACTIVE,2023-07-17,,mihai_rus,$2a$10$0vFskZQqPf2u/0/5dbVHOOD0Dv19OnXWBPOL.5Ix.7bI12OUO0gbG,1,0
+4,Ancuta,Chis,ancachis38@gmail.com,initial.load,2023-08-14,initial.load,2023-08-14,USER,ACTIVE,2023-07-17,,ancuta_chis,$2a$10$f8kwMLOp.F4WYbtfnMg6GedG/nA6vjqsmGTA5xFYarJziZFVD5GVy,1,0
+5,Paul,Marcu,marcu.paul2002@gmail.com,initial.load,2023-08-14,initial.load,2023-08-14,USER,ACTIVE,2023-07-17,,paul_marcu,$2a$10$GKy.wiwbhqWSukfOxsWGGOoVxwH3XEJGegF544AcLTxPAdWJvkyXG,1,0
+6,Paul,Cristian,paulsichet@gmail.com,initial.load,2023-08-14,initial.load,2023-08-14,USER,ACTIVE,2023-07-17,,paul_cristian,$2a$10$dp20CoW.ZTtZAziZHr1fMeyzWtXLz96UunH2uAEtTdEQ2xCFI.W6S,1,0
+7,Luiza,Rusu,luizarusuteodora@gmail.com,initial.load,2023-08-14,initial.load,2023-08-14,USER,ACTIVE,2023-07-17,,luiza_rusu,$2a$10$mlP7kFSJvFkKw52XQXv.Sux.lbB2SMS2M8ISUAYDXW1Q7YcI6T9Ce,1,0
+8,Cristina,Chindris,cristinachindris137@gmail.com,initial.load,2023-08-14,initial.load,2023-08-14,TEAM_LEAD,ACTIVE,2023-07-17,,cristina_chindris,$2a$10$22VMfpv7Srhy62oS5X7yfeBzI.8awdRYyvnoHoPNCaarQTLHPNjkC,1,0
+9,Raluca,Serban,serban18raluca@gmail.com,initial.load,2023-08-14,initial.load,2023-08-14,TEAM_LEAD,ACTIVE,2023-07-17,,raluca_serban,$2a$10$WGfRGCfs6hAX5CmLW025TeRwDhwYmpBNNk4rlBHQI92nJ1x7UqDoW,1,0
+10,Utilizator,HR,user_hr@email,initial.load,2023-08-14,initial.load,2023-08-14,HR,ACTIVE,2023-07-17,,user_hr,$2a$10$xrH2JoUZXTLNX.ZaCl6mV.F7/LJ8mmzjmxovumI7tBpbgWzG6h2Xm,3,0

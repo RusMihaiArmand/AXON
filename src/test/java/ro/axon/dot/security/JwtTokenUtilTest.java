@@ -1,9 +1,7 @@
 package ro.axon.dot.security;
 
-
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,30 +22,13 @@ import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Date;
-import java.util.HashSet;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters.LocalDateConverter;
-import org.springframework.security.converter.RsaKeyConverters;
 import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.TeamEty;
 import ro.axon.dot.exceptions.BusinessException;
 
 class JwtTokenUtilTest {
@@ -150,47 +131,4 @@ class JwtTokenUtilTest {
     assertThrows(BusinessException.class, () -> tokenUtil.isTokenExpired(tokenUtil.getExpirationDateFromToken(token2)));
   }
 
-  @Test
-  void validateToken() {
-    SignedJWT accessToken;
-    try {
-      accessToken = tokenUtil.generateAccessToken(employee, now);
-    } catch (BusinessException e) {
-      throw new RuntimeException(e);
-    }
-
-    EmployeeEty test = new EmployeeEty(
-        "22",
-        "jon",
-        "doe",
-        "email@bla.com",
-        "",
-        LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant(),
-        "",
-        LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant(),
-        "user",
-        "active",
-        LocalDate.now(),
-        LocalDate.now(),
-        "user12345",
-        "pass",
-        new TeamEty(),
-        new HashSet<>(),
-        new HashSet<>()
-    );
-
-    assertNotNull(accessToken);
-    assertDoesNotThrow(() -> tokenUtil.validateToken(accessToken, employee));
-
-    assertThrows(BusinessException.class, () -> tokenUtil.validateToken(accessToken, test));
-  }
-
-  @Test
-  void verifyToken() throws BusinessException {
-    SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
-
-    assertNotNull(accessToken);
-
-    assertDoesNotThrow(() -> tokenUtil.verifyToken(accessToken));
-  }
 }

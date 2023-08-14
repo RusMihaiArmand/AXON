@@ -248,4 +248,10 @@
         </createTable>
     </changeSet>
 
+    <changeSet author="gabriel.salajan" id="004">
+        <comment>Initial Employees load</comment>
+        <loadData file="includes/data-employee-initial-load.csv" tableName="EMPLOYEE"
+          relativeToChangelogFile="true"/>
+    </changeSet>
+
 </databaseChangeLog>

@@ -29,6 +29,7 @@ import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.TeamRepository;
 import ro.axon.dot.domain.TeamStatus;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.EmployeeMapperImpl;
@@ -50,6 +51,8 @@ class EmployeeServiceTest {
   PasswordEncoder passwordEncoder;
   @Mock
   EmployeeRepository employeeRepository;
+  @Mock
+  TeamRepository teamRepository;
   EmployeeService employeeService;
   EmployeeMapper employeeMapper;
   @Mock
@@ -59,7 +62,7 @@ class EmployeeServiceTest {
   void setUp() {
     passwordEncoder = new BCryptPasswordEncoder();
     employeeMapper = new EmployeeMapperImpl();
-    employeeService = new EmployeeService(employeeRepository, leaveRequestRepository, passwordEncoder);
+    employeeService = new EmployeeService(employeeRepository, teamRepository, leaveRequestRepository, passwordEncoder);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -407,6 +410,8 @@ class EmployeeServiceTest {
         new HashSet<>()
         );
 
+    when(teamRepository.findById(any())).thenReturn(Optional.of(team));
+    when(employeeRepository.findEmployeeByUsername(employee.getUsername())).thenReturn(Optional.empty());
     when(employeeRepository.save(any())).thenReturn(employee);
 
 
@@ -466,13 +471,7 @@ class EmployeeServiceTest {
 
     when(employeeRepository.findEmployeeByUsername(any())).thenReturn(Optional.of(employee));
 
-    EmployeeEty loadedEmployee;
-
-    try {
-      loadedEmployee = employeeService.loadEmployeeByUsername("test.user2");
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    EmployeeEty loadedEmployee = employeeService.loadEmployeeByUsername("test.user2");
 
     assertNotNull(loadedEmployee);
     assertEquals(employee.getId(), loadedEmployee.getId());
