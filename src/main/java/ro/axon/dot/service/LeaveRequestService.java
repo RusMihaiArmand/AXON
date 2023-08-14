@@ -17,8 +17,6 @@ import java.util.stream.StreamSupport;
 public class LeaveRequestService {
 
     private final LeaveRequestRepository leaveRequestRepository;
-    private final EmployeeRepository employeeRepository;
-
 
     public LeaveRequestDetailsList getLeaveRequestsDetailsSorted(BooleanExpression query) {
         var leaveRequestDetailsList = new LeaveRequestDetailsList();
