@@ -61,8 +61,8 @@ public class EmployeeApi {
   public ResponseEntity<Void> checkEmployeeUniqueCredentials(@RequestParam(name = "username", required = false) String username,
                                                           @RequestParam(name = "email", required = false) String email) {
 
-    employeeService.checkEmployeeUniqueCredentials(username, email);
-
-    return ResponseEntity.ok().build();
+    if (employeeService.checkEmployeeUniqueCredentials(username, email))
+      return ResponseEntity.ok().build();
+    return ResponseEntity.badRequest().build();
   }
 }

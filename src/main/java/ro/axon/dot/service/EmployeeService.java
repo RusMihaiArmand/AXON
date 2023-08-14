@@ -56,7 +56,7 @@ public class EmployeeService {
     return employeeDetailsList;
   }
 
-  Integer getTotalYearlyDaysOffFromEmployee(EmployeeEty employee) {
+  private Integer getTotalYearlyDaysOffFromEmployee(EmployeeEty employee) {
     Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
     //  stream that returns an employee's total yearly days off (from the current year)
     return employee.getEmpYearlyDaysOff()
@@ -65,7 +65,7 @@ public class EmployeeService {
             .orElseThrow(() -> new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()));
   }
 
-  List<LeaveRequestEty> getVacationLeaveRequests(EmployeeEty employee) {
+  private List<LeaveRequestEty> getVacationLeaveRequests(EmployeeEty employee) {
     //  stream that returns an employee's leave requests that are considered to use days off (only VACATION marked ones that aren't REJECTED)
     return employee.getLeaveRequests().stream()
             .filter(request -> request.getType().equals(LeaveRequestEtyTypeEnum.VACATION)
@@ -73,6 +73,7 @@ public class EmployeeService {
   }
 
   public RemainingDaysOff getEmployeeRemainingDaysOff(String employeeId) {
+
     var remainingDaysOff = new RemainingDaysOff();
     EmployeeEty employee;
 
@@ -91,18 +92,27 @@ public class EmployeeService {
     return remainingDaysOff;
   }
 
-  public void checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
+  private boolean isUsernameFound(String usernameParam, EmployeeRepository employeeRepository) {
     Optional<String> username = Optional.ofNullable(usernameParam);
-    Optional<String> email = Optional.ofNullable(emailParam);
+    if (username.isPresent() && !username.get().isEmpty()) return employeeRepository.existsByUsername(username.get());
+    return false;
+  }
 
-    if (username.isPresent() && !username.get().isEmpty()) {
-      if (employeeRepository.findByUsername(username.get()).size() > 0)
-        throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build());
+  private boolean isEmailFound(String emailParam, EmployeeRepository employeeRepository) {
+    Optional<String> email = Optional.ofNullable(emailParam);
+    if (email.isPresent() && !email.get().isEmpty()) return employeeRepository.existsByEmail(email.get());
+    return false;
+  }
+
+  public boolean checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
+
+    if (isUsernameFound(usernameParam, employeeRepository)) {
+      throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build());
     }
-    if (email.isPresent() && !email.get().isEmpty()) {
-      if (employeeRepository.findByEmail(email.get()).size() > 0)
-        throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build());
+    if (isEmailFound(emailParam, employeeRepository)) {
+      throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build());
     }
+    return true;
   }
 
   public void inactivateEmployee(String employeeId){

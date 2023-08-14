@@ -202,28 +202,26 @@ class EmployeeServiceTest {
 
   @Test
   void checkEmployeeUniqueCredentialsDuplicateUsername() {
-    EmployeeEty employee = new EmployeeEty();
-    when(employeeRepository.findByUsername(USERNAME)).thenReturn(List.of(employee));
+    when(employeeRepository.existsByUsername(USERNAME)).thenReturn(true);
     var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com");});
     assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.USERNAME_DUPLICATE);
   }
 
   @Test
   void checkEmployeeUniqueCredentialsDuplicateEmail() {
-    EmployeeEty employee = new EmployeeEty();
-    when(employeeRepository.findByUsername("unique.name")).thenReturn(new ArrayList<>());
-    when(employeeRepository.findByEmail(EMAIL)).thenReturn(List.of(employee));
+    when(employeeRepository.existsByUsername("unique.name")).thenReturn(false);
+    when(employeeRepository.existsByEmail(EMAIL)).thenReturn(true);
     var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials("unique.name", EMAIL);});
     assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.EMAIL_DUPLICATE);
   }
 
   @Test
   void checkEmployeeUniqueCredentials() {
-    when(employeeRepository.findByUsername("unique.name")).thenReturn(new ArrayList<>());
-    when(employeeRepository.findByEmail("unique@gmail.com")).thenReturn(new ArrayList<>());
+    when(employeeRepository.existsByUsername("unique.name")).thenReturn(false);
+    when(employeeRepository.existsByEmail("unique@gmail.com")).thenReturn(false);
     employeeService.checkEmployeeUniqueCredentials("unique.name", "unique@gmail.com");
-    verify(employeeRepository, times(1)).findByUsername(anyString());
-    verify(employeeRepository, times(1)).findByEmail(anyString());
+    verify(employeeRepository, times(1)).existsByUsername(anyString());
+    verify(employeeRepository, times(1)).existsByEmail(anyString());
   }
   @Test
   void editLeaveRequestNotFound(){
