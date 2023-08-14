@@ -414,7 +414,7 @@ class EmployeeApiTest {
     mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
+            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
   }
 
   @Test
@@ -429,11 +429,13 @@ class EmployeeApiTest {
     mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.errorCode").value("EDOT0002400"));
+            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET.getErrorCode()));
   }
 
   @Test
   void checkEmployeeUniqueCredentials() throws Exception {
+    when(employeeService.checkEmployeeUniqueCredentials(anyString(), anyString())).thenReturn(true);
+
     mockMvc.perform(get("/api/v1/employee/validation")
             .param("username", USERNAME)
             .param("email", EMAIL))

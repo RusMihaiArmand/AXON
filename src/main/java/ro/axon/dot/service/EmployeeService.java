@@ -63,7 +63,7 @@ public class EmployeeService {
         return employeeDetailsList;
     }
 
-  Integer getTotalYearlyDaysOffFromEmployee(EmployeeEty employee) {
+  private Integer getTotalYearlyDaysOffFromEmployee(EmployeeEty employee) {
     Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
     //  stream that returns an employee's total yearly days off (from the current year)
     return employee.getEmpYearlyDaysOff()
@@ -72,7 +72,7 @@ public class EmployeeService {
             .orElseThrow(() -> new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()));
   }
 
-  List<LeaveRequestEty> getVacationLeaveRequests(EmployeeEty employee) {
+  private List<LeaveRequestEty> getVacationLeaveRequests(EmployeeEty employee) {
     //  stream that returns an employee's leave requests that are considered to use days off (only VACATION marked ones that aren't REJECTED)
     return employee.getLeaveRequests().stream()
             .filter(request -> request.getType().equals(LeaveRequestEtyTypeEnum.VACATION)
@@ -80,6 +80,7 @@ public class EmployeeService {
   }
 
   public RemainingDaysOff getEmployeeRemainingDaysOff(String employeeId) {
+
     var remainingDaysOff = new RemainingDaysOff();
     EmployeeEty employee;
 
@@ -98,13 +99,14 @@ public class EmployeeService {
     return remainingDaysOff;
   }
 
-    private void checkEmployeeExists(Long idEmployee) throws BusinessException {
-        Optional<EmployeeEty> employeeOptional = employeeRepository.findById(String.valueOf(idEmployee));
-        if (employeeOptional.isEmpty()) throw new BusinessException(
-                BusinessException.BusinessExceptionElement
-                        .builder()
-                        .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-                        .build());
+
+  private void checkEmployeeExists(Long idEmployee) throws BusinessException {
+      Optional<EmployeeEty> employeeOptional = employeeRepository.findById(String.valueOf(idEmployee));
+      if (employeeOptional.isEmpty()) throw new BusinessException(
+              BusinessException.BusinessExceptionElement
+                      .builder()
+                      .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                      .build());
     }
 
     private LeaveRequestEty checkLeaveRequestExists(Long idRequest) throws BusinessException {

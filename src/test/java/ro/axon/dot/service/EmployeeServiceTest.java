@@ -28,6 +28,7 @@ import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
@@ -313,6 +314,29 @@ class EmployeeServiceTest {
   }
 
   @Test
+  void checkEmployeeUniqueCredentialsDuplicateUsername() {
+    when(employeeRepository.existsByUsername(USERNAME)).thenReturn(true);
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com");});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.USERNAME_DUPLICATE);
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentialsDuplicateEmail() {
+    when(employeeRepository.existsByUsername("unique.name")).thenReturn(false);
+    when(employeeRepository.existsByEmail(EMAIL)).thenReturn(true);
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials("unique.name", EMAIL);});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.EMAIL_DUPLICATE);
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentials() {
+    when(employeeRepository.existsByUsername("unique.name")).thenReturn(false);
+    when(employeeRepository.existsByEmail("unique@gmail.com")).thenReturn(false);
+    employeeService.checkEmployeeUniqueCredentials("unique.name", "unique@gmail.com");
+    verify(employeeRepository, times(1)).existsByUsername(anyString());
+    verify(employeeRepository, times(1)).existsByEmail(anyString());
+  }
+  @Test
   void editLeaveRequestNotFound(){
 
     EditLeaveRequestDetails leaveRequestEdit = new EditLeaveRequestDetails();
@@ -551,29 +575,4 @@ class EmployeeServiceTest {
         assertEquals(requests.getItems().get(1).getEmployeeDetails().getEmployeeId(), "1");
         assertEquals(requests.getItems().get(1).getId(), 2L);
     }
-  @Test
-  void checkEmployeeUniqueCredentialsDuplicateUsername() {
-    EmployeeEty employee = new EmployeeEty();
-    when(employeeRepository.findByUsername(USERNAME)).thenReturn(List.of(employee));
-    var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com");});
-    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.USERNAME_DUPLICATE);
-  }
-
-  @Test
-  void checkEmployeeUniqueCredentialsDuplicateEmail() {
-    EmployeeEty employee = new EmployeeEty();
-    when(employeeRepository.findByUsername("unique.name")).thenReturn(new ArrayList<>());
-    when(employeeRepository.findByEmail(EMAIL)).thenReturn(List.of(employee));
-    var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials("unique.name", EMAIL);});
-    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.EMAIL_DUPLICATE);
-  }
-
-  @Test
-  void checkEmployeeUniqueCredentials() {
-    when(employeeRepository.findByUsername("unique.name")).thenReturn(new ArrayList<>());
-    when(employeeRepository.findByEmail("unique@gmail.com")).thenReturn(new ArrayList<>());
-    employeeService.checkEmployeeUniqueCredentials("unique.name", "unique@gmail.com");
-    verify(employeeRepository, times(1)).findByUsername(anyString());
-    verify(employeeRepository, times(1)).findByEmail(anyString());
-  }
 }
