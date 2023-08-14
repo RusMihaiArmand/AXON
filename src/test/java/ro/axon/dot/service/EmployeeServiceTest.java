@@ -7,6 +7,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static ro.axon.dot.EmployeeTestAttributes.*;
+import static org.mockito.Mockito.*;
 import static ro.axon.dot.EmployeeTestAttributes.CONTRACT_END_DATE;
 import static ro.axon.dot.EmployeeTestAttributes.CONTRACT_START_DATE;
 import static ro.axon.dot.EmployeeTestAttributes.CRT_TMS;
@@ -54,6 +56,7 @@ import ro.axon.dot.model.CreateLeaveRequestDetails;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.model.EmployeeDto;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
@@ -966,5 +969,6 @@ class EmployeeServiceTest {
 
     verify(employeeRepository, never()).save(existingEmployee);
   }
+
 
 }

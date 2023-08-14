@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ro.axon.dot.model.*;
+import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.LeaveRequestService;
 
