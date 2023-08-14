@@ -28,6 +28,7 @@ import ro.axon.dot.EmployeeTestAttributes;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
+import ro.axon.dot.model.*;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
@@ -88,6 +89,10 @@ class EmployeeApiTest {
     EmployeeDetailsListItem employee1 = initEmployee();
 
     EmployeeDetailsListItem employee2 = initEmployee();
+    employee2.setFirstName("Maria");
+    employee2.setLastName("Anton");
+    employee2.setTeamDetails(teamDetails2);
+    employee2.setTotalVacationDays(21);
     EmployeeDetailsList employeesList = new EmployeeDetailsList();
 
     employeesList.setItems(Arrays.asList(employee1,employee2));
@@ -396,4 +401,56 @@ class EmployeeApiTest {
 
     return employee;
   }
+
+    @Test
+    void getLeaveRequestsOk() throws Exception {
+        LeaveRequestDetailsList requestsDTO = new LeaveRequestDetailsList();
+        LeaveRequestDetailsListItem request1 = new LeaveRequestDetailsListItem();
+        request1.setId(1L);
+        LeaveRequestDetailsListItem request2 = new LeaveRequestDetailsListItem();
+        request2.setId(2L);
+        requestsDTO.setItems(Arrays.asList(request1, request2));
+        when(employeeService.getLeaveRequests(anyString(), any(), any())).thenReturn(requestsDTO);
+
+        mockMvc.perform(get("/api/v1/employees/1/requests?startDate=2023-08-01&endDate=2023-08-11")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items", hasSize(2)))
+                .andExpect(jsonPath("$.items[0].id").value(1L))
+                .andExpect(jsonPath("$.items[1].id").value(2L));
+    }
+
+    @Test
+    void getLeaveRequestsNoDatesOk() throws Exception {
+        LeaveRequestDetailsList requestsDTO = new LeaveRequestDetailsList();
+        LeaveRequestDetailsListItem request1 = new LeaveRequestDetailsListItem();
+        request1.setId(1L);
+        LeaveRequestDetailsListItem request2 = new LeaveRequestDetailsListItem();
+        request2.setId(2L);
+        requestsDTO.setItems(Arrays.asList(request1, request2));
+        when(employeeService.getLeaveRequests("1", null, null)).thenReturn(requestsDTO);
+
+        mockMvc.perform(get("/api/v1/employees/1/requests")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items", hasSize(2)))
+                .andExpect(jsonPath("$.items[0].id").value(1L))
+                .andExpect(jsonPath("$.items[1].id").value(2L));
+    }
+
+    @Test
+    void getLeaveRequestsEmployeeNotFound() throws Exception {
+        doThrow(new BusinessException(
+                BusinessException.BusinessExceptionElement
+                        .builder()
+                        .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                        .build()))
+                .when(employeeService).getLeaveRequests(anyString(), any(), any());
+
+        mockMvc.perform(get("/api/v1/employees/1/requests")
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message").value("The employee with the given ID does not exist."))
+                        .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
+    }
 }

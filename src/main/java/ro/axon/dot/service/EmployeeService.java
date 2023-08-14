@@ -3,9 +3,12 @@ package ro.axon.dot.service;
 import java.time.LocalDate;
 import java.util.Calendar;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,8 +27,10 @@ import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.LeaveRequestMapper;
+import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
+import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.RemainingDaysOff;
@@ -211,5 +216,31 @@ public class EmployeeService {
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
           BusinessErrorCode.LEAVE_REQUEST_PAST_DATE).build());
     }
+  }
+  public LeaveRequestDetailsList getLeaveRequests(String idEmployee, LocalDate startDate, LocalDate endDate) {
+      Optional<EmployeeEty> employeeOptional = employeeRepository.findById(idEmployee);
+      if (employeeOptional.isEmpty())
+          throw new BusinessException(
+                BusinessException.BusinessExceptionElement
+                        .builder()
+                        .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                        .build());
+
+      List<LeaveRequestEty> leaveRequests = employeeOptional.get().getLeaveRequests().stream().toList();
+      if (startDate != null)
+          leaveRequests = leaveRequests
+                          .stream()
+                          .filter(request ->
+                               startDate.compareTo(request.getStartDate()) <= 0
+                               && request.getEndDate().compareTo(endDate) <= 0)
+                          .collect(Collectors.toList());
+
+      LeaveRequestDetailsList leaveRequestsDTO = new LeaveRequestDetailsList();
+      leaveRequestsDTO.setItems(leaveRequests
+                            .stream()
+                            .map(LeaveRequestMapper.INSTANCE::mapLeaveRequestEtyToLeaveRequestDto)
+                            .collect(Collectors.toList()));
+
+      return leaveRequestsDTO;
   }
 }

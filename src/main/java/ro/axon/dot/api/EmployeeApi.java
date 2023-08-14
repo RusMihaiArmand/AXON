@@ -2,6 +2,7 @@ package ro.axon.dot.api;
 
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -13,10 +14,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
+import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.LeaveRequestService;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -63,5 +67,13 @@ public class EmployeeApi {
     RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(employeeId);
 
     return ResponseEntity.ok(remainingDaysOff);
+  }
+
+  @GetMapping(value = "/employees/{employeeId}/requests")
+  public ResponseEntity<LeaveRequestDetailsList> getLeaveRequests(
+        @PathVariable(name = "employeeId") String idEmployee,
+        @RequestParam(name = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+        @RequestParam(name = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
+            return ResponseEntity.ok(employeeService.getLeaveRequests(idEmployee, startDate, endDate));
   }
 }

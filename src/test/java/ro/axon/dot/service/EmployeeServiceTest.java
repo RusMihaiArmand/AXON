@@ -8,18 +8,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static ro.axon.dot.EmployeeTestAttributes.*;
-
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatus;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.domain.EmployeeEty;
@@ -33,6 +30,7 @@ import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.LeaveRequestReview;
@@ -40,80 +38,82 @@ import ro.axon.dot.model.LeaveRequestReview;
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
 
-  EmployeeService employeeService;
+    EmployeeService employeeService;
 
-  @Mock
-  EmployeeRepository employeeRepository;
-  @Mock
-  LeaveRequestRepository leaveRequestRepository;
+    @Mock
+    EmployeeRepository employeeRepository;
 
-  @BeforeEach
-  void setUp() {
-    employeeService = new EmployeeService(employeeRepository, leaveRequestRepository);
+    @Mock
+    LeaveRequestRepository leaveRequestRepository;
 
-    TEAM_ETY.setId(1L);
-    TEAM_ETY.setName("AxonTeam");
-    TEAM_ETY.setCrtTms(CRT_TMS);
-    TEAM_ETY.setMdfUsr(MDF_USR);
-    TEAM_ETY.setMdfTms(MDF_TMS);
-  }
+    @BeforeEach
+    void setUp() {
+        employeeService = new EmployeeService(employeeRepository, leaveRequestRepository);
 
-  @Test
-  void getEmployeesDetails() throws Exception{
+        TEAM_ETY.setId(1L);
+        TEAM_ETY.setName("AxonTeam");
+        TEAM_ETY.setCrtTms(CRT_TMS);
+        TEAM_ETY.setMdfUsr(MDF_USR);
+        TEAM_ETY.setMdfTms(MDF_TMS);
+    }
 
-    EmployeeEty employee = initEmployee();
+    @Test
+    void getEmployeesDetails() throws Exception{
 
-    List<EmployeeEty> employees = Arrays.asList(employee, new EmployeeEty(), new EmployeeEty());
+        EmployeeEty employee = initEmployee();
 
-    when(employeeRepository.findAll()).thenReturn(employees);
+        List<EmployeeEty> employees = Arrays.asList(employee, new EmployeeEty(), new EmployeeEty());
 
-    EmployeeDetailsList returnedEmployeesList = employeeService.getEmployeesDetails(null);
+        when(employeeRepository.findAll()).thenReturn(employees);
 
-    assertEquals(3, returnedEmployeesList.getItems().size());
+        EmployeeDetailsList returnedEmployeesList = employeeService.getEmployeesDetails(null);
 
-    EmployeeDetailsListItem returnedEmployee = returnedEmployeesList.getItems().get(0);
-    assertEquals(ID, returnedEmployee.getId());
-    assertEquals(FIRST_NAME, returnedEmployee.getFirstName());
-    assertEquals(LAST_NAME, returnedEmployee.getLastName());
-    assertEquals(EMAIL, returnedEmployee.getEmail());
-    assertEquals(CRT_USR, returnedEmployee.getCrtUsr());
-    assertEquals(CRT_TMS, returnedEmployee.getCrtTms());
-    assertEquals(MDF_USR, returnedEmployee.getMdfUsr());
-    assertEquals(MDF_TMS, returnedEmployee.getMdfTms());
-    assertEquals(ROLE, returnedEmployee.getRole());
-    assertEquals(STATUS, returnedEmployee.getStatus());
-    assertEquals(CONTRACT_START_DATE, returnedEmployee.getContractStartDate());
-    assertEquals(USERNAME, returnedEmployee.getUsername());
+        assertEquals(3, returnedEmployeesList.getItems().size());
 
-    assertEquals(TEAM_ETY.getId(), returnedEmployee.getTeamDetails().getId());
-    assertEquals(TEAM_ETY.getName(), returnedEmployee.getTeamDetails().getName());
-    assertEquals(TEAM_ETY.getCrtUsr(), returnedEmployee.getTeamDetails().getCrtUsr());
-    assertEquals(TEAM_ETY.getMdfUsr(), returnedEmployee.getTeamDetails().getMdfUsr());
-    assertEquals(TEAM_ETY.getMdfTms(), returnedEmployee.getTeamDetails().getMdfTms());
-  }
+        EmployeeDetailsListItem returnedEmployee = returnedEmployeesList.getItems().get(0);
+        assertEquals(ID, returnedEmployee.getId());
+        assertEquals(FIRST_NAME, returnedEmployee.getFirstName());
+        assertEquals(LAST_NAME, returnedEmployee.getLastName());
+        assertEquals(EMAIL, returnedEmployee.getEmail());
+        assertEquals(CRT_USR, returnedEmployee.getCrtUsr());
+        assertEquals(CRT_TMS, returnedEmployee.getCrtTms());
+        assertEquals(MDF_USR, returnedEmployee.getMdfUsr());
+        assertEquals(MDF_TMS, returnedEmployee.getMdfTms());
+        assertEquals(ROLE, returnedEmployee.getRole());
+        assertEquals(STATUS, returnedEmployee.getStatus());
+        assertEquals(CONTRACT_START_DATE, returnedEmployee.getContractStartDate());
+        assertEquals(USERNAME, returnedEmployee.getUsername());
 
-  @Test
-  void getEmployeeByName() {
-    String searchName = "Cris";
+        assertEquals(TEAM_ETY.getId(), returnedEmployee.getTeamDetails().getId());
+        assertEquals(TEAM_ETY.getName(), returnedEmployee.getTeamDetails().getName());
+        assertEquals(TEAM_ETY.getCrtUsr(), returnedEmployee.getTeamDetails().getCrtUsr());
+        assertEquals(TEAM_ETY.getMdfUsr(), returnedEmployee.getTeamDetails().getMdfUsr());
+        assertEquals(TEAM_ETY.getMdfTms(), returnedEmployee.getTeamDetails().getMdfTms());
+    }
 
-    EmployeeEty employee1 = initEmployee();
-    employee1.setFirstName("Cristian");
+    @Test
+    void getEmployeeByName() {
+        String searchName = "Cris";
 
-    EmployeeEty employee2 = initEmployee();
-    employee2.setLastName("Cristurean");
+        EmployeeEty employee1 = initEmployee();
+        employee1.setFirstName("Cristian");
 
-    List<EmployeeEty> employees = Arrays.asList(employee1, employee2);
+        EmployeeEty employee2 = initEmployee();
+        employee2.setLastName("Cristurean");
 
-    when(employeeRepository.findAll())
-        .thenReturn(employees.stream()
-            .filter(e -> e.getFirstName().contains(searchName) || e.getLastName().contains(searchName))
-            .collect(Collectors.toList()));
+        List<EmployeeEty> employees = Arrays.asList(employee1, employee2);
 
-    EmployeeDetailsList returnedEmployees = employeeService.getEmployeesDetails(searchName);
+        when(employeeRepository.findAll())
+                .thenReturn(employees.stream()
+                        .filter(e -> e.getFirstName().contains(searchName) || e.getLastName().contains(searchName))
+                        .collect(Collectors.toList()));
 
-    assertEquals(2, returnedEmployees.getItems().size());
-    verify(employeeRepository, times(1)).findAll();
-  }
+        EmployeeDetailsList returnedEmployees = employeeService.getEmployeesDetails(searchName);
+
+        assertEquals(2, returnedEmployees.getItems().size());
+        verify(employeeRepository, times(1)).findAll();
+    }
+
 
   @Test
   void updateLeaveRequestStatusEmployeeNotFound() {
@@ -225,44 +225,44 @@ class EmployeeServiceTest {
   void inactivateEmployeeSuccess(){
     EmployeeEty employee = initEmployee();
 
-    when(employeeRepository.findById(ID)).thenReturn(Optional.of(employee));
+        when(employeeRepository.findById(ID)).thenReturn(Optional.of(employee));
 
-    employeeService.inactivateEmployee(ID);
+        employeeService.inactivateEmployee(ID);
 
-    assertEquals("INACTIVE", employee.getStatus());
-    assertEquals("User", employee.getMdfUsr());
-  }
+        assertEquals("INACTIVE", employee.getStatus());
+        assertEquals("User", employee.getMdfUsr());
+    }
 
-  @Test
-  void inactivateEmployeeFail(){
+    @Test
+    void inactivateEmployeeFail(){
 
-    when(employeeRepository.findById(ID)).thenReturn(Optional.empty());
+        when(employeeRepository.findById(ID)).thenReturn(Optional.empty());
 
-    BusinessException exception = assertThrows(BusinessException.class,
-        () -> employeeService.inactivateEmployee(ID));
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> employeeService.inactivateEmployee(ID));
 
-    assertEquals(BusinessErrorCode.EMPLOYEE_NOT_FOUND, exception.getError().getErrorDescription());
-    verify(employeeRepository, never()).save(any());
-  }
+        assertEquals(BusinessErrorCode.EMPLOYEE_NOT_FOUND, exception.getError().getErrorDescription());
+        verify(employeeRepository, never()).save(any());
+    }
 
-  private EmployeeEty initEmployee(){
+    private EmployeeEty initEmployee(){
 
-    EmployeeEty employee = new EmployeeEty();
+        EmployeeEty employee = new EmployeeEty();
 
-    employee.setId(ID);
-    employee.setFirstName(FIRST_NAME);
-    employee.setLastName(LAST_NAME);
-    employee.setEmail(EMAIL);
-    employee.setCrtUsr(CRT_USR);
-    employee.setCrtTms(CRT_TMS);
-    employee.setMdfUsr(MDF_USR);
-    employee.setMdfTms(MDF_TMS);
-    employee.setRole(ROLE);
-    employee.setStatus(STATUS);
-    employee.setContractStartDate(CONTRACT_START_DATE);
-    employee.setContractEndDate(CONTRACT_END_DATE);
-    employee.setUsername(USERNAME);
-    employee.setTeam(TEAM_ETY);
+        employee.setId(ID);
+        employee.setFirstName(FIRST_NAME);
+        employee.setLastName(LAST_NAME);
+        employee.setEmail(EMAIL);
+        employee.setCrtUsr(CRT_USR);
+        employee.setCrtTms(CRT_TMS);
+        employee.setMdfUsr(MDF_USR);
+        employee.setMdfTms(MDF_TMS);
+        employee.setRole(ROLE);
+        employee.setStatus(STATUS);
+        employee.setContractStartDate(CONTRACT_START_DATE);
+        employee.setContractEndDate(CONTRACT_END_DATE);
+        employee.setUsername(USERNAME);
+        employee.setTeam(TEAM_ETY);
 
     return employee;
   }
@@ -470,4 +470,84 @@ class EmployeeServiceTest {
     assertEquals(LeaveRequestEtyStatusEnum.PENDING, leaveRequestItem.getStatus());
   }
 
+    @Test
+    public void getLeaveRequestsEmployeeNotFound() {
+        when(employeeRepository.findById(anyString())).thenThrow(
+                new BusinessException(
+                        BusinessException.BusinessExceptionElement
+                                .builder()
+                                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                                .build()));
+
+        var ex = assertThrows(BusinessException.class, () -> {
+            employeeService.getLeaveRequests("1", LocalDate.of(2023, 8, 1),
+                    LocalDate.of(2023, 8, 10));
+        });
+        assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+        assertEquals(ex.getError().getErrorDescription().getDevMsg(), "The employee with the given ID does not exist.");
+        assertEquals(ex.getError().getErrorDescription().getErrorCode(), "EDOT0001400");
+    }
+
+    @Test
+    public void getLeaveRequestsNoDates() {
+        EmployeeEty employee = new EmployeeEty();
+        employee.setId("1");
+        LeaveRequestEty request1 = new LeaveRequestEty();
+        LeaveRequestEty request2 = new LeaveRequestEty();
+        request1.setId(1L);
+        request1.setEmployee(employee);
+        request2.setId(2L);
+        request2.setEmployee(employee);
+        Set<LeaveRequestEty> requestsSet = new HashSet<>();
+        requestsSet.add(request1);
+        requestsSet.add(request2);
+        employee.setLeaveRequests(requestsSet);
+        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+        LeaveRequestDetailsList requests = employeeService.getLeaveRequests("1", null, null);
+        assertEquals(requests.getItems().size(), 2);
+        assertEquals(requests.getItems().get(0).getEmployeeDetails().getEmployeeId(), "1");
+        assertEquals(requests.getItems().get(0).getId(), 1L);
+        assertEquals(requests.getItems().get(1).getEmployeeDetails().getEmployeeId(), "1");
+        assertEquals(requests.getItems().get(1).getId(), 2L);
+    }
+
+    @Test
+    public void getLeaveRequests() {
+        EmployeeEty employee = new EmployeeEty();
+        employee.setId("1");
+        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+        LeaveRequestEty request1 = new LeaveRequestEty();
+        LeaveRequestEty request2 = new LeaveRequestEty();
+        LeaveRequestEty request3 = new LeaveRequestEty();
+
+        request1.setId(1L);
+        request1.setStartDate(LocalDate.of(2023, 8, 1));
+        request1.setEndDate(LocalDate.of(2023, 8, 5));
+        request1.setEmployee(employee);
+
+        request2.setId(2L);
+        request2.setStartDate(LocalDate.of(2023, 8, 7));
+        request2.setEndDate(LocalDate.of(2023, 8, 10));
+        request2.setEmployee(employee);
+
+        request3.setId(3L);
+        request3.setStartDate(LocalDate.of(2023, 8, 3));
+        request3.setEndDate(LocalDate.of(2023, 8, 11));
+        request3.setEmployee(employee);
+        Set<LeaveRequestEty> requestsSet = new HashSet<>();
+        requestsSet.add(request1);
+        requestsSet.add(request2);
+        requestsSet.add(request3);
+        employee.setLeaveRequests(requestsSet);
+
+        String id = "1";
+        LocalDate startDate = LocalDate.of(2023, 8, 1);
+        LocalDate endDate = LocalDate.of(2023, 8, 10);
+        LeaveRequestDetailsList requests = employeeService.getLeaveRequests(id, startDate, endDate);
+        assertEquals(requests.getItems().size(), 2);
+        assertEquals(requests.getItems().get(0).getEmployeeDetails().getEmployeeId(), "1");
+        assertEquals(requests.getItems().get(0).getId(), 1L);
+        assertEquals(requests.getItems().get(1).getEmployeeDetails().getEmployeeId(), "1");
+        assertEquals(requests.getItems().get(1).getId(), 2L);
+    }
 }
