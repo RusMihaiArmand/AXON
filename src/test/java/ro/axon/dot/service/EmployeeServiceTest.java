@@ -9,10 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static ro.axon.dot.EmployeeTestAttributes.*;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -487,7 +484,7 @@ class EmployeeServiceTest {
                     LocalDate.of(2023, 8, 10));
         });
         assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
-        assertEquals(ex.getError().getErrorDescription().getDevMsg(), "Employee not found");
+        assertEquals(ex.getError().getErrorDescription().getDevMsg(), "The employee with the given ID does not exist.");
         assertEquals(ex.getError().getErrorDescription().getErrorCode(), "EDOT0001400");
     }
 
@@ -501,7 +498,10 @@ class EmployeeServiceTest {
         request1.setEmployee(employee);
         request2.setId(2L);
         request2.setEmployee(employee);
-        employee.setLeaveRequests(Arrays.asList(request1, request2));
+        Set<LeaveRequestEty> requestsSet = new HashSet<>();
+        requestsSet.add(request1);
+        requestsSet.add(request2);
+        employee.setLeaveRequests(requestsSet);
         when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
         LeaveRequestDetailsList requests = employeeService.getLeaveRequests("1", null, null);
         assertEquals(requests.getItems().size(), 2);
@@ -534,8 +534,11 @@ class EmployeeServiceTest {
         request3.setStartDate(LocalDate.of(2023, 8, 3));
         request3.setEndDate(LocalDate.of(2023, 8, 11));
         request3.setEmployee(employee);
-        employee.setLeaveRequests(Arrays.asList(request1, request2, request3));
-
+        Set<LeaveRequestEty> requestsSet = new HashSet<>();
+        requestsSet.add(request1);
+        requestsSet.add(request2);
+        requestsSet.add(request3);
+        employee.setLeaveRequests(requestsSet);
 
         String id = "1";
         LocalDate startDate = LocalDate.of(2023, 8, 1);

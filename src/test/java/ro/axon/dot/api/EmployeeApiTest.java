@@ -450,7 +450,7 @@ class EmployeeApiTest {
         mockMvc.perform(get("/api/v1/employees/1/requests")
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.message").value("Employee not found"))
+                        .andExpect(jsonPath("$.message").value("The employee with the given ID does not exist."))
                         .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
     }
 }
