@@ -221,4 +221,9 @@
                   tableName="LEGALLY_DAYS_OFF"/>
     </changeSet>
 
+
+    <changeSet id="001M" author="mihai.rus">
+        <comment>Rename for easier relation between yearly days off and yearly days off history</comment>
+        <renameColumn tableName="EMP_YEARLY_DAYS_OFF" oldColumnName="ID" newColumnName="EMP_YEARLY_DAYS_OFF_ID"></renameColumn>
+    </changeSet>
 </databaseChangeLog>

@@ -6,6 +6,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import lombok.Getter;
@@ -34,7 +36,10 @@ public class EmpYearlyDaysOffHistEty{
   @Column(name = "CRT_TMS")
   private Instant crtTms;
 
-  @Column(name = "EMP_YEARLY_DAYS_OFF_ID")
-  private Long empYearlyDaysOffId;
+  @ManyToOne
+  @JoinColumn(name = "EMP_YEARLY_DAYS_OFF_ID")
+  private EmpYearlyDaysOffEty empYearlyDaysOffEty;
+
+
 
 }
