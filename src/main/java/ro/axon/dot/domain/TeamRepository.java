@@ -9,4 +9,5 @@ public interface TeamRepository extends
     QuerydslPredicateExecutor<TeamEty> {
 
   List<TeamEty> findByStatus(TeamStatus status);
+
 }

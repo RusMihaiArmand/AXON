@@ -1,5 +1,7 @@
 package ro.axon.dot.domain;
 
+import java.util.HashSet;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,6 +32,11 @@ public class TeamEty extends SrgKeyEntityTml<Long> {
     @Column(name = "STATUS")
     @Enumerated(value = EnumType.STRING)
     private TeamStatus status;
+
+    @OneToMany(mappedBy = "team",
+        cascade = {CascadeType.PERSIST, CascadeType.DETACH,
+        CascadeType.MERGE, CascadeType.REFRESH})
+    private Set<EmployeeEty> employees = new HashSet<>();
 
     @Override
     protected Class<? extends SrgKeyEntityTml<Long>> entityRefClass() {

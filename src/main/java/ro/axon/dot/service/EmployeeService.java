@@ -17,6 +17,8 @@ import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
+import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.TeamRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
@@ -33,6 +35,7 @@ import ro.axon.dot.model.RemainingDaysOff;
 public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
+  private final TeamRepository teamRepository;
   private final LeaveRequestRepository leaveRequestRepository;
 
   private final PasswordEncoder passwordEncoder;
@@ -171,36 +174,46 @@ public class EmployeeService {
 
     EmployeeEty toSave = EmployeeMapper.INSTANCE.mapEmployeeDtoToEmployeeEty(employee);
     toSave.setPassword(passwordEncoder.encode("axon_" + toSave.getUsername()));
+
+    TeamEty team = loadTeamById(toSave.getTeam().getId());
+
+    toSave.setTeam(team);
+    team.getEmployees().add(toSave);
+
+    teamRepository.save(team);
+
     EmployeeEty saved = employeeRepository.save(toSave);
 
     return EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(saved);
   }
 
+  public TeamEty loadTeamById(Long id){
+    return teamRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(
+            BusinessExceptionElement
+                .builder()
+                .errorDescription(BusinessErrorCode.TEAM_NOT_FOUND)
+                .build())
+        );
+  }
+
   public EmployeeEty loadEmployeeByUsername(String username) {
-    EmployeeEty employee = findEmployeeByUsername(username);
-    if (employee == null) {
-      throw new BusinessException(BusinessExceptionElement
-          .builder()
-          .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-          .build()
-      );
-    }
-    return employee;
+    return employeeRepository.findEmployeeByUsername(username)
+        .orElseThrow(() -> new BusinessException(
+            BusinessExceptionElement
+                .builder()
+                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                .build()
+        ));
   }
 
   private void verifyEmployeeExists(String username) {
-    EmployeeEty employee = findEmployeeByUsername(username);
-    if (employee != null) {
+    if (employeeRepository.findEmployeeByUsername(username).isPresent()) {
       throw new BusinessException(BusinessExceptionElement
           .builder()
           .errorDescription(BusinessErrorCode.USERNAME_ALREADY_EXISTS)
-          .build()
-      );
+          .build());
     }
-  }
-
-  private EmployeeEty findEmployeeByUsername(String username) {
-    return employeeRepository.findEmployeeByUsername(username).orElse(null);
   }
 
 }

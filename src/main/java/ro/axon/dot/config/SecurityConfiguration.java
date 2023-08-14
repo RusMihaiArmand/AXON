@@ -1,43 +1,58 @@
 package ro.axon.dot.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import ro.axon.dot.security.FilterExceptionHandler;
-import ro.axon.dot.security.JwtRequestFilter;
-import ro.axon.dot.security.JwtTokenUtil;
-import ro.axon.dot.service.EmployeeService;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
-import ro.axon.dot.service.RefreshTokenService;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-  @Autowired
-  private RefreshTokenService refreshTokenService;
-
-  @Autowired
-  @Lazy
-  private EmployeeService employeeService;
-
-  @Autowired
-  private JwtTokenUtil jwtTokenUtil;
+  @PostConstruct
+  public void init() {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    System.out.println("Date in UTC: " + LocalDateTime.now());
+  }
 
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+    grantedAuthoritiesConverter.setAuthoritiesClaimName("authorities");
+
+    JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+    jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+      var roles = jwt.getClaim("roles");
+      return roles == null ? null
+          : new HashSet<>(mapRolesToGrantedAuthorities((Collection<String>) roles));
+    });
+    return jwtAuthenticationConverter;
   }
 
   @Override
@@ -49,13 +64,41 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
   protected void configure(HttpSecurity httpSecurity) throws Exception {
 
     httpSecurity.csrf().disable()
-        .authorizeRequests().anyRequest().authenticated().and()
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        .authorizeRequests()
+        .antMatchers(HttpMethod.POST, "/api/v1/logout").hasAnyRole("USER", "HR", "TEAM_LEAD")
 
-    httpSecurity.addFilterBefore(
-        new JwtRequestFilter(refreshTokenService, employeeService, jwtTokenUtil),
-        UsernamePasswordAuthenticationFilter.class);
+        .antMatchers(HttpMethod.GET,"/api/v1/teams").hasAnyRole("USER", "HR", "TEAM_LEAD")
+        .antMatchers(HttpMethod.POST,"/api/v1/teams").hasAnyRole("TEAM_LEAD")
 
-    httpSecurity.addFilterBefore(new FilterExceptionHandler(), JwtRequestFilter.class);
+
+        .antMatchers(HttpMethod.GET,"/api/v1/employees").hasAnyRole("HR", "TEAM_LEAD")
+        .antMatchers(HttpMethod.POST,"/api/v1/employees/register").hasAnyRole("HR")
+        .antMatchers(HttpMethod.PATCH,"/api/v1/employees/{employeeId}/inactivate").hasAnyRole("HR")
+        .antMatchers(HttpMethod.GET,"/api/v1/employees/{employeeId}/remaining-days-off").hasAnyRole("HR")
+        .antMatchers(HttpMethod.PUT,"/api/v1/employees/{employeeId}/requests/{requestId}").hasAnyRole("HR", "TEAM_LEAD")
+
+        .antMatchers(HttpMethod.GET,"/api/v1/requests").hasAnyRole("HR", "TEAM_LEAD")
+        .antMatchers(HttpMethod.GET,"/api/v1/misc/legally-days-off").hasAnyRole("USER", "HR", "TEAM_LEAD")
+
+        .antMatchers(HttpMethod.GET,"/api/v1/misc/roles").hasAnyRole()
+
+        .anyRequest().authenticated().and()
+
+        .oauth2ResourceServer(
+            oauth -> oauth.jwt(
+                token -> token.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+        )
+
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .and()
+        .exceptionHandling(exception -> exception
+            .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+            .accessDeniedHandler(new BearerTokenAccessDeniedHandler()));
+  }
+
+  private List<GrantedAuthority> mapRolesToGrantedAuthorities(Collection<String> roles) {
+    return roles.stream()
+        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+        .collect(Collectors.toList());
   }
 }
