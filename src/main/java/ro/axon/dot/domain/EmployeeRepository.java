@@ -6,5 +6,4 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 public interface EmployeeRepository extends
     JpaRepository<EmployeeEty, String>,
     QuerydslPredicateExecutor<EmployeeEty> {
-
 }
