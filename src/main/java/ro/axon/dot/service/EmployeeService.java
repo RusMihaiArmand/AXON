@@ -22,8 +22,6 @@ import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.LeaveRequestMapper;
@@ -65,7 +63,7 @@ public class EmployeeService {
         return employeeDetailsList;
     }
 
-  Integer getTotalYearlyDaysOffFromEmployee(EmployeeEty employee) {
+  private Integer getTotalYearlyDaysOffFromEmployee(EmployeeEty employee) {
     Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
     //  stream that returns an employee's total yearly days off (from the current year)
     return employee.getEmpYearlyDaysOff()
@@ -74,7 +72,7 @@ public class EmployeeService {
             .orElseThrow(() -> new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()));
   }
 
-  List<LeaveRequestEty> getVacationLeaveRequests(EmployeeEty employee) {
+  private List<LeaveRequestEty> getVacationLeaveRequests(EmployeeEty employee) {
     //  stream that returns an employee's leave requests that are considered to use days off (only VACATION marked ones that aren't REJECTED)
     return employee.getLeaveRequests().stream()
             .filter(request -> request.getType().equals(LeaveRequestEtyTypeEnum.VACATION)
@@ -82,6 +80,7 @@ public class EmployeeService {
   }
 
   public RemainingDaysOff getEmployeeRemainingDaysOff(String employeeId) {
+
     var remainingDaysOff = new RemainingDaysOff();
     EmployeeEty employee;
 
@@ -100,7 +99,7 @@ public class EmployeeService {
     return remainingDaysOff;
   }
 
-    private void checkEmployeeExists(Long idEmployee) throws BusinessException {
+  private void checkEmployeeExists(Long idEmployee) throws BusinessException {
         Optional<EmployeeEty> employeeOptional = employeeRepository.findById(String.valueOf(idEmployee));
         if (employeeOptional.isEmpty()) throw new BusinessException(
                 BusinessException.BusinessExceptionElement
@@ -148,6 +147,29 @@ public class EmployeeService {
         return request;
     }
 
+
+  private boolean isUsernameFound(String usernameParam, EmployeeRepository employeeRepository) {
+    Optional<String> username = Optional.ofNullable(usernameParam);
+    if (username.isPresent() && !username.get().isEmpty()) return employeeRepository.existsByUsername(username.get());
+    return false;
+  }
+
+  private boolean isEmailFound(String emailParam, EmployeeRepository employeeRepository) {
+    Optional<String> email = Optional.ofNullable(emailParam);
+    if (email.isPresent() && !email.get().isEmpty()) return employeeRepository.existsByEmail(email.get());
+    return false;
+  }
+
+  public boolean checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
+
+    if (isUsernameFound(usernameParam, employeeRepository)) {
+      throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build());
+    }
+    if (isEmailFound(emailParam, employeeRepository)) {
+      throw new BusinessException(BusinessException.BusinessExceptionElement.builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build());
+    }
+    return true;
+  }
 
   public void inactivateEmployee(String employeeId){
 

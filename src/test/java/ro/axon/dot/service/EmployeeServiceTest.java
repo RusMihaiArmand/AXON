@@ -2,6 +2,7 @@ package ro.axon.dot.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -27,6 +28,7 @@ import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
@@ -311,6 +313,29 @@ class EmployeeServiceTest {
     assertEquals(20, remainingDaysOff.getRemainingDays());
   }
 
+  @Test
+  void checkEmployeeUniqueCredentialsDuplicateUsername() {
+    when(employeeRepository.existsByUsername(USERNAME)).thenReturn(true);
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com");});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.USERNAME_DUPLICATE);
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentialsDuplicateEmail() {
+    when(employeeRepository.existsByUsername("unique.name")).thenReturn(false);
+    when(employeeRepository.existsByEmail(EMAIL)).thenReturn(true);
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials("unique.name", EMAIL);});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.EMAIL_DUPLICATE);
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentials() {
+    when(employeeRepository.existsByUsername("unique.name")).thenReturn(false);
+    when(employeeRepository.existsByEmail("unique@gmail.com")).thenReturn(false);
+    employeeService.checkEmployeeUniqueCredentials("unique.name", "unique@gmail.com");
+    verify(employeeRepository, times(1)).existsByUsername(anyString());
+    verify(employeeRepository, times(1)).existsByEmail(anyString());
+  }
   @Test
   void editLeaveRequestNotFound(){
 
