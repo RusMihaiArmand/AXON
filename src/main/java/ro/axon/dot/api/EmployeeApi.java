@@ -2,6 +2,7 @@ package ro.axon.dot.api;
 
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,9 +15,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
+import ro.axon.dot.model.LeaveRequestDetailsList;
+import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.service.EmployeeService;
+import ro.axon.dot.service.LeaveRequestService;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +30,7 @@ import ro.axon.dot.service.EmployeeService;
 public class EmployeeApi {
 
   private final EmployeeService employeeService;
+  private final LeaveRequestService leaveRequestService;
 
   @PostMapping(value = "/employees/register")
   public ResponseEntity<?> register(@RequestBody @Valid EmployeeDetailsListItem employee) {
@@ -54,11 +61,35 @@ public class EmployeeApi {
     return ResponseEntity.noContent().build();
   }
 
+  @PatchMapping("employees/{idEmployee}/requests/{idRequest}")
+  public ResponseEntity<Void> handleLeaveRequest(@PathVariable(name = "idEmployee") Long idEmployee,
+      @PathVariable(name = "idRequest") Long idRequest, @RequestBody LeaveRequestReview review) {
+      employeeService.updateLeaveRequestStatus(idEmployee, idRequest, review);
+      return ResponseEntity.noContent().build();
+  }
+
   @GetMapping(value = {"/employees/{employeeId}/remaining-days-off"})
   public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(@PathVariable String employeeId){
 
     RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(employeeId);
 
     return ResponseEntity.ok(remainingDaysOff);
+  }
+
+  @GetMapping(value = "/employee/validation")
+  public ResponseEntity<Void> checkEmployeeUniqueCredentials(@RequestParam(name = "username", required = false) String username,
+                                                          @RequestParam(name = "email", required = false) String email) {
+
+    if (employeeService.checkEmployeeUniqueCredentials(username, email))
+      return ResponseEntity.ok().build();
+    return ResponseEntity.badRequest().build();
+  }
+
+  @GetMapping(value = "/employees/{employeeId}/requests")
+  public ResponseEntity<LeaveRequestDetailsList> getLeaveRequests(
+        @PathVariable(name = "employeeId") String idEmployee,
+        @RequestParam(name = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+        @RequestParam(name = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
+            return ResponseEntity.ok(employeeService.getLeaveRequests(idEmployee, startDate, endDate));
   }
 }

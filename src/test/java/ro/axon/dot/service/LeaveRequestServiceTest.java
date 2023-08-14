@@ -1,10 +1,12 @@
 package ro.axon.dot.service;
 
 import com.querydsl.core.types.dsl.Expressions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import ro.axon.dot.domain.*;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
@@ -18,17 +20,16 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class LeaveRequestServiceTest {
 
+    @InjectMocks
     private LeaveRequestService leaveRequestService;
     @Mock
     private LeaveRequestRepository leaveRequestRepository;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        leaveRequestService = new LeaveRequestService(leaveRequestRepository);
-    }
+    @Mock
+    private EmployeeRepository employeeRepository;
 
     @Test
     void getLeaveRequestsDetailsEmptyList() {
@@ -111,5 +112,4 @@ class LeaveRequestServiceTest {
         assertEquals(leaveRequest3IdValue, leaveRequests.get(1).getId());
         assertEquals(leaveRequest2IdValue, leaveRequests.get(2).getId());
     }
-
 }

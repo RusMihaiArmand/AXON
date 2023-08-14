@@ -8,5 +8,7 @@ public interface EmployeeRepository extends
     JpaRepository<EmployeeEty, String>,
     QuerydslPredicateExecutor<EmployeeEty> {
 
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
   Optional<EmployeeEty> findEmployeeByUsername(String username);
 }
