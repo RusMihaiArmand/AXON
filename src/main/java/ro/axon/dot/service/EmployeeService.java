@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ro.axon.dot.domain.*;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
@@ -18,11 +19,14 @@ import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
+import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
+import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.RemainingDaysOff;
 
@@ -33,28 +37,28 @@ public class EmployeeService {
   private final EmployeeRepository employeeRepository;
   private final LeaveRequestRepository leaveRequestRepository;
 
-  public EmployeeDetailsList getEmployeesDetails(String name) {
-    var employeeDetailsList = new EmployeeDetailsList();
-    List<EmployeeEty> employees;
+    public EmployeeDetailsList getEmployeesDetails(String name) {
+        var employeeDetailsList = new EmployeeDetailsList();
+        List<EmployeeEty> employees;
 
-    Optional<String> searchName = Optional.ofNullable(name);
+        Optional<String> searchName = Optional.ofNullable(name);
 
-    if (searchName.isPresent() && !searchName.get().isEmpty()) {
-      employees = employeeRepository.findAll().stream()
-          .filter(employee ->
-              employee.getFirstName().toLowerCase().contains(searchName.get().toLowerCase()) ||
-              employee.getLastName().toLowerCase().contains(searchName.get().toLowerCase()))
-          .collect(Collectors.toList());
-    } else {
-      employees = employeeRepository.findAll();
+        if (searchName.isPresent() && !searchName.get().isEmpty()) {
+            employees = employeeRepository.findAll().stream()
+                    .filter(employee ->
+                            employee.getFirstName().toLowerCase().contains(searchName.get().toLowerCase()) ||
+                                    employee.getLastName().toLowerCase().contains(searchName.get().toLowerCase()))
+                    .collect(Collectors.toList());
+        } else {
+            employees = employeeRepository.findAll();
+        }
+
+        employeeDetailsList.setItems(employees.stream()
+                .map(EmployeeMapper.INSTANCE::mapEmployeeEtyToEmployeeDto)
+                .collect(Collectors.toList()));
+
+        return employeeDetailsList;
     }
-
-    employeeDetailsList.setItems(employees.stream()
-        .map(EmployeeMapper.INSTANCE::mapEmployeeEtyToEmployeeDto)
-        .collect(Collectors.toList()));
-
-    return employeeDetailsList;
-  }
 
   Integer getTotalYearlyDaysOffFromEmployee(EmployeeEty employee) {
     Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
@@ -90,6 +94,55 @@ public class EmployeeService {
     remainingDaysOff.setRemainingDays(totalDaysOff - spentDaysOff);
     return remainingDaysOff;
   }
+
+    private void checkEmployeeExists(Long idEmployee) throws BusinessException {
+        Optional<EmployeeEty> employeeOptional = employeeRepository.findById(String.valueOf(idEmployee));
+        if (employeeOptional.isEmpty()) throw new BusinessException(
+                BusinessException.BusinessExceptionElement
+                        .builder()
+                        .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                        .build());
+    }
+
+    private LeaveRequestEty checkLeaveRequestExists(Long idRequest) throws BusinessException {
+        Optional<LeaveRequestEty> requestOptional = leaveRequestRepository.findById(idRequest);
+        if (requestOptional.isEmpty()) throw new BusinessException(
+                BusinessException.BusinessExceptionElement
+                        .builder()
+                        .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND)
+                        .build());
+        return requestOptional.get();
+    }
+
+    private void checkVersion(LeaveRequestEty request, LeaveRequestReview review) throws BusinessException {
+        if (review.getVersion() < request.getV()) throw new BusinessException(
+                BusinessException.BusinessExceptionElement
+                        .builder()
+                        .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+                        .build());
+    }
+
+    private void checkStatus(LeaveRequestEty request) {
+        if (request.getStatus() != LeaveRequestEtyStatusEnum.PENDING) throw new BusinessException(
+                BusinessException.BusinessExceptionElement
+                        .builder()
+                        .errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED)
+                        .build());
+    }
+
+    public LeaveRequestEty updateLeaveRequestStatus(Long idEmployee, Long idRequest, LeaveRequestReview review) throws BusinessException {
+        checkEmployeeExists(idEmployee);
+        LeaveRequestEty request = checkLeaveRequestExists(idRequest);
+        checkVersion(request, review);
+        checkStatus(request);
+
+        request.setStatus(LeaveRequestEtyStatusEnum.valueOf(review.getLeaveRequestStatus()));
+        request.setRejectReason(review.getRejectReason());
+        request.setV(review.getVersion());
+        leaveRequestRepository.save(request);
+        return request;
+    }
+
 
   public void inactivateEmployee(String employeeId){
 

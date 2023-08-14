@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
@@ -28,12 +30,12 @@ import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
-import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.model.LeaveRequestReview;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
@@ -113,6 +115,112 @@ class EmployeeServiceTest {
     verify(employeeRepository, times(1)).findAll();
   }
 
+  @Test
+  void updateLeaveRequestStatusEmployeeNotFound() {
+      LeaveRequestReview review = new LeaveRequestReview();
+      review.setLeaveRequestStatus("APPROVED");
+      review.setVersion(1L);
+      when(employeeRepository.findById(anyString())).thenReturn(Optional.empty());
+
+      var ex = assertThrows(BusinessException.class, () -> {
+          employeeService.updateLeaveRequestStatus(1L, 1L, review);
+      });
+      assertEquals(ex.getError().getErrorDescription().getErrorCode(),"EDOT0001400");
+      assertEquals(ex.getError().getErrorDescription().getDevMsg(),"The employee with the given ID does not exist.");
+      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void updateLeaveRequestStatusRequestNotFound() {
+      EmployeeEty employee = new EmployeeEty();
+      LeaveRequestReview answer = new LeaveRequestReview();
+
+      when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
+      when(leaveRequestRepository.findById(1L)).thenReturn(Optional.empty());
+
+
+      var ex = assertThrows(BusinessException.class, () -> {
+                  employeeService.updateLeaveRequestStatus(1L, 1L, answer);
+              });
+      assertEquals(ex.getError().getErrorDescription().getErrorCode(),"EDOT0003400");
+      assertEquals(ex.getError().getErrorDescription().getDevMsg(),"Request not found");
+      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void updateLeaveRequestStatusAlreadyAnswered() {
+      EmployeeEty employee = new EmployeeEty();
+      LeaveRequestEty request = new LeaveRequestEty();
+      request.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+      request.setV(1L);
+
+      LeaveRequestReview review = new LeaveRequestReview();
+      review.setVersion(1L);
+      review.setLeaveRequestStatus("APPROVED");
+      when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
+      when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(request));
+
+      var ex = assertThrows(BusinessException.class, () -> {
+          employeeService.updateLeaveRequestStatus(1L, 1L, review);
+      });
+      assertEquals(ex.getError().getErrorDescription().getErrorCode(),"EDOT0004400");
+      assertEquals(ex.getError().getErrorDescription().getDevMsg(),"Request already answered");
+      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void updateLeaveRequestStatusOutdatedVersion() {
+      EmployeeEty employee = new EmployeeEty();
+      LeaveRequestEty request = new LeaveRequestEty();
+      request.setV(2L);
+
+      LeaveRequestReview answer = new LeaveRequestReview();
+      answer.setVersion(1L);
+
+      when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
+      when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(request));
+
+
+      var ex = assertThrows(BusinessException.class, () -> {
+          employeeService.updateLeaveRequestStatus(1L, 1L, answer);
+        });
+
+      assertEquals(ex.getError().getErrorDescription().getErrorCode(),"EDOT0005400");
+      assertEquals(ex.getError().getErrorDescription().getDevMsg(),"Request version smaller than db version");
+      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.CONFLICT);
+  }
+
+  @Test
+  void updateLeaveRequestStatus() {
+      EmployeeEty employee = new EmployeeEty();
+      LeaveRequestEty request = new LeaveRequestEty();
+      request.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+      request.setV(1L);
+
+      LeaveRequestReview answer = new LeaveRequestReview();
+      answer.setVersion(1L);
+      answer.setLeaveRequestStatus("APPROVED");
+
+      when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
+      when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(request));
+      // accept
+      request.setV(1L);
+      LeaveRequestEty updatedRequest = employeeService.updateLeaveRequestStatus(1L, 1L, answer);
+      assertEquals(updatedRequest.getStatus(), LeaveRequestEtyStatusEnum.APPROVED);
+      assertEquals(updatedRequest.getV(), 1L);
+      assertNull(updatedRequest.getRejectReason());
+
+      // reject
+      request.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+      answer.setLeaveRequestStatus("REJECTED");
+      answer.setRejectReason("Not a good time");
+      answer.setVersion(3L);
+      updatedRequest = employeeService.updateLeaveRequestStatus(1L, 1L, answer);
+      assertEquals(updatedRequest.getStatus(), LeaveRequestEtyStatusEnum.REJECTED);
+      assertEquals(updatedRequest.getRejectReason(), "Not a good time");
+      assertEquals(updatedRequest.getV(), 3L);
+
+  }
   @Test
   void inactivateEmployeeSuccess(){
     EmployeeEty employee = initEmployee();
