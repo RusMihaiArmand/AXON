@@ -11,15 +11,19 @@ import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
+import ro.axon.dot.domain.EmpYearlyDaysOffHistEty;
+import ro.axon.dot.domain.EmpYearlyDaysOffHistRepository;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
+import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
+import ro.axon.dot.mapper.EmpYearlyDaysOffHistMapper;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
@@ -30,6 +34,7 @@ import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.LegallyDaysOffItem;
 import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.model.VacationDaysModifyDetails;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +42,7 @@ public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
   private final LeaveRequestRepository leaveRequestRepository;
+  private final EmpYearlyDaysOffHistRepository empYearlyDaysOffHistRepository;
   private final LegallyDaysOffService legallyDaysOffService;
 
   public EmployeeDetailsList getEmployeesDetails(String name) {
@@ -420,4 +426,70 @@ public class EmployeeService {
 
     return leaveRequestsDTO;
   }
+
+
+
+
+  private int daysChanger(VacationDaysModifyDetails vacationDaysModifyDetails)
+  {
+    if(vacationDaysModifyDetails.getType().equals(VacationDaysChangeTypeEnum.DECREASE))
+      return -vacationDaysModifyDetails.getNoDays();
+    else {
+      return vacationDaysModifyDetails.getNoDays();
+    }
+  }
+
+  @Transactional
+  public void changeVacationDays(VacationDaysModifyDetails vacationDaysModifyDetails)
+  {
+    int dayChanger = this.daysChanger(vacationDaysModifyDetails);
+
+    employeeRepository.findAllById(vacationDaysModifyDetails.getEmployeeIds())
+        .forEach(employee -> updateDaysForEmployee(dayChanger,vacationDaysModifyDetails.getDescription(),employee));
+  }
+
+
+  private void updateDaysForEmployee(int daysChanger, String description, EmployeeEty emp) throws BusinessException
+  {
+    EmpYearlyDaysOffEty daysOffEty;
+    daysOffEty = emp.getEmpYearlyDaysOff().stream()
+        .filter(yearlyDaysOff -> yearlyDaysOff.getYear().equals(LocalDate.now().getYear()))
+        .findFirst()
+        .orElseThrow( () -> new BusinessException(BusinessExceptionElement
+            .builder()
+            .errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()
+        ));
+
+    if (daysOffEty.getTotalNoDays() < -daysChanger) {
+      throw new BusinessException(BusinessExceptionElement
+          .builder().errorDescription(BusinessErrorCode.NEGATIVE_DAYS_OFF).build());
+    }
+
+    emp.getEmpYearlyDaysOff().remove(daysOffEty);
+    daysOffEty.setTotalNoDays(daysOffEty.getTotalNoDays() + daysChanger);
+    emp.getEmpYearlyDaysOff().add(daysOffEty);
+
+    EmpYearlyDaysOffHistEty daysOffHistory = new EmpYearlyDaysOffHistEty();
+
+    daysOffHistory.setNoDays(Math.abs(daysChanger));
+    daysOffHistory.setDescription(description);
+
+    if (daysChanger > 0) {
+      daysOffHistory.setType("INCREASE");
+    } else {
+      daysOffHistory.setType("DECREASE");
+    }
+
+    daysOffHistory.setCrtUsr("CREATION-USER"); //to be modified when login endpoint is finished
+    daysOffHistory.setCrtTms(Instant.now());
+
+    daysOffHistory.setEmpYearlyDaysOffEty(daysOffEty);
+
+    System.out.println("ID IS " + emp.getId());
+    EmpYearlyDaysOffHistMapper.INSTANCE.mapEmpYearlyDaysOffHistEtyToEmpYearlyDaysOffHistDto(
+        empYearlyDaysOffHistRepository.save(daysOffHistory));
+
+    daysOffEty.getEmpYearlyDaysOffHistEtySet().add(daysOffHistory);
+  }
+
 }

@@ -25,6 +25,7 @@ import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,6 +41,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import ro.axon.dot.domain.EmpYearlyDaysOffHistRepository;
+import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
+import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
@@ -48,7 +52,6 @@ import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
-import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
@@ -57,6 +60,7 @@ import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.model.VacationDaysModifyDetails;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
@@ -71,10 +75,14 @@ class EmployeeServiceTest {
   @Mock
   LegallyDaysOffService legallyDaysOffService;
 
+
+    @Mock
+    EmpYearlyDaysOffHistRepository empYearlyDaysOffHistoryRepository;
+
   @BeforeEach
   void setUp() {
     employeeService = new EmployeeService(employeeRepository, leaveRequestRepository,
-        legallyDaysOffService);
+        empYearlyDaysOffHistoryRepository, legallyDaysOffService);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -771,4 +779,203 @@ class EmployeeServiceTest {
       assertEquals(requests.getItems().get(1).getEmployeeDetails().getEmployeeId(), "1");
       assertEquals(requests.getItems().get(1).getId(), 2L);
     }
+
+
+
+
+
+  @Test
+  void changeVacationDays()
+  {
+    EmpYearlyDaysOffEty yearlyDaysOff1 = new EmpYearlyDaysOffEty();
+    EmpYearlyDaysOffEty yearlyDaysOff2 = new EmpYearlyDaysOffEty();
+
+
+    EmployeeEty employee = new EmployeeEty();
+    employee.setId("id1M");
+    employee.setFirstName(FIRST_NAME);
+    employee.setLastName(LAST_NAME);
+    employee.setEmail(EMAIL);
+    employee.setCrtUsr(CRT_USR);
+    employee.setCrtTms(CRT_TMS);
+    employee.setMdfUsr(MDF_USR);
+    employee.setMdfTms(MDF_TMS);
+    employee.setRole(ROLE);
+    employee.setStatus(STATUS);
+    employee.setContractStartDate(CONTRACT_START_DATE);
+    employee.setContractEndDate(CONTRACT_END_DATE);
+    employee.setUsername(USERNAME);
+    employee.setTeam(TEAM_ETY);
+
+
+    EmployeeEty employee2 = new EmployeeEty();
+    employee2.setId("id2M");
+    employee2.setFirstName(FIRST_NAME);
+    employee2.setLastName(LAST_NAME);
+    employee2.setEmail("alt-mail");
+    employee2.setCrtUsr(CRT_USR);
+    employee2.setCrtTms(CRT_TMS);
+    employee2.setMdfUsr(MDF_USR);
+    employee2.setMdfTms(MDF_TMS);
+    employee2.setRole(ROLE);
+    employee2.setStatus(STATUS);
+    employee2.setContractStartDate(CONTRACT_START_DATE);
+    employee2.setContractEndDate(CONTRACT_END_DATE);
+    employee2.setUsername("utilizator");
+    employee2.setTeam(TEAM_ETY);
+
+    yearlyDaysOff1.setTotalNoDays(15);
+    yearlyDaysOff1.setYear(2023);
+    yearlyDaysOff1.setEmployeeEty(employee);
+    yearlyDaysOff1.setId(1L);
+
+    Set<EmpYearlyDaysOffEty> set1 = new HashSet<>();
+    set1.add(yearlyDaysOff1);
+    employee.setEmpYearlyDaysOff(set1);
+
+    yearlyDaysOff2.setTotalNoDays(25);
+    yearlyDaysOff2.setYear(2023);
+    yearlyDaysOff2.setEmployeeEty(employee2);
+    yearlyDaysOff2.setId(2L);
+
+    Set<EmpYearlyDaysOffEty> set2 = new HashSet<>();
+    set2.add(yearlyDaysOff2);
+    employee2.setEmpYearlyDaysOff(set2);
+
+
+    List<EmployeeEty> lista = new ArrayList<>();
+    lista.add(employee);
+    lista.add(employee2);
+    when(employeeRepository.findAllById(any())).thenReturn( lista );
+
+    List<EmpYearlyDaysOffEty> yearlyDaysOffDetailsList = new ArrayList<>();
+    yearlyDaysOffDetailsList.add(yearlyDaysOff1);
+    yearlyDaysOffDetailsList.add(yearlyDaysOff2);
+
+    VacationDaysModifyDetails v = new VacationDaysModifyDetails();
+
+    v.setNoDays(1);
+    v.setType(VacationDaysChangeTypeEnum.INCREASE);
+    v.setDescription("d");
+    List<String> idList = new ArrayList<>();
+    idList.add("id1M");
+    idList.add("id2M");
+    v.setEmployeeIds( idList );
+
+    employeeService.changeVacationDays(v);
+
+    verify(empYearlyDaysOffHistoryRepository, times(2))
+        .save(any());
+
   }
+
+  @Test
+  void changeVacationDaysYearlyDaysOffNotSet()
+  {
+    EmpYearlyDaysOffEty yearlyDaysOff2 = new EmpYearlyDaysOffEty();
+
+
+    EmployeeEty employee2 = new EmployeeEty();
+    employee2.setId("id2M");
+    employee2.setFirstName(FIRST_NAME);
+    employee2.setLastName(LAST_NAME);
+    employee2.setEmail("alt-mail");
+    employee2.setCrtUsr(CRT_USR);
+    employee2.setCrtTms(CRT_TMS);
+    employee2.setMdfUsr(MDF_USR);
+    employee2.setMdfTms(MDF_TMS);
+    employee2.setRole(ROLE);
+    employee2.setStatus(STATUS);
+    employee2.setContractStartDate(CONTRACT_START_DATE);
+    employee2.setContractEndDate(CONTRACT_END_DATE);
+    employee2.setUsername("utilizator");
+    employee2.setTeam(TEAM_ETY);
+
+    yearlyDaysOff2.setTotalNoDays(25);
+    yearlyDaysOff2.setYear(2023);
+    yearlyDaysOff2.setEmployeeEty(employee2);
+    yearlyDaysOff2.setId(2L);
+
+    List<EmployeeEty> lista = new ArrayList<>();
+    lista.add(employee2);
+    when(employeeRepository.findAllById(any())).thenReturn( lista );
+
+    List<EmpYearlyDaysOffEty> yearlyDaysOffDetailsList = new ArrayList<>();
+    yearlyDaysOffDetailsList.add(yearlyDaysOff2);
+
+    VacationDaysModifyDetails v = new VacationDaysModifyDetails();
+
+    v.setNoDays(1);
+    v.setType(VacationDaysChangeTypeEnum.INCREASE);
+    v.setDescription("d");
+    List<String> idList = new ArrayList<>();
+    idList.add("id2M");
+    v.setEmployeeIds( idList );
+
+
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.changeVacationDays(v);});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET);
+  }
+
+  @Test
+  void changeVacationDaysNegativeDays()
+  {
+
+    EmpYearlyDaysOffEty yearlyDaysOff2 = new EmpYearlyDaysOffEty();
+
+
+    EmployeeEty employee2 = new EmployeeEty();
+    employee2.setId("id2M");
+    employee2.setFirstName(FIRST_NAME);
+    employee2.setLastName(LAST_NAME);
+    employee2.setEmail("alt-mail");
+    employee2.setCrtUsr(CRT_USR);
+    employee2.setCrtTms(CRT_TMS);
+    employee2.setMdfUsr(MDF_USR);
+    employee2.setMdfTms(MDF_TMS);
+    employee2.setRole(ROLE);
+    employee2.setStatus(STATUS);
+    employee2.setContractStartDate(CONTRACT_START_DATE);
+    employee2.setContractEndDate(CONTRACT_END_DATE);
+    employee2.setUsername("utilizator");
+    employee2.setTeam(TEAM_ETY);
+
+
+    yearlyDaysOff2.setTotalNoDays(25);
+    yearlyDaysOff2.setYear(2023);
+    yearlyDaysOff2.setEmployeeEty(employee2);
+    yearlyDaysOff2.setId(2L);
+
+
+
+    Set<EmpYearlyDaysOffEty> set2 = new HashSet<>();
+    set2.add(yearlyDaysOff2);
+    employee2.setEmpYearlyDaysOff(set2);
+
+
+    List<EmployeeEty> lista = new ArrayList<>();
+    lista.add(employee2);
+    when(employeeRepository.findAllById(any())).thenReturn( lista );
+
+    List<EmpYearlyDaysOffEty> yearlyDaysOffDetailsList = new ArrayList<>();
+    yearlyDaysOffDetailsList.add(yearlyDaysOff2);
+
+
+    VacationDaysModifyDetails v = new VacationDaysModifyDetails();
+
+    v.setNoDays(111);
+    v.setType(VacationDaysChangeTypeEnum.DECREASE);
+    v.setDescription("d");
+    List<String> idList = new ArrayList<>();
+    idList.add("id2M");
+    v.setEmployeeIds( idList );
+
+
+    var ex = assertThrows(BusinessException.class, () -> { employeeService.changeVacationDays(v);});
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.NEGATIVE_DAYS_OFF);
+
+  }
+
+
+
+}
