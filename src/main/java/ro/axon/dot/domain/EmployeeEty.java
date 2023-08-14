@@ -6,7 +6,6 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.Instant;
 import javax.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -54,12 +53,13 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @ManyToOne
   private TeamEty team;
 
+  @OneToMany(fetch = FetchType.LAZY)
+  @JoinColumn(name = "EMPLOYEE_ID")
+  private Set<LeaveRequestEty> leaveRequests = new HashSet<>();
+
   @OneToMany
   @JoinColumn(name = "EMPLOYEE_ID")
   private Set<EmpYearlyDaysOffEty> empYearlyDaysOff = new HashSet<>();
-
-  @OneToMany(mappedBy = "employee")
-  private Set<LeaveRequestEty> leaveRequests = new HashSet<>();
 
   @Override
   protected Class<? extends SrgKeyEntityTml<String>> entityRefClass() {

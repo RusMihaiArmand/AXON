@@ -3,8 +3,7 @@ package ro.axon.dot.service;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ro.axon.dot.domain.LeaveRequestEty;
-import ro.axon.dot.domain.LeaveRequestRepository;
+import ro.axon.dot.domain.*;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 
@@ -18,6 +17,8 @@ import java.util.stream.StreamSupport;
 public class LeaveRequestService {
 
     private final LeaveRequestRepository leaveRequestRepository;
+    private final EmployeeRepository employeeRepository;
+
 
     public LeaveRequestDetailsList getLeaveRequestsDetailsSorted(BooleanExpression query) {
         var leaveRequestDetailsList = new LeaveRequestDetailsList();

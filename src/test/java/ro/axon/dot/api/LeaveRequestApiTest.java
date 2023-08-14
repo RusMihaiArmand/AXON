@@ -3,9 +3,10 @@ package ro.axon.dot.api;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -27,6 +28,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+@ExtendWith(MockitoExtension.class)
 class LeaveRequestApiTest {
 
     @Mock
@@ -38,9 +41,9 @@ class LeaveRequestApiTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(leaveRequestApi)
-            .setControllerAdvice(new ApiExceptionHandler()).build();
+                        .setControllerAdvice(new ApiExceptionHandler())
+                        .build();
     }
 
     @Test
@@ -187,5 +190,4 @@ class LeaveRequestApiTest {
                 .andExpect(jsonPath("$.items[2].id").value(3L))
                 .andExpect(jsonPath("$.items[3].id").value(4L));
     }
-
 }
