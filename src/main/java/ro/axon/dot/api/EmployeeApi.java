@@ -26,6 +26,7 @@ import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.UserDetailsResponse;
+import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.service.EmployeeService;
 
 import java.time.LocalDate;
@@ -36,21 +37,11 @@ import java.time.LocalDate;
 public class EmployeeApi {
 
   private final EmployeeService employeeService;
+  private final JwtTokenUtil jwtTokenUtil;
 
   @PostMapping(value = "/employees/register")
-  public ResponseEntity<?> register(@RequestHeader(name="Authorization") String token, @RequestBody @Valid RegisterRequest request) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", token);
-
-    ResponseEntity<UserDetailsResponse> response = new RestTemplate().exchange(
-        "http://localhost:8081/core/api/v1/user",
-        HttpMethod.GET,
-        new HttpEntity<>(headers),
-        UserDetailsResponse.class
-    );
-
-    UserDetailsResponse userDetails = response.getBody();
-    return ResponseEntity.ok(employeeService.createEmployee(request, userDetails));
+  public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
+    return ResponseEntity.ok(employeeService.createEmployee(request, jwtTokenUtil.getLoggedUserId()));
   }
 
   @GetMapping(value = "/employees")

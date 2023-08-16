@@ -29,7 +29,8 @@ public enum BusinessErrorCode {
     LEAVE_REQUEST_PAST_DATE("EDOT0017400", "Leave request contains days from past months.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_PRECEDING_VERSION("EDOT0018409", "Leave request version cannot precede version from database.", HttpStatus.CONFLICT),
     EMAIL_DUPLICATE("EDOT0019409", "An employee with this email already exists.", HttpStatus.CONFLICT),
-    LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE("EDOT0006400", "Cannot delete approved leave requests from past months.", HttpStatus.BAD_REQUEST);
+    LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE("EDOT0020400", "Cannot delete approved leave requests from past months.", HttpStatus.BAD_REQUEST),
+    NO_JWT_AUTH_FOUND("EDOT0021401", "No JWT Auth found in Security Context!", HttpStatus.UNAUTHORIZED);
 
     private final String errorCode;
     private final String devMsg;

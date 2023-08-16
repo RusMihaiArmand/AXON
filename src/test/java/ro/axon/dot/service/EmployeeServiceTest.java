@@ -739,7 +739,7 @@ class EmployeeServiceTest {
     userDetails.setRoles(Collections.singletonList("HR"));
     userDetails.setTeamDetails(new TeamDetails(3L, "HR"));
 
-    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(request, userDetails);
+    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(request, "hr_user_id");
 
     EmployeeEty returned = employeeMapper.mapEmployeeDtoToEmployeeEty(returnedEmployee);
 

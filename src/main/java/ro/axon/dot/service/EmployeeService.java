@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -309,16 +310,15 @@ public class EmployeeService {
   }
 
   @Transactional
-  public EmployeeDetailsListItem createEmployee(RegisterRequest request,
-      UserDetailsResponse userDetails) {
+  public EmployeeDetailsListItem createEmployee(RegisterRequest request, String loggedUserId) {
 
     verifyEmployeeExists(request.getUsername());
 
     TeamEty team = loadTeamById(request.getTeamId());
     final LocalDateTime now = LocalDateTime.now();
 
-    EmployeeEty toSave = setEmployeeDetails(request, userDetails, team, now);
-    EmpYearlyDaysOffEty daysOff = setDaysOffDetails(request, userDetails, toSave, now);
+    EmployeeEty toSave = setEmployeeDetails(request, loggedUserId, team, now);
+    EmpYearlyDaysOffEty daysOff = setDaysOffDetails(request, loggedUserId, toSave, now);
 
     toSave.setEmpYearlyDaysOff(Set.of(daysOff));
     team.getEmployees().add(toSave);
@@ -327,7 +327,7 @@ public class EmployeeService {
     return EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(saved);
   }
 
-  private EmpYearlyDaysOffEty setDaysOffDetails(RegisterRequest request, UserDetailsResponse userDetails, EmployeeEty employee, LocalDateTime now){
+  private EmpYearlyDaysOffEty setDaysOffDetails(RegisterRequest request, String loggedUserId, EmployeeEty employee, LocalDateTime now){
     EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
 
     daysOff.setYear(request.getContractStartDate().getYear());
@@ -338,7 +338,7 @@ public class EmployeeService {
     daysOffHistEty.setNoDays(request.getNoDaysOff());
     daysOffHistEty.setDescription("Initial number of days off for the current year");
     daysOffHistEty.setType("INCREASE");
-    daysOffHistEty.setCrtUsr(userDetails.getEmployeeId());
+    daysOffHistEty.setCrtUsr(loggedUserId);
     daysOffHistEty.setCrtTms(now.toInstant(ZoneOffset.UTC));
 
     daysOff.setEmpYearlyDaysOffHistEtySet(Set.of(daysOffHistEty));
@@ -346,7 +346,7 @@ public class EmployeeService {
 
     return daysOff;
   }
-  private EmployeeEty setEmployeeDetails(RegisterRequest request, UserDetailsResponse userDetails, TeamEty team, LocalDateTime now){
+  private EmployeeEty setEmployeeDetails(RegisterRequest request, String loggedUserId, TeamEty team, LocalDateTime now){
     EmployeeEty toSave = new EmployeeEty();
 
     toSave.setTeam(team);
@@ -357,8 +357,8 @@ public class EmployeeService {
     toSave.setRole(request.getRole());
     toSave.setEmail(request.getEmail());
     toSave.setContractStartDate(request.getContractStartDate());
-    toSave.setCrtUsr(userDetails.getEmployeeId());
-    toSave.setMdfUsr(userDetails.getEmployeeId());
+    toSave.setCrtUsr(loggedUserId);
+    toSave.setMdfUsr(loggedUserId);
     toSave.setCrtTms(now.toInstant(ZoneOffset.UTC));
     toSave.setMdfTms(now.toInstant(ZoneOffset.UTC));
     toSave.setStatus("ACTIVE");

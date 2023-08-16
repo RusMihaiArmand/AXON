@@ -26,6 +26,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.converter.RsaKeyConverters;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.exceptions.BusinessErrorCode;
@@ -186,4 +188,21 @@ public class JwtTokenUtil {
 		}
 	}
 
+	private JwtAuthenticationToken getJwtAuthenticationToken() {
+		var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication instanceof JwtAuthenticationToken) {
+			return (JwtAuthenticationToken) authentication;
+		}
+
+		throw new BusinessException(
+				BusinessExceptionElement
+						.builder()
+						.errorDescription(BusinessErrorCode.NO_JWT_AUTH_FOUND)
+						.build());
+	}
+
+	public String getLoggedUserId(){
+		return getJwtAuthenticationToken().getToken().getSubject();
+	}
 }
