@@ -3,9 +3,10 @@ package ro.axon.dot.model;
 import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 
-@Getter
+@Data
 @AllArgsConstructor
 public class LoginResponse {
 
@@ -14,13 +15,4 @@ public class LoginResponse {
   private final LocalDateTime accessTokenExpirationTime;
   private final LocalDateTime refreshTokenExpirationTime;
 
-  @Override
-  public String toString() {
-    return "LoginResponse{" +
-        "accessToken='" + accessToken + '\'' +
-        ", refreshToken='" + refreshToken + '\'' +
-        ", accessTokenExpirationTime=" + accessTokenExpirationTime +
-        ", refreshTokenExpirationTime=" + refreshTokenExpirationTime +
-        '}';
-  }
 }

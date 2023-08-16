@@ -43,9 +43,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
   @Bean
   public JwtAuthenticationConverter jwtAuthenticationConverter() {
-    JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-    grantedAuthoritiesConverter.setAuthoritiesClaimName("authorities");
-
     JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
     jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
       var roles = jwt.getClaim("roles");
@@ -56,29 +53,19 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
   }
 
   @Override
-  public void configure(WebSecurity web) {
-    web.ignoring().antMatchers("/api/v1/login").antMatchers("/api/v1/refresh");
-  }
-
-  @Override
   protected void configure(HttpSecurity httpSecurity) throws Exception {
 
     httpSecurity.csrf().disable()
         .authorizeRequests()
-        .antMatchers(HttpMethod.POST, "/api/v1/logout").hasAnyRole("USER", "HR", "TEAM_LEAD")
+        .antMatchers(HttpMethod.POST, "/api/v1/login",
+            "/api/v1/refresh", "/api/v1/logout").permitAll()
 
-        .antMatchers(HttpMethod.GET,"/api/v1/teams").hasAnyRole("USER", "HR", "TEAM_LEAD")
-        .antMatchers(HttpMethod.POST,"/api/v1/teams").hasAnyRole("TEAM_LEAD")
-
-
-        .antMatchers(HttpMethod.GET,"/api/v1/employees").hasAnyRole("HR", "TEAM_LEAD")
-        .antMatchers(HttpMethod.POST,"/api/v1/employees/register").hasAnyRole("HR")
+        .antMatchers(HttpMethod.POST,"/api/v1/employees/register", "/api/v1/teams").hasAnyRole("HR")
         .antMatchers(HttpMethod.PATCH,"/api/v1/employees/{employeeId}/inactivate").hasAnyRole("HR")
         .antMatchers(HttpMethod.GET,"/api/v1/employees/{employeeId}/remaining-days-off").hasAnyRole("HR")
         .antMatchers(HttpMethod.PUT,"/api/v1/employees/{employeeId}/requests/{requestId}").hasAnyRole("HR", "TEAM_LEAD")
 
         .antMatchers(HttpMethod.GET,"/api/v1/requests").hasAnyRole("HR", "TEAM_LEAD")
-        .antMatchers(HttpMethod.GET,"/api/v1/misc/legally-days-off").hasAnyRole("USER", "HR", "TEAM_LEAD")
 
         .antMatchers(HttpMethod.GET,"/api/v1/misc/roles").hasAnyRole()
 

@@ -33,9 +33,7 @@ public class TeamEty extends SrgKeyEntityTml<Long> {
     @Enumerated(value = EnumType.STRING)
     private TeamStatus status;
 
-    @OneToMany(mappedBy = "team",
-        cascade = {CascadeType.PERSIST, CascadeType.DETACH,
-        CascadeType.MERGE, CascadeType.REFRESH})
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
     private Set<EmployeeEty> employees = new HashSet<>();
 
     @Override

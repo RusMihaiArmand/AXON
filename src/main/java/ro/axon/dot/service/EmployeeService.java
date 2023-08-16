@@ -1,9 +1,12 @@
 package ro.axon.dot.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -35,6 +38,7 @@ import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
+import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 
 @Service
@@ -274,22 +278,41 @@ public class EmployeeService {
   }
 
   @Transactional
-  public EmployeeDetailsListItem createEmployee(EmployeeDetailsListItem employee) {
+  public EmployeeDetailsListItem createEmployee(RegisterRequest request) {
 
-    verifyEmployeeExists(employee.getUsername());
+    verifyEmployeeExists(request.getUsername());
 
-    EmployeeEty toSave = EmployeeMapper.INSTANCE.mapEmployeeDtoToEmployeeEty(employee);
-    toSave.setPassword(passwordEncoder.encode("axon_" + toSave.getUsername()));
+    TeamEty team = loadTeamById(request.getTeamId());
 
-    TeamEty team = loadTeamById(toSave.getTeam().getId());
+    EmployeeEty toSave = new EmployeeEty();
 
     toSave.setTeam(team);
+    toSave.setFirstName(request.getFirstname());
+    toSave.setLastName(request.getLastname());
+    toSave.setUsername(request.getUsername());
+    toSave.setTeam(team);
+    toSave.setRole(request.getRole());
+    toSave.setEmail(request.getEmail());
+    toSave.setContractStartDate(request.getContractStartDate());
+
+    EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
+    daysOff.setYear(request.getContractStartDate().getYear());
+    daysOff.setTotalNoDays(request.getNoDaysOff());
+    toSave.setEmpYearlyDaysOff(Set.of(daysOff));
+
+    toSave.setPassword(passwordEncoder.encode("axon_" + toSave.getUsername()));
     team.getEmployees().add(toSave);
 
-    teamRepository.save(team);
+
+
+    final LocalDateTime now = LocalDateTime.now();
+    toSave.setCrtUsr();
+    toSave.setMdfUsr();
+    toSave.setCrtTms(now.toInstant(ZoneOffset.UTC));
+    toSave.setMdfTms(now.toInstant(ZoneOffset.UTC));
+    toSave.setStatus("ACTIVE");
 
     EmployeeEty saved = employeeRepository.save(toSave);
-
     return EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(saved);
   }
 

@@ -62,6 +62,7 @@ import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
+import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.service.EmployeeService;
@@ -561,7 +562,7 @@ class EmployeeApiTest {
         "11",
         "jon",
         "doe",
-        "email@bla.com",
+        "jon@mail.com",
         "crtUsr",
         LocalDateTime.now().toInstant(ZoneOffset.UTC),
         "mdfUsr",
@@ -577,16 +578,25 @@ class EmployeeApiTest {
         new HashSet<>()
     );
 
+    RegisterRequest request = new RegisterRequest();
+    request.setFirstname("jon");
+    request.setLastname("doe");
+    request.setUsername("jon121");
+    request.setTeamId(1L);
+    request.setRole("USER");
+    request.setEmail("jon@mail.com");
+    request.setContractStartDate(LocalDate.now());
+    request.setNoDaysOff(20);
+
     EmployeeDetailsListItem employeeDto = EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(employee);
+    when(employeeService.createEmployee(request)).thenReturn(employeeDto);
 
-    when(employeeService.createEmployee(employeeDto)).thenReturn(employeeDto);
-
-    ResponseEntity<?> responseEntity = employeeApi.register(employeeDto);
+    ResponseEntity<?> responseEntity = employeeApi.register(request);
 
     assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     assertNotNull(responseEntity.getBody());
 
     EmployeeDetailsListItem response = (EmployeeDetailsListItem) responseEntity.getBody();
-    assertEquals(response.getUsername(), employee.getUsername());
+    assertEquals(response.getUsername(), request.getUsername());
   }
 }
