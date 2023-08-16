@@ -38,14 +38,11 @@ class JwtTokenUtilTest {
   private final JwtTokenUtil tokenUtil;
   private EmployeeEty employee;
 
-  private final LocalDateTime now;
-
   public JwtTokenUtilTest() {
     TokenUtilSetup tokenUtilSetup = new TokenUtilSetup();
 
     properties = tokenUtilSetup.getProperties();
     tokenUtil = tokenUtilSetup.getTokenUtil();
-    now = tokenUtilSetup.getNow();
 
     setupEmployee();
   }
@@ -72,12 +69,14 @@ class JwtTokenUtilTest {
 
   @Test
   void generateAccessToken() throws ParseException, BusinessException {
+    final LocalDateTime now = LocalDateTime.now();
+
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
     JWTClaimsSet claimsSet = accessToken.getJWTClaimsSet();
 
-    assertEquals(String.valueOf(employee.getId()), claimsSet.getSubject());
+    assertEquals(employee.getId(), claimsSet.getSubject());
     assertEquals(properties.domain(), claimsSet.getIssuer());
     assertEquals(employee.getId(), claimsSet.getAudience().get(0));
     assertEquals(employee.getUsername(), claimsSet.getClaim("username"));
@@ -88,6 +87,8 @@ class JwtTokenUtilTest {
 
   @Test
   void generateRefreshToken() throws ParseException, BusinessException {
+    final LocalDateTime now = LocalDateTime.now();
+
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
     assertNotNull(refreshToken);
@@ -104,6 +105,8 @@ class JwtTokenUtilTest {
 
   @Test
   void getUsernameFromToken() throws BusinessException {
+    final LocalDateTime now = LocalDateTime.now();
+
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
@@ -112,6 +115,8 @@ class JwtTokenUtilTest {
 
   @Test
   void getExpirationDateFromToken() throws BusinessException, ParseException {
+    final LocalDateTime now = LocalDateTime.now();
+
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
@@ -120,6 +125,8 @@ class JwtTokenUtilTest {
 
   @Test
   void isTokenExpired() throws  BusinessException {
+    final LocalDateTime now = LocalDateTime.now();
+
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);

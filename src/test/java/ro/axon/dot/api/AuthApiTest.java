@@ -34,6 +34,7 @@ import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.LoginRequest;
 import ro.axon.dot.model.LoginResponse;
 import ro.axon.dot.model.RefreshTokenRequest;
+import ro.axon.dot.model.UserDetailsResponse;
 import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.security.TokenUtilSetup;
 import ro.axon.dot.service.EmployeeService;
@@ -51,14 +52,11 @@ class AuthApiTest {
   private JwtTokenUtil tokenUtil;
   AuthApi api;
 
-  MockMvc mockMvc;
-
   @BeforeEach
   void setUp() {
     tokenUtil = new TokenUtilSetup().getTokenUtil();
 
     api = new AuthApi(passwordEncoder, tokenUtil, employeeService, refreshTokenService);
-    mockMvc = MockMvcBuilders.standaloneSetup(api).build();
   }
 
   @Test
@@ -541,5 +539,44 @@ class AuthApiTest {
     BusinessException exception = assertThrows(BusinessException.class, () -> api.logout(
         tokenRequest));
     assertEquals(BusinessErrorCode.TOKEN_EXPIRED, exception.getError().getErrorDescription());
+  }
+
+  @Test
+  void getUserDetails() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>(),
+        new HashSet<>()
+    );
+
+    SignedJWT token = tokenUtil.generateAccessToken(employee, LocalDateTime.now());
+
+    final String tokenString = "Bearer " + token.serialize();
+
+    when(employeeService.loadEmployeeByUsername(employee.getUsername())).thenReturn(employee);
+
+    ResponseEntity<?> responseEntity = api.getUserDetails(tokenString);
+
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    assertNotNull(responseEntity.getBody());
+
+    UserDetailsResponse response = (UserDetailsResponse) responseEntity.getBody();
+    assertEquals(employee.getUsername(), response.getUsername());
+    assertEquals(employee.getId(), response.getEmployeeId());
   }
 }

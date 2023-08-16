@@ -13,8 +13,6 @@ public class TokenUtilSetup {
 
   private JwtTokenUtil tokenUtil;
 
-  private final LocalDateTime now = LocalDateTime.now();
-
   public TokenUtilSetup() {
     properties = new JwtTokenUtilProperties(
         "https://localhost:8081/",
