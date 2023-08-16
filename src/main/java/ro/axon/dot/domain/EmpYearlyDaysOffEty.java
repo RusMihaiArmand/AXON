@@ -28,7 +28,7 @@ public class EmpYearlyDaysOffEty{
 
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EMP_YEARLY_DAYS_OFF_ID_SQ")
-  @Column(name = "EMP_YEARLY_DAYS_OFF_ID")
+  @Column(name = "ID")
   private Long id;
 
   @Column(name = "TOTAL_NO_DAYS")

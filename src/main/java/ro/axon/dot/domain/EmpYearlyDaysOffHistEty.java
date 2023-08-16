@@ -3,6 +3,8 @@ package ro.axon.dot.domain;
 import java.time.Instant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -29,15 +31,24 @@ public class EmpYearlyDaysOffHistEty{
   private Integer noDays;
   @Column(name = "DESCRIPTION")
   private String description;
+
+
+  @Enumerated(EnumType.STRING)
   @Column(name = "TYPE")
-  private String type;
+  private VacationDaysChangeTypeEnum type;
+
+
   @Column(name = "CRT_USR")
   private String crtUsr;
   @Column(name = "CRT_TMS")
   private Instant crtTms;
 
+  //@Column(name = "EMP_YEARLY_DAYS_OFF_ID")
+ // private Long yearlyDaysOffId;
+
   @ManyToOne
-  @JoinColumn(name = "EMP_YEARLY_DAYS_OFF_ID")
+ // @JoinColumn(name = "EMP_YEARLY_DAYS_OFF_ID")
+  @JoinColumn(name = "EMP_YEARLY_DAYS_OFF_ID", referencedColumnName = "ID")
   private EmpYearlyDaysOffEty empYearlyDaysOffEty;
 
 

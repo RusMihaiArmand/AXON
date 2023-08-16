@@ -4,6 +4,8 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Calendar;
+import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,7 +25,6 @@ import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
-import ro.axon.dot.mapper.EmpYearlyDaysOffHistMapper;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
@@ -428,9 +429,7 @@ public class EmployeeService {
   }
 
 
-
-
-  private int daysChanger(VacationDaysModifyDetails vacationDaysModifyDetails)
+  private int getDaysToModify(VacationDaysModifyDetails vacationDaysModifyDetails)
   {
     if(vacationDaysModifyDetails.getType().equals(VacationDaysChangeTypeEnum.DECREASE))
       return -vacationDaysModifyDetails.getNoDays();
@@ -442,12 +441,24 @@ public class EmployeeService {
   @Transactional
   public void changeVacationDays(VacationDaysModifyDetails vacationDaysModifyDetails)
   {
-    int dayChanger = this.daysChanger(vacationDaysModifyDetails);
+    int dayChanger = this.getDaysToModify(vacationDaysModifyDetails);
 
     employeeRepository.findAllById(vacationDaysModifyDetails.getEmployeeIds())
         .forEach(employee -> updateDaysForEmployee(dayChanger,vacationDaysModifyDetails.getDescription(),employee));
   }
 
+  EmpYearlyDaysOffEty createDaysOffEty(EmployeeEty employee){
+    EmpYearlyDaysOffEty empDaysOffEty = new EmpYearlyDaysOffEty();
+
+    empDaysOffEty.setEmployeeEty(employee);
+    empDaysOffEty.setYear( LocalDate.now().getYear() );
+    empDaysOffEty.setTotalNoDays(0);
+    empDaysOffEty.setEmpYearlyDaysOffHistEtySet( new HashSet<>() );
+
+    employee.getEmpYearlyDaysOff().add(empDaysOffEty);
+
+    return empDaysOffEty;
+  }
 
   private void updateDaysForEmployee(int daysChanger, String description, EmployeeEty emp) throws BusinessException
   {
@@ -455,19 +466,17 @@ public class EmployeeService {
     daysOffEty = emp.getEmpYearlyDaysOff().stream()
         .filter(yearlyDaysOff -> yearlyDaysOff.getYear().equals(LocalDate.now().getYear()))
         .findFirst()
-        .orElseThrow( () -> new BusinessException(BusinessExceptionElement
-            .builder()
-            .errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()
-        ));
+        .orElseGet( () -> createDaysOffEty(emp));
 
-    if (daysOffEty.getTotalNoDays() < -daysChanger) {
+    int daysLeft = daysOffEty.getTotalNoDays() + daysChanger;
+
+    if (daysLeft < 0) {
       throw new BusinessException(BusinessExceptionElement
           .builder().errorDescription(BusinessErrorCode.NEGATIVE_DAYS_OFF).build());
     }
 
-    emp.getEmpYearlyDaysOff().remove(daysOffEty);
-    daysOffEty.setTotalNoDays(daysOffEty.getTotalNoDays() + daysChanger);
-    emp.getEmpYearlyDaysOff().add(daysOffEty);
+    daysOffEty.setTotalNoDays(daysLeft);
+    daysOffEty.setYear( LocalDate.now().getYear() );
 
     EmpYearlyDaysOffHistEty daysOffHistory = new EmpYearlyDaysOffHistEty();
 
@@ -475,9 +484,9 @@ public class EmployeeService {
     daysOffHistory.setDescription(description);
 
     if (daysChanger > 0) {
-      daysOffHistory.setType("INCREASE");
+      daysOffHistory.setType(VacationDaysChangeTypeEnum.INCREASE);
     } else {
-      daysOffHistory.setType("DECREASE");
+      daysOffHistory.setType(VacationDaysChangeTypeEnum.DECREASE);
     }
 
     daysOffHistory.setCrtUsr("CREATION-USER"); //to be modified when login endpoint is finished
@@ -485,11 +494,8 @@ public class EmployeeService {
 
     daysOffHistory.setEmpYearlyDaysOffEty(daysOffEty);
 
-    System.out.println("ID IS " + emp.getId());
-    EmpYearlyDaysOffHistMapper.INSTANCE.mapEmpYearlyDaysOffHistEtyToEmpYearlyDaysOffHistDto(
-        empYearlyDaysOffHistRepository.save(daysOffHistory));
-
     daysOffEty.getEmpYearlyDaysOffHistEtySet().add(daysOffHistory);
-  }
 
+    employeeRepository.save(emp);
+  }
 }

@@ -79,10 +79,9 @@ class EmployeeServiceTest {
     @Mock
     EmpYearlyDaysOffHistRepository empYearlyDaysOffHistoryRepository;
 
-  @BeforeEach
-  void setUp() {
-    employeeService = new EmployeeService(employeeRepository, leaveRequestRepository,
-        empYearlyDaysOffHistoryRepository, legallyDaysOffService);
+    @BeforeEach
+    void setUp() {
+        employeeService = new EmployeeService(employeeRepository, leaveRequestRepository);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -848,9 +847,6 @@ class EmployeeServiceTest {
     lista.add(employee2);
     when(employeeRepository.findAllById(any())).thenReturn( lista );
 
-    List<EmpYearlyDaysOffEty> yearlyDaysOffDetailsList = new ArrayList<>();
-    yearlyDaysOffDetailsList.add(yearlyDaysOff1);
-    yearlyDaysOffDetailsList.add(yearlyDaysOff2);
 
     VacationDaysModifyDetails v = new VacationDaysModifyDetails();
 
@@ -864,57 +860,9 @@ class EmployeeServiceTest {
 
     employeeService.changeVacationDays(v);
 
-    verify(empYearlyDaysOffHistoryRepository, times(2))
+    verify(employeeRepository, times(2))
         .save(any());
 
-  }
-
-  @Test
-  void changeVacationDaysYearlyDaysOffNotSet()
-  {
-    EmpYearlyDaysOffEty yearlyDaysOff2 = new EmpYearlyDaysOffEty();
-
-
-    EmployeeEty employee2 = new EmployeeEty();
-    employee2.setId("id2M");
-    employee2.setFirstName(FIRST_NAME);
-    employee2.setLastName(LAST_NAME);
-    employee2.setEmail("alt-mail");
-    employee2.setCrtUsr(CRT_USR);
-    employee2.setCrtTms(CRT_TMS);
-    employee2.setMdfUsr(MDF_USR);
-    employee2.setMdfTms(MDF_TMS);
-    employee2.setRole(ROLE);
-    employee2.setStatus(STATUS);
-    employee2.setContractStartDate(CONTRACT_START_DATE);
-    employee2.setContractEndDate(CONTRACT_END_DATE);
-    employee2.setUsername("utilizator");
-    employee2.setTeam(TEAM_ETY);
-
-    yearlyDaysOff2.setTotalNoDays(25);
-    yearlyDaysOff2.setYear(2023);
-    yearlyDaysOff2.setEmployeeEty(employee2);
-    yearlyDaysOff2.setId(2L);
-
-    List<EmployeeEty> lista = new ArrayList<>();
-    lista.add(employee2);
-    when(employeeRepository.findAllById(any())).thenReturn( lista );
-
-    List<EmpYearlyDaysOffEty> yearlyDaysOffDetailsList = new ArrayList<>();
-    yearlyDaysOffDetailsList.add(yearlyDaysOff2);
-
-    VacationDaysModifyDetails v = new VacationDaysModifyDetails();
-
-    v.setNoDays(1);
-    v.setType(VacationDaysChangeTypeEnum.INCREASE);
-    v.setDescription("d");
-    List<String> idList = new ArrayList<>();
-    idList.add("id2M");
-    v.setEmployeeIds( idList );
-
-
-    var ex = assertThrows(BusinessException.class, () -> { employeeService.changeVacationDays(v);});
-    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET);
   }
 
   @Test
@@ -956,9 +904,6 @@ class EmployeeServiceTest {
     List<EmployeeEty> lista = new ArrayList<>();
     lista.add(employee2);
     when(employeeRepository.findAllById(any())).thenReturn( lista );
-
-    List<EmpYearlyDaysOffEty> yearlyDaysOffDetailsList = new ArrayList<>();
-    yearlyDaysOffDetailsList.add(yearlyDaysOff2);
 
 
     VacationDaysModifyDetails v = new VacationDaysModifyDetails();

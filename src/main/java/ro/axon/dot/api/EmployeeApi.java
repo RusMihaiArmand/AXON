@@ -116,7 +116,7 @@ public class EmployeeApi {
 
   @PostMapping("/employees/days-off")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void modifyEmployeesDaysOff(@RequestBody VacationDaysModifyDetails vacationDaysModifyDetails)
+  public void modifyEmployeesDaysOff(@Valid @RequestBody VacationDaysModifyDetails vacationDaysModifyDetails)
   {
     employeeService.changeVacationDays(vacationDaysModifyDetails);
   }
