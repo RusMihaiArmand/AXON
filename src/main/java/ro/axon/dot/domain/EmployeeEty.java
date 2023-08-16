@@ -56,8 +56,11 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @JoinColumn(name = "TEAM_ID")
   private TeamEty team;
 
-  @OneToMany(fetch = FetchType.LAZY)
-  @JoinColumn(name = "EMPLOYEE_ID")
+  @OneToMany(
+      mappedBy = "employee",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true
+  )
   private Set<LeaveRequestEty> leaveRequests = new HashSet<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "employee")
@@ -68,4 +71,8 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
     return EmployeeEty.class;
   }
 
+  public void removeLeaveRequests(LeaveRequestEty leaveRequestEty){
+    leaveRequests.remove(leaveRequestEty);
+    leaveRequestEty.setEmployee(null);
+  }
 }

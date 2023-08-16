@@ -7,6 +7,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -82,6 +83,16 @@ public class EmployeeApi {
       employeeService.updateLeaveRequestStatus(idEmployee, idRequest, review);
       return ResponseEntity.noContent().build();
   }
+
+  @DeleteMapping("employees/{employeeId}/requests/{requestId}")
+  public ResponseEntity<Void> deleteLeaveRequest(@PathVariable String employeeId,
+                                                 @PathVariable Long requestId){
+
+    employeeService.deleteLeaveRequest(employeeId, requestId);
+
+    return ResponseEntity.noContent().build();
+  }
+
 
   @GetMapping(value = {"/employees/{employeeId}/remaining-days-off"})
   public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(@PathVariable String employeeId){

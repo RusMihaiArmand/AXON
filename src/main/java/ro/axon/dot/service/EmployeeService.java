@@ -7,7 +7,6 @@ import java.util.Calendar;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -181,9 +180,7 @@ public class EmployeeService {
 
   public void inactivateEmployee(String employeeId){
 
-    EmployeeEty employee = employeeRepository.findById(employeeId).orElseThrow(
-        () -> new BusinessException(BusinessExceptionElement
-        .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
+    EmployeeEty employee = findEmployeeById(employeeId);
 
       employee.setStatus("INACTIVE");
 
@@ -199,17 +196,13 @@ public class EmployeeService {
       Long requestId,
       EditLeaveRequestDetails editLeaveRequestDetails){
 
-    EmployeeEty employee = employeeRepository.findById(employeeId).orElseThrow(
-        () -> new BusinessException(BusinessExceptionElement.builder().errorDescription(
-            BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()
-        ));
+    EmployeeEty employee = findEmployeeById(employeeId);
 
     LeaveRequestEty leaveRequest = checkLeaveRequestExists(employee, requestId);
 
     validateLeaveRequest(leaveRequest, editLeaveRequestDetails);
 
-    if(leaveRequest.getStatus().equals(LeaveRequestEtyStatusEnum.APPROVED) ||
-        leaveRequest.getStatus().equals(LeaveRequestEtyStatusEnum.PENDING)){
+    if(isPendingOrApprovedLeaveRequest(leaveRequest)){
 
       leaveRequest.setStartDate(editLeaveRequestDetails.getStartDate());
       leaveRequest.setEndDate(editLeaveRequestDetails.getEndDate());
@@ -224,13 +217,46 @@ public class EmployeeService {
     return leaveRequestDetailsListItem;
   }
 
+  @Transactional
+  public void deleteLeaveRequest(String employeeId, Long requestId){
+
+    EmployeeEty employee = findEmployeeById(employeeId);
+
+    LeaveRequestEty leaveRequest = checkLeaveRequestExists(employee, requestId);
+
+    if(leaveRequest.getStatus().equals(LeaveRequestEtyStatusEnum.REJECTED)){
+
+      throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
+          BusinessErrorCode.LEAVE_REQUEST_REJECTED).build());
+    }
+    if(leaveRequest.getStatus().equals(LeaveRequestEtyStatusEnum.APPROVED) &&
+        leaveRequest.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))){
+
+      throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
+          BusinessErrorCode.LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE).build());
+    }
+
+    if(isPendingOrApprovedLeaveRequest(leaveRequest)){
+
+      employee.removeLeaveRequests(leaveRequest);
+      employeeRepository.save(employee);
+    }
+  }
+
+  private EmployeeEty findEmployeeById(String employeeId){
+
+    return employeeRepository.findById(employeeId).orElseThrow(
+        () -> new BusinessException(BusinessExceptionElement.builder().errorDescription(
+            BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()
+        ));
+  }
+
   private LeaveRequestEty checkLeaveRequestExists(EmployeeEty employee, Long requestId){
 
     return employee.getLeaveRequests().stream()
         .filter(leaveRequestEty -> leaveRequestEty.getId().equals(requestId)).findFirst()
         .orElseThrow(() -> new BusinessException(BusinessExceptionElement.builder()
             .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND).build()));
-
   }
   private void validateLeaveRequest(LeaveRequestEty leaveRequest, EditLeaveRequestDetails editLeaveRequestDetails){
 
@@ -247,6 +273,14 @@ public class EmployeeService {
           BusinessErrorCode.LEAVE_REQUEST_PAST_DATE).build());
     }
   }
+
+  private boolean isPendingOrApprovedLeaveRequest(LeaveRequestEty leaveRequest){
+
+    return leaveRequest.getStatus().equals(LeaveRequestEtyStatusEnum.PENDING) ||
+        leaveRequest.getStatus().equals(LeaveRequestEtyStatusEnum.APPROVED);
+  }
+
+  @Transactional
   public LeaveRequestDetailsList getLeaveRequests(String idEmployee, LocalDate startDate, LocalDate endDate) {
       Optional<EmployeeEty> employeeOptional = employeeRepository.findById(idEmployee);
       if (employeeOptional.isEmpty())

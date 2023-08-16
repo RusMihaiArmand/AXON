@@ -1,8 +1,6 @@
 package ro.axon.dot.api;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -10,71 +8,42 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static ro.axon.dot.EmployeeTestAttributes.CRT_TMS;
-import static ro.axon.dot.EmployeeTestAttributes.CRT_USR;
-import static ro.axon.dot.EmployeeTestAttributes.EMAIL;
-import static ro.axon.dot.EmployeeTestAttributes.FIRST_NAME;
-import static ro.axon.dot.EmployeeTestAttributes.ID;
-import static ro.axon.dot.EmployeeTestAttributes.LAST_NAME;
-import static ro.axon.dot.EmployeeTestAttributes.MDF_TMS;
-import static ro.axon.dot.EmployeeTestAttributes.MDF_USR;
-import static ro.axon.dot.EmployeeTestAttributes.ROLE;
-import static ro.axon.dot.EmployeeTestAttributes.STATUS;
-import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
-import static ro.axon.dot.EmployeeTestAttributes.V;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
+
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.client.RestTemplate;
-import ro.axon.dot.EmployeeTestAttributes;
-import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.domain.TeamEty;
-import ro.axon.dot.domain.TeamStatus;
+import ro.axon.dot.EmployeeTestAttributes;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
-import ro.axon.dot.mapper.EmployeeMapper;
+import ro.axon.dot.model.*;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
-import ro.axon.dot.model.LeaveRequestDetailsList;
-import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
-import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
-import ro.axon.dot.model.TeamDetails;
 import ro.axon.dot.model.TeamDetailsListItem;
-import ro.axon.dot.model.UserDetailsResponse;
-import ro.axon.dot.security.JwtTokenUtil;
-import ro.axon.dot.security.TokenUtilSetup;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.LeaveRequestService;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ro.axon.dot.EmployeeTestAttributes.*;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeApiTest {
@@ -87,8 +56,7 @@ class EmployeeApiTest {
   public static final TeamDetailsListItem teamDetails2 = new TeamDetailsListItem();
   public static final EmployeeDetailsListItem employee = new EmployeeDetailsListItem();
 
-  @Mock
-  private PasswordEncoder passwordEncoder;
+
   @Mock
   EmployeeService employeeService;
   @Mock
@@ -414,6 +382,16 @@ class EmployeeApiTest {
             .content(editLeaveRequestContent))
         .andExpect(status().isConflict());
   }
+
+  @Test
+  public void deleteLeaveRequestSuccess() throws Exception{
+    mockMvc.perform(delete("/api/v1/employees/" + employeeId + "/requests/" + requestId))
+        .andExpect(status().isNoContent());
+
+    verify(employeeService, times(1)).deleteLeaveRequest(anyString(), anyLong());
+  }
+
+
   private EmployeeDetailsListItem initEmployee(){
 
     EmployeeDetailsListItem employee = new EmployeeDetailsListItem();

@@ -2,7 +2,6 @@ package ro.axon.dot.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -247,46 +246,24 @@ class EmployeeServiceTest {
   void inactivateEmployeeSuccess(){
     EmployeeEty employee = initEmployee();
 
-        when(employeeRepository.findById(ID)).thenReturn(Optional.of(employee));
+    when(employeeRepository.findById(ID)).thenReturn(Optional.of(employee));
 
-        employeeService.inactivateEmployee(ID);
+    employeeService.inactivateEmployee(ID);
 
-        assertEquals("INACTIVE", employee.getStatus());
-        assertEquals("User", employee.getMdfUsr());
-    }
+    assertEquals("INACTIVE", employee.getStatus());
+    assertEquals("User", employee.getMdfUsr());
+  }
 
-    @Test
-    void inactivateEmployeeFail(){
+  @Test
+  void inactivateEmployeeFail(){
 
-        when(employeeRepository.findById(ID)).thenReturn(Optional.empty());
+    when(employeeRepository.findById(ID)).thenReturn(Optional.empty());
 
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> employeeService.inactivateEmployee(ID));
+    BusinessException exception = assertThrows(BusinessException.class,
+        () -> employeeService.inactivateEmployee(ID));
 
-        assertEquals(BusinessErrorCode.EMPLOYEE_NOT_FOUND, exception.getError().getErrorDescription());
-        verify(employeeRepository, never()).save(any());
-    }
-
-    private EmployeeEty initEmployee(){
-
-        EmployeeEty employee = new EmployeeEty();
-
-        employee.setId(ID);
-        employee.setFirstName(FIRST_NAME);
-        employee.setLastName(LAST_NAME);
-        employee.setEmail(EMAIL);
-        employee.setCrtUsr(CRT_USR);
-        employee.setCrtTms(CRT_TMS);
-        employee.setMdfUsr(MDF_USR);
-        employee.setMdfTms(MDF_TMS);
-        employee.setRole(ROLE);
-        employee.setStatus(STATUS);
-        employee.setContractStartDate(CONTRACT_START_DATE);
-        employee.setContractEndDate(CONTRACT_END_DATE);
-        employee.setUsername(USERNAME);
-        employee.setTeam(TEAM_ETY);
-
-    return employee;
+    assertEquals(BusinessErrorCode.EMPLOYEE_NOT_FOUND, exception.getError().getErrorDescription());
+    verify(employeeRepository, never()).save(any());
   }
 
   @Test
@@ -515,6 +492,121 @@ class EmployeeServiceTest {
     assertEquals(LeaveRequestEtyStatusEnum.PENDING, leaveRequestItem.getStatus());
   }
 
+  @Test
+  public void deleteRejectedLeaveRequest(){
+    String employeeId = ID;
+    Long requestId = 1L;
+
+    EmployeeEty employee = initEmployee();
+
+    LeaveRequestEty leaveRequest = new LeaveRequestEty();
+    leaveRequest.setId(requestId);
+    leaveRequest.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.REJECTED);
+    leaveRequest.setStartDate(LocalDate.parse("2023-08-23"));
+    leaveRequest.setEndDate(LocalDate.parse("2023-08-27"));
+    leaveRequest.setDescription("Medical leave request");
+
+    leaveRequest.setEmployee(employee);
+    employee.getLeaveRequests().add(leaveRequest);
+
+    Optional<EmployeeEty> employeeEtyOptional = Optional.of(employee);
+
+    when(employeeRepository.findById(anyString())).thenReturn(employeeEtyOptional);
+
+    BusinessException exception = assertThrows(BusinessException.class,
+        () -> employeeService.deleteLeaveRequest(employeeId, requestId));
+
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_REJECTED, exception.getError().getErrorDescription());
+
+    assertEquals(1, employeeEtyOptional.get().getLeaveRequests().size());
+    verify(employeeRepository, times(1)).findById(anyString());
+    verify(employeeRepository, times(0)).save(any(EmployeeEty.class));
+    verify(leaveRequestRepository, times(0)).delete(any(LeaveRequestEty.class));
+  }
+
+  @Test
+  public void deleteApprovedPastLeaveRequest(){
+    String employeeId = ID;
+    Long requestId = 1L;
+
+    EmployeeEty employee = initEmployee();
+
+    LeaveRequestEty leaveRequest = new LeaveRequestEty();
+    leaveRequest.setId(requestId);
+    leaveRequest.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+    leaveRequest.setStartDate(LocalDate.parse("2023-07-23"));
+    leaveRequest.setEndDate(LocalDate.parse("2023-07-27"));
+    leaveRequest.setDescription("Medical leave request");
+
+    leaveRequest.setEmployee(employee);
+    employee.getLeaveRequests().add(leaveRequest);
+
+    Optional<EmployeeEty> employeeEtyOptional = Optional.of(employee);
+
+    when(employeeRepository.findById(anyString())).thenReturn(employeeEtyOptional);
+
+    BusinessException exception = assertThrows(BusinessException.class,
+        () -> employeeService.deleteLeaveRequest(employeeId, requestId));
+
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE, exception.getError().getErrorDescription());
+
+    assertEquals(1, employeeEtyOptional.get().getLeaveRequests().size());
+    verify(employeeRepository, times(1)).findById(anyString());
+    verify(employeeRepository, times(0)).save(any(EmployeeEty.class));
+    verify(leaveRequestRepository, times(0)).delete(any(LeaveRequestEty.class));
+  }
+
+  @Test
+  public void deleteLeaveRequestSuccess(){
+    EmployeeEty employee = initEmployee();
+
+    LeaveRequestEty leaveRequest = new LeaveRequestEty();
+    leaveRequest.setId(1L);
+    leaveRequest.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+    leaveRequest.setStartDate(LocalDate.parse("2023-08-23"));
+    leaveRequest.setEndDate(LocalDate.parse("2023-08-27"));
+    leaveRequest.setDescription("Medical leave request");
+
+    leaveRequest.setEmployee(employee);
+    employee.getLeaveRequests().add(leaveRequest);
+
+    Optional<EmployeeEty> employeeEtyOptional = Optional.of(employee);
+
+    when(employeeRepository.findById(anyString())).thenReturn(employeeEtyOptional);
+
+    employeeService.deleteLeaveRequest(ID, 1L);
+
+    assertEquals(0, employeeEtyOptional.get().getLeaveRequests().size());
+    verify(employeeRepository, times(1)).findById(anyString());
+    verify(employeeRepository, times(1)).save(any(EmployeeEty.class));
+    verify(leaveRequestRepository, times(1)).delete(any(LeaveRequestEty.class));
+  }
+
+
+  private EmployeeEty initEmployee(){
+
+    EmployeeEty employee = new EmployeeEty();
+
+    employee.setId(ID);
+    employee.setFirstName(FIRST_NAME);
+    employee.setLastName(LAST_NAME);
+    employee.setEmail(EMAIL);
+    employee.setCrtUsr(CRT_USR);
+    employee.setCrtTms(CRT_TMS);
+    employee.setMdfUsr(MDF_USR);
+    employee.setMdfTms(MDF_TMS);
+    employee.setRole(ROLE);
+    employee.setStatus(STATUS);
+    employee.setContractStartDate(CONTRACT_START_DATE);
+    employee.setContractEndDate(CONTRACT_END_DATE);
+    employee.setUsername(USERNAME);
+    employee.setTeam(TEAM_ETY);
+
+    return employee;
+  }
     @Test
     public void getLeaveRequestsEmployeeNotFound() {
         when(employeeRepository.findById(anyString())).thenThrow(

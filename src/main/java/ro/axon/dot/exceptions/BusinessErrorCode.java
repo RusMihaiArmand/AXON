@@ -26,9 +26,10 @@ public enum BusinessErrorCode {
     YEARLY_DAYS_OFF_NOT_SET("EDOT0014400", "The vacation days for this employee have not been set for this year.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_NOT_FOUND("EDOT0015404", "The leave request with the given ID does not exist.", HttpStatus.NOT_FOUND),
     LEAVE_REQUEST_REJECTED("EDOT0016400", "Leave request already rejected.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_PAST_DATE("EDOT0017400", "Leave request cannot be submitted for past dates.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_PAST_DATE("EDOT0017400", "Leave request contains days from past months.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_PRECEDING_VERSION("EDOT0018409", "Leave request version cannot precede version from database.", HttpStatus.CONFLICT),
-    EMAIL_DUPLICATE("EDOT0019409", "An employee with this email already exists.", HttpStatus.CONFLICT);
+    EMAIL_DUPLICATE("EDOT0019409", "An employee with this email already exists.", HttpStatus.CONFLICT),
+    LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE("EDOT0006400", "Cannot delete approved leave requests from past months.", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String devMsg;
