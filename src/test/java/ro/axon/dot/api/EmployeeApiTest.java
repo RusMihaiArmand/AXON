@@ -4,16 +4,36 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ro.axon.dot.EmployeeTestAttributes.CRT_TMS;
+import static ro.axon.dot.EmployeeTestAttributes.CRT_USR;
+import static ro.axon.dot.EmployeeTestAttributes.EMAIL;
+import static ro.axon.dot.EmployeeTestAttributes.FIRST_NAME;
+import static ro.axon.dot.EmployeeTestAttributes.ID;
+import static ro.axon.dot.EmployeeTestAttributes.LAST_NAME;
+import static ro.axon.dot.EmployeeTestAttributes.MDF_TMS;
+import static ro.axon.dot.EmployeeTestAttributes.MDF_USR;
+import static ro.axon.dot.EmployeeTestAttributes.ROLE;
+import static ro.axon.dot.EmployeeTestAttributes.STATUS;
+import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
+import static ro.axon.dot.EmployeeTestAttributes.V;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Arrays;
-
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,28 +42,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import ro.axon.dot.EmployeeTestAttributes;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.EmployeeTestAttributes;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
-import ro.axon.dot.model.*;
+import ro.axon.dot.model.CreateLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.model.LeaveRequestDetailsList;
+import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.service.EmployeeService;
-import ro.axon.dot.service.LeaveRequestService;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static ro.axon.dot.EmployeeTestAttributes.*;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeApiTest {
@@ -59,8 +72,6 @@ class EmployeeApiTest {
 
   @Mock
   EmployeeService employeeService;
-  @Mock
-  LeaveRequestService leaveRequestService;
 
   @InjectMocks
   EmployeeApi employeeApi;
@@ -68,10 +79,10 @@ class EmployeeApiTest {
   MockMvc mockMvc;
 
   @BeforeEach
-  void setUp(){
+  void setUp() {
     mockMvc = MockMvcBuilders.standaloneSetup(employeeApi)
         .setControllerAdvice(new ApiExceptionHandler())
-            .build();
+        .build();
 
     teamDetails1.setName("AxonTeam");
     teamDetails2.setName("InternshipTeam");
@@ -85,7 +96,7 @@ class EmployeeApiTest {
   }
 
   @Test
-  void getEmployeesList() throws Exception{
+  void getEmployeesList() throws Exception {
 
     EmployeeDetailsListItem employee1 = initEmployee();
 
@@ -96,12 +107,12 @@ class EmployeeApiTest {
     employee2.setTotalVacationDays(21);
     EmployeeDetailsList employeesList = new EmployeeDetailsList();
 
-    employeesList.setItems(Arrays.asList(employee1,employee2));
+    employeesList.setItems(Arrays.asList(employee1, employee2));
 
     when(employeeService.getEmployeesDetails(null)).thenReturn(employeesList);
 
     mockMvc.perform(get("/api/v1/employees")
-        .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.items", hasSize(2)))
         .andExpect(jsonPath("$.items[0].firstName").value(FIRST_NAME))
@@ -123,17 +134,18 @@ class EmployeeApiTest {
   }
 
   @Test
-  void getEmployeesListNull() throws Exception{
+  void getEmployeesListNull() throws Exception {
 
     EmployeeDetailsList employeesList = new EmployeeDetailsList();
 
     when(employeeService.getEmployeesDetails(null)).thenReturn(employeesList);
 
     mockMvc.perform(get("/api/v1/employees")
-        .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.items").isEmpty());
   }
+
   @Test
   void getEmployeesByNameNotFound() throws Exception {
 
@@ -176,103 +188,104 @@ class EmployeeApiTest {
 
 
   private String getJsonAnswer() throws IOException {
-      LeaveRequestReview review = new LeaveRequestReview();
-      review.setLeaveRequestStatus("APPROVED");
-      review.setVersion(1L);
-      ObjectMapper mapper = new ObjectMapper();
-      return mapper.writeValueAsString(review);
+    LeaveRequestReview review = new LeaveRequestReview();
+    review.setLeaveRequestStatus("APPROVED");
+    review.setVersion(1L);
+    ObjectMapper mapper = new ObjectMapper();
+    return mapper.writeValueAsString(review);
   }
 
 
   @Test
   void answerLeaveRequestEmployeeNotFound() throws Exception {
-      doThrow(new BusinessException(
-              BusinessException.BusinessExceptionElement
-                      .builder()
-                      .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-                      .build()))
-              .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
+    doThrow(new BusinessException(
+        BusinessException.BusinessExceptionElement
+            .builder()
+            .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+            .build()))
+        .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
 
-      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-                      .contentType(MediaType.APPLICATION_JSON)
-                      .accept(MediaType.APPLICATION_JSON)
-                      .content(getJsonAnswer()))
-              .andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.message").value("The employee with the given ID does not exist."))
-              .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
+    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .content(getJsonAnswer()))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("The employee with the given ID does not exist."))
+        .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
   }
 
   @Test
   void answerLeaveRequestRequestNotFound() throws Exception {
-      doThrow(new BusinessException(
-              BusinessException.BusinessExceptionElement
-                      .builder()
-                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND)
-                      .build()))
-              .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
+    doThrow(new BusinessException(
+        BusinessException.BusinessExceptionElement
+            .builder()
+            .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND)
+            .build()))
+        .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
 
-      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-                      .contentType(MediaType.APPLICATION_JSON)
-                      .accept(MediaType.APPLICATION_JSON)
-                      .content(getJsonAnswer()))
-              .andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.message").value("Request not found"))
-              .andExpect(jsonPath("$.errorCode").value("EDOT0003400"));
+    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .content(getJsonAnswer()))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("Request not found"))
+        .andExpect(jsonPath("$.errorCode").value("EDOT0003400"));
   }
 
   @Test
   void answerLeaveRequestRequestResolved() throws Exception {
-      doThrow(new BusinessException(
-              BusinessException.BusinessExceptionElement
-                      .builder()
-                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED)
-                      .build()))
-              .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
+    doThrow(new BusinessException(
+        BusinessException.BusinessExceptionElement
+            .builder()
+            .errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED)
+            .build()))
+        .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
 
-      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-                      .contentType(MediaType.APPLICATION_JSON)
-                      .accept(MediaType.APPLICATION_JSON)
-                      .content(getJsonAnswer()))
-              .andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.message").value("Request already answered"))
-              .andExpect(jsonPath("$.errorCode").value("EDOT0004400"));
+    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .content(getJsonAnswer()))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("Request already answered"))
+        .andExpect(jsonPath("$.errorCode").value("EDOT0004400"));
   }
+
   @Test
   void answerLeaveRequestOutdatedVersion() throws Exception {
-      doThrow(new BusinessException(
-              BusinessException.BusinessExceptionElement
-                      .builder()
-                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
-                      .build()))
-              .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
+    doThrow(new BusinessException(
+        BusinessException.BusinessExceptionElement
+            .builder()
+            .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+            .build()))
+        .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
 
-      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-                      .contentType(MediaType.APPLICATION_JSON)
-                      .accept(MediaType.APPLICATION_JSON)
-                      .content(getJsonAnswer()))
-              .andExpect(status().isConflict())
-              .andExpect(jsonPath("$.message").value("Request version smaller than db version"))
-              .andExpect(jsonPath("$.errorCode").value("EDOT0005400"));
+    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .content(getJsonAnswer()))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.message").value("Request version smaller than db version"))
+        .andExpect(jsonPath("$.errorCode").value("EDOT0005400"));
   }
 
   @Test
   void answerLeaveRequestEmployeeOk() throws Exception {
-      LeaveRequestReview review = new LeaveRequestReview();
-      review.setLeaveRequestStatus("APPROVED");
-      review.setVersion(1L);
-      ObjectMapper mapper = new ObjectMapper();
-      String jsonAnswer = mapper.writeValueAsString(review);
+    LeaveRequestReview review = new LeaveRequestReview();
+    review.setLeaveRequestStatus("APPROVED");
+    review.setVersion(1L);
+    ObjectMapper mapper = new ObjectMapper();
+    String jsonAnswer = mapper.writeValueAsString(review);
 
-      LeaveRequestEty request = new LeaveRequestEty();
-      request.setId(1L);
-      request.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-      when(employeeService.updateLeaveRequestStatus(anyLong(), anyLong(), any())).thenReturn(request);
+    LeaveRequestEty request = new LeaveRequestEty();
+    request.setId(1L);
+    request.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+    when(employeeService.updateLeaveRequestStatus(anyLong(), anyLong(), any())).thenReturn(request);
 
-      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-                      .contentType(MediaType.APPLICATION_JSON)
-                      .accept(MediaType.APPLICATION_JSON)
-                      .content(jsonAnswer))
-              .andExpect(status().isNoContent());
+    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .content(jsonAnswer))
+        .andExpect(status().isNoContent());
   }
 
   @Test
@@ -306,16 +319,17 @@ class EmployeeApiTest {
 
     mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
             .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.remainingDays").value(20));
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.remainingDays").value(20));
   }
 
   @Test
   void editLeaveRequestSucces() throws Exception {
 
-    mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId, employeeId, requestId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(editLeaveRequestContent))
+    mockMvc.perform(
+            put("/api/v1/employees/" + employeeId + "/requests/" + requestId, employeeId, requestId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(editLeaveRequestContent))
         .andExpect(status().isNoContent());
   }
 
@@ -323,7 +337,7 @@ class EmployeeApiTest {
   public void testEditLeaveRequestEmployeeNotFound() throws Exception {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
-        .thenThrow( new BusinessException(BusinessExceptionElement
+        .thenThrow(new BusinessException(BusinessExceptionElement
             .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
@@ -336,7 +350,7 @@ class EmployeeApiTest {
   public void testEditLeaveRequestNotFound() throws Exception {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
-        .thenThrow( new BusinessException(BusinessExceptionElement
+        .thenThrow(new BusinessException(BusinessExceptionElement
             .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND).build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
@@ -344,11 +358,12 @@ class EmployeeApiTest {
             .content(editLeaveRequestContent))
         .andExpect(status().isBadRequest());
   }
+
   @Test
   public void testEditLeaveRequestPastDate() throws Exception {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
-        .thenThrow( new BusinessException(BusinessExceptionElement
+        .thenThrow(new BusinessException(BusinessExceptionElement
             .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PAST_DATE).build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
@@ -361,7 +376,7 @@ class EmployeeApiTest {
   public void testEditLeaveRequestRejected() throws Exception {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
-        .thenThrow( new BusinessException(BusinessExceptionElement
+        .thenThrow(new BusinessException(BusinessExceptionElement
             .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED).build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
@@ -374,8 +389,9 @@ class EmployeeApiTest {
   public void testEditLeaveRequestPrecedingVersion() throws Exception {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
-        .thenThrow( new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION).build()));
+        .thenThrow(new BusinessException(BusinessExceptionElement
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+            .build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
@@ -384,7 +400,7 @@ class EmployeeApiTest {
   }
 
   @Test
-  public void deleteLeaveRequestSuccess() throws Exception{
+  public void deleteLeaveRequestSuccess() throws Exception {
     mockMvc.perform(delete("/api/v1/employees/" + employeeId + "/requests/" + requestId))
         .andExpect(status().isNoContent());
 
@@ -392,7 +408,7 @@ class EmployeeApiTest {
   }
 
 
-  private EmployeeDetailsListItem initEmployee(){
+  private EmployeeDetailsListItem initEmployee() {
 
     EmployeeDetailsListItem employee = new EmployeeDetailsListItem();
     employee.setId(ID);
@@ -414,18 +430,38 @@ class EmployeeApiTest {
   }
 
   @Test
+  @DisplayName("When add leave request then return status code")
+  void whenAddLeaveRequestThenReturnStatus() throws Exception {
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    CreateLeaveRequestDetails createLeaveRequestDetails = new CreateLeaveRequestDetails();
+
+    mockMvc.perform(post("/api/v1/employees/1/requests")
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(createLeaveRequestDetails)))
+        .andExpect(status().isCreated());
+
+    verify(employeeService, times(1)).createLeaveRequest(eq("1"),
+        eq(createLeaveRequestDetails));
+
+  }
+
+
+  @Test
   void getRemainingDaysOffEmployeeNotFound() throws Exception {
     RemainingDaysOff remainingDaysOff = new RemainingDaysOff();
     remainingDaysOff.setRemainingDays(employee.getTotalVacationDays());
 
     doThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()))
-            .when(employeeService).getEmployeeRemainingDaysOff(ID);
+        .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()))
+        .when(employeeService).getEmployeeRemainingDaysOff(ID);
 
     mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
   }
 
   @Test
@@ -434,13 +470,14 @@ class EmployeeApiTest {
     remainingDaysOff.setRemainingDays(employee.getTotalVacationDays());
 
     doThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()))
-            .when(employeeService).getEmployeeRemainingDaysOff(ID);
+        .builder().errorDescription(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET).build()))
+        .when(employeeService).getEmployeeRemainingDaysOff(ID);
 
     mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET.getErrorCode()));
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errorCode").value(
+            BusinessErrorCode.YEARLY_DAYS_OFF_NOT_SET.getErrorCode()));
   }
 
   @Test
@@ -450,86 +487,87 @@ class EmployeeApiTest {
     mockMvc.perform(get("/api/v1/employee/validation")
             .param("username", USERNAME)
             .param("email", EMAIL))
-            .andExpect(status().isOk());
+        .andExpect(status().isOk());
   }
 
   @Test
   void checkEmployeeUniqueCredentialsDuplicateUsername() throws Exception {
     doThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build()
+        .builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build()
     )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
 
     mockMvc.perform(get("/api/v1/employee/validation")
-                    .param("username", USERNAME)
-                    .param("email", EMAIL)
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.USERNAME_DUPLICATE.getErrorCode()));
+            .param("username", USERNAME)
+            .param("email", EMAIL)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.errorCode").value(BusinessErrorCode.USERNAME_DUPLICATE.getErrorCode()));
   }
 
   @Test
   void checkEmployeeUniqueCredentialsDuplicateEmail() throws Exception {
     doThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build()
+        .builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build()
     )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
 
     mockMvc.perform(get("/api/v1/employee/validation")
-                    .param("username", USERNAME)
-                    .param("email", EMAIL)
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMAIL_DUPLICATE.getErrorCode()));
+            .param("username", USERNAME)
+            .param("email", EMAIL)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMAIL_DUPLICATE.getErrorCode()));
   }
 
-    @Test
-    void getLeaveRequestsOk() throws Exception {
-        LeaveRequestDetailsList requestsDTO = new LeaveRequestDetailsList();
-        LeaveRequestDetailsListItem request1 = new LeaveRequestDetailsListItem();
-        request1.setId(1L);
-        LeaveRequestDetailsListItem request2 = new LeaveRequestDetailsListItem();
-        request2.setId(2L);
-        requestsDTO.setItems(Arrays.asList(request1, request2));
-        when(employeeService.getLeaveRequests(anyString(), any(), any())).thenReturn(requestsDTO);
+  @Test
+  void getLeaveRequestsOk() throws Exception {
+    LeaveRequestDetailsList requestsDTO = new LeaveRequestDetailsList();
+    LeaveRequestDetailsListItem request1 = new LeaveRequestDetailsListItem();
+    request1.setId(1L);
+    LeaveRequestDetailsListItem request2 = new LeaveRequestDetailsListItem();
+    request2.setId(2L);
+    requestsDTO.setItems(Arrays.asList(request1, request2));
+    when(employeeService.getLeaveRequests(anyString(), any(), any())).thenReturn(requestsDTO);
 
-        mockMvc.perform(get("/api/v1/employees/1/requests?startDate=2023-08-01&endDate=2023-08-11")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items", hasSize(2)))
-                .andExpect(jsonPath("$.items[0].id").value(1L))
-                .andExpect(jsonPath("$.items[1].id").value(2L));
-    }
+    mockMvc.perform(get("/api/v1/employees/1/requests?startDate=2023-08-01&endDate=2023-08-11")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items", hasSize(2)))
+        .andExpect(jsonPath("$.items[0].id").value(1L))
+        .andExpect(jsonPath("$.items[1].id").value(2L));
+  }
 
-    @Test
-    void getLeaveRequestsNoDatesOk() throws Exception {
-        LeaveRequestDetailsList requestsDTO = new LeaveRequestDetailsList();
-        LeaveRequestDetailsListItem request1 = new LeaveRequestDetailsListItem();
-        request1.setId(1L);
-        LeaveRequestDetailsListItem request2 = new LeaveRequestDetailsListItem();
-        request2.setId(2L);
-        requestsDTO.setItems(Arrays.asList(request1, request2));
-        when(employeeService.getLeaveRequests("1", null, null)).thenReturn(requestsDTO);
+  @Test
+  void getLeaveRequestsNoDatesOk() throws Exception {
+    LeaveRequestDetailsList requestsDTO = new LeaveRequestDetailsList();
+    LeaveRequestDetailsListItem request1 = new LeaveRequestDetailsListItem();
+    request1.setId(1L);
+    LeaveRequestDetailsListItem request2 = new LeaveRequestDetailsListItem();
+    request2.setId(2L);
+    requestsDTO.setItems(Arrays.asList(request1, request2));
+    when(employeeService.getLeaveRequests("1", null, null)).thenReturn(requestsDTO);
 
-        mockMvc.perform(get("/api/v1/employees/1/requests")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items", hasSize(2)))
-                .andExpect(jsonPath("$.items[0].id").value(1L))
-                .andExpect(jsonPath("$.items[1].id").value(2L));
-    }
+    mockMvc.perform(get("/api/v1/employees/1/requests")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items", hasSize(2)))
+        .andExpect(jsonPath("$.items[0].id").value(1L))
+        .andExpect(jsonPath("$.items[1].id").value(2L));
+  }
 
-    @Test
-    void getLeaveRequestsEmployeeNotFound() throws Exception {
-        doThrow(new BusinessException(
-                BusinessException.BusinessExceptionElement
-                        .builder()
-                        .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-                        .build()))
-                .when(employeeService).getLeaveRequests(anyString(), any(), any());
+  @Test
+  void getLeaveRequestsEmployeeNotFound() throws Exception {
+    doThrow(new BusinessException(
+        BusinessException.BusinessExceptionElement
+            .builder()
+            .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+            .build()))
+        .when(employeeService).getLeaveRequests(anyString(), any(), any());
 
-        mockMvc.perform(get("/api/v1/employees/1/requests")
-                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.message").value("The employee with the given ID does not exist."))
-                        .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
-    }
+    mockMvc.perform(get("/api/v1/employees/1/requests")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("The employee with the given ID does not exist."))
+        .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
+  }
 }
