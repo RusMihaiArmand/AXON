@@ -60,8 +60,7 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @JoinColumn(name = "EMPLOYEE_ID")
   private Set<LeaveRequestEty> leaveRequests = new HashSet<>();
 
-  @OneToMany
-  @JoinColumn(name = "EMPLOYEE_ID")
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "employee")
   private Set<EmpYearlyDaysOffEty> empYearlyDaysOff = new HashSet<>();
 
   @Override

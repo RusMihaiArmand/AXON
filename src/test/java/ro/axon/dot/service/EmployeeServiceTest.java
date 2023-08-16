@@ -28,7 +28,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatus;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
@@ -42,14 +41,16 @@ import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
-import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
+import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.LeaveRequestReview;
+import ro.axon.dot.model.TeamDetails;
+import ro.axon.dot.model.UserDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
@@ -146,9 +147,9 @@ class EmployeeServiceTest {
       var ex = assertThrows(BusinessException.class, () -> {
           employeeService.updateLeaveRequestStatus(1L, 1L, review);
       });
-      assertEquals(ex.getError().getErrorDescription().getErrorCode(),"EDOT0001400");
-      assertEquals(ex.getError().getErrorDescription().getDevMsg(),"The employee with the given ID does not exist.");
-      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+      assertEquals(ex.getError().getErrorDescription().getErrorCode(), BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
+      assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
+      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
   }
 
   @Test
@@ -163,9 +164,9 @@ class EmployeeServiceTest {
       var ex = assertThrows(BusinessException.class, () -> {
                   employeeService.updateLeaveRequestStatus(1L, 1L, answer);
               });
-      assertEquals(ex.getError().getErrorDescription().getErrorCode(),"EDOT0003400");
-      assertEquals(ex.getError().getErrorDescription().getDevMsg(),"Request not found");
-      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+      assertEquals(ex.getError().getErrorDescription().getErrorCode(),BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getErrorCode());
+      assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getDevMsg());
+      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
   }
 
   @Test
@@ -184,8 +185,8 @@ class EmployeeServiceTest {
       var ex = assertThrows(BusinessException.class, () -> {
           employeeService.updateLeaveRequestStatus(1L, 1L, review);
       });
-      assertEquals(ex.getError().getErrorDescription().getErrorCode(),"EDOT0004400");
-      assertEquals(ex.getError().getErrorDescription().getDevMsg(),"Request already answered");
+      assertEquals(ex.getError().getErrorDescription().getErrorCode(),BusinessErrorCode.LEAVE_REQUEST_REJECTED.getErrorCode());
+      assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.LEAVE_REQUEST_REJECTED.getDevMsg());
       assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
   }
 
@@ -206,8 +207,8 @@ class EmployeeServiceTest {
           employeeService.updateLeaveRequestStatus(1L, 1L, answer);
         });
 
-      assertEquals(ex.getError().getErrorDescription().getErrorCode(),"EDOT0005400");
-      assertEquals(ex.getError().getErrorDescription().getDevMsg(),"Request version smaller than db version");
+      assertEquals(ex.getError().getErrorDescription().getErrorCode(),BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getErrorCode());
+      assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getDevMsg());
       assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.CONFLICT);
   }
 
@@ -336,7 +337,7 @@ class EmployeeServiceTest {
   void checkEmployeeUniqueCredentialsDuplicateUsername() {
     when(employeeRepository.existsByUsername(USERNAME)).thenReturn(true);
     var ex = assertThrows(BusinessException.class, () -> { employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com");});
-    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.USERNAME_DUPLICATE);
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.USERNAME_ALREADY_EXISTS);
   }
 
   @Test
@@ -527,9 +528,9 @@ class EmployeeServiceTest {
             employeeService.getLeaveRequests("1", LocalDate.of(2023, 8, 1),
                     LocalDate.of(2023, 8, 10));
         });
-        assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
-        assertEquals(ex.getError().getErrorDescription().getDevMsg(), "The employee with the given ID does not exist.");
-        assertEquals(ex.getError().getErrorDescription().getErrorCode(), "EDOT0001400");
+        assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
+        assertEquals(ex.getError().getErrorDescription().getDevMsg(), BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
+        assertEquals(ex.getError().getErrorDescription().getErrorCode(), BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
     }
 
     @Test
@@ -627,11 +628,26 @@ class EmployeeServiceTest {
         );
 
     when(teamRepository.findById(any())).thenReturn(Optional.of(team));
-    when(employeeRepository.findEmployeeByUsername(employee.getUsername())).thenReturn(Optional.empty());
+    //when(employeeRepository.findEmployeeByUsername(employee.getUsername())).thenReturn(Optional.empty());
     when(employeeRepository.save(any())).thenReturn(employee);
 
+    RegisterRequest request = new RegisterRequest();
+    request.setFirstname("jon");
+    request.setLastname("doe");
+    request.setUsername("jon121");
+    request.setTeamId(1L);
+    request.setRole("USER");
+    request.setEmail("jon@mail.com");
+    request.setContractStartDate(LocalDate.now());
+    request.setNoDaysOff(20);
 
-    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(employeeMapper.mapEmployeeEtyToEmployeeDto(employee));
+    UserDetailsResponse userDetails = new UserDetailsResponse();
+    userDetails.setEmployeeId("11-hr-2323");
+    userDetails.setUsername("user_hr122");
+    userDetails.setRoles(Collections.singletonList("HR"));
+    userDetails.setTeamDetails(new TeamDetails(3L, "HR"));
+
+    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(request, userDetails);
 
     EmployeeEty returned = employeeMapper.mapEmployeeDtoToEmployeeEty(returnedEmployee);
 

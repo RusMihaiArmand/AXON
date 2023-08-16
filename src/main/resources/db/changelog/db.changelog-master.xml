@@ -252,6 +252,10 @@
         <comment>Initial Employees load</comment>
         <loadData file="includes/data-employee-initial-load.csv" tableName="EMPLOYEE"
           relativeToChangelogFile="true"/>
+        <loadData file="includes/data-emp-yearly-days-off-initial-load.csv" tableName="EMP_YEARLY_DAYS_OFF"
+          relativeToChangelogFile="true"/>
+        <loadData file="includes/data-emp-yearly-days-off-hist-initial-load.csv" tableName="EMP_YEARLY_DAYS_OFF_HIST"
+          relativeToChangelogFile="true"/>
     </changeSet>
 
 </databaseChangeLog>

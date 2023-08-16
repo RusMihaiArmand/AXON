@@ -33,7 +33,7 @@ import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.LoginRequest;
 import ro.axon.dot.model.LoginResponse;
-import ro.axon.dot.model.TokenRequest;
+import ro.axon.dot.model.RefreshTokenRequest;
 import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.security.TokenUtilSetup;
 import ro.axon.dot.service.EmployeeService;
@@ -189,7 +189,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
+    RefreshTokenRequest tokenRequest = new RefreshTokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -208,6 +208,49 @@ class AuthApiTest {
     assertNotEquals(response.getRefreshToken(), refreshToken);
   }
 
+  @Test
+  void refresh_token_not_found() {
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        new TeamEty(),
+        new HashSet<>(),
+        new HashSet<>()
+    );
+    LocalDateTime now = LocalDateTime.now();
+
+    SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
+
+    RefreshTokenRequest tokenRequest = new RefreshTokenRequest(refreshToken.serialize());
+
+    RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
+    refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
+    refreshTokenEty.setEmployee(employee);
+    refreshTokenEty.setStatus(TokenStatus.ACTIVE);
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+
+    when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenThrow(new BusinessException(BusinessExceptionElement
+        .builder()
+        .errorDescription(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND)
+        .build()));
+
+    BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(tokenRequest));
+
+    assertEquals(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND, exception.getError().getErrorDescription());
+  }
   @Test
   void refresh_token_revoked() {
 
@@ -234,7 +277,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
+    RefreshTokenRequest tokenRequest = new RefreshTokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -276,7 +319,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
+    RefreshTokenRequest tokenRequest = new RefreshTokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -339,7 +382,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
+    RefreshTokenRequest tokenRequest = new RefreshTokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -381,7 +424,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
+    RefreshTokenRequest tokenRequest = new RefreshTokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -444,7 +487,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
+    RefreshTokenRequest tokenRequest = new RefreshTokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
@@ -485,7 +528,7 @@ class AuthApiTest {
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
-    TokenRequest tokenRequest = new TokenRequest(refreshToken.serialize());
+    RefreshTokenRequest tokenRequest = new RefreshTokenRequest(refreshToken.serialize());
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty();
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());

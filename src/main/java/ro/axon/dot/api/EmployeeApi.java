@@ -3,6 +3,9 @@ package ro.axon.dot.api;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -10,18 +13,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestReview;
-import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.model.UserDetailsResponse;
 import ro.axon.dot.service.EmployeeService;
-import ro.axon.dot.service.LeaveRequestService;
 
 import java.time.LocalDate;
 
@@ -33,8 +37,19 @@ public class EmployeeApi {
   private final EmployeeService employeeService;
 
   @PostMapping(value = "/employees/register")
-  public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
-    return ResponseEntity.ok(employeeService.createEmployee(request));
+  public ResponseEntity<?> register(@RequestHeader(name="Authorization") String token, @RequestBody @Valid RegisterRequest request) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", token);
+
+    ResponseEntity<UserDetailsResponse> response = new RestTemplate().exchange(
+        "http://localhost:8081/core/api/v1/user",
+        HttpMethod.GET,
+        new HttpEntity<>(headers),
+        UserDetailsResponse.class
+    );
+
+    UserDetailsResponse userDetails = response.getBody();
+    return ResponseEntity.ok(employeeService.createEmployee(request, userDetails));
   }
 
   @GetMapping(value = "/employees")

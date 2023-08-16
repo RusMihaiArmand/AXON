@@ -41,12 +41,18 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     return new BCryptPasswordEncoder();
   }
 
+  private List<GrantedAuthority> mapRolesToGrantedAuthorities(Collection<String> roles) {
+    return roles.stream()
+        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+        .collect(Collectors.toList());
+  }
+
   @Bean
   public JwtAuthenticationConverter jwtAuthenticationConverter() {
     JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
     jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
       var roles = jwt.getClaim("roles");
-      return roles == null ? null
+      return (roles == null) ? null
           : new HashSet<>(mapRolesToGrantedAuthorities((Collection<String>) roles));
     });
     return jwtAuthenticationConverter;
@@ -59,17 +65,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .authorizeRequests()
         .antMatchers(HttpMethod.POST, "/api/v1/login",
             "/api/v1/refresh", "/api/v1/logout").permitAll()
-
         .antMatchers(HttpMethod.POST,"/api/v1/employees/register", "/api/v1/teams").hasAnyRole("HR")
         .antMatchers(HttpMethod.PATCH,"/api/v1/employees/{employeeId}/inactivate").hasAnyRole("HR")
-        .antMatchers(HttpMethod.GET,"/api/v1/employees/{employeeId}/remaining-days-off").hasAnyRole("HR")
         .antMatchers(HttpMethod.PUT,"/api/v1/employees/{employeeId}/requests/{requestId}").hasAnyRole("HR", "TEAM_LEAD")
-
         .antMatchers(HttpMethod.GET,"/api/v1/requests").hasAnyRole("HR", "TEAM_LEAD")
-
-        //TODO resolve
-        .antMatchers(HttpMethod.GET,"/api/v1/user").hasAnyRole("USER", "HR", "TEAM_LEAD")
-        .antMatchers(HttpMethod.GET,"/api/v1/misc/roles").hasAnyRole()
 
         .anyRequest().authenticated().and()
 
@@ -77,17 +76,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             oauth -> oauth.jwt(
                 token -> token.jwtAuthenticationConverter(jwtAuthenticationConverter()))
         )
-
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
         .exceptionHandling(exception -> exception
             .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
             .accessDeniedHandler(new BearerTokenAccessDeniedHandler()));
-  }
-
-  private List<GrantedAuthority> mapRolesToGrantedAuthorities(Collection<String> roles) {
-    return roles.stream()
-        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-        .collect(Collectors.toList());
   }
 }

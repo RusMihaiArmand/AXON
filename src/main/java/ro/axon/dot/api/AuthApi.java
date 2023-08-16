@@ -6,15 +6,11 @@ import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +24,7 @@ import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.LoginRequest;
 import ro.axon.dot.model.LoginResponse;
-import ro.axon.dot.model.TokenRequest;
+import ro.axon.dot.model.RefreshTokenRequest;
 import ro.axon.dot.model.TeamDetails;
 import ro.axon.dot.model.UserDetailsResponse;
 import ro.axon.dot.security.JwtTokenUtil;
@@ -68,7 +64,7 @@ public class AuthApi {
   }
 
   @PostMapping(value = "/refresh")
-  public ResponseEntity<?> refresh(@RequestBody @Valid TokenRequest request) {
+  public ResponseEntity<?> refresh(@RequestBody @Valid RefreshTokenRequest request) {
 
     Pair<SignedJWT, RefreshTokenEty> tokenEtyPair = parseAndCheckToken(request.getRefreshToken());
 
@@ -90,7 +86,7 @@ public class AuthApi {
   }
 
   @PostMapping(value = "/logout")
-  public ResponseEntity<?> logout(@RequestBody @Valid TokenRequest request) {
+  public ResponseEntity<?> logout(@RequestBody @Valid RefreshTokenRequest request) {
 
     Pair<SignedJWT, RefreshTokenEty> tokenEtyPair = parseAndCheckToken(request.getRefreshToken());
 

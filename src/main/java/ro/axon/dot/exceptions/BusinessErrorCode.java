@@ -19,17 +19,16 @@ public enum BusinessErrorCode {
     TOKEN_EXPIRED("EDOT0008401", "Token is expired", HttpStatus.UNAUTHORIZED),
     PASSWORD_NOT_MATCHING("EDOT0009401", "Password does not match", HttpStatus.UNAUTHORIZED),
     AUDIENCE_DOES_NOT_MATCH("EDOT0010401", "Audience doesn't match", HttpStatus.UNAUTHORIZED),
-    REQUEST_HEADER_INVALID("EDOT0011400", "Request header invalid", HttpStatus.BAD_REQUEST),
 
-    USERNAME_ALREADY_EXISTS("EDOT0012409", "An employee with this username already exists.", HttpStatus.CONFLICT),
-    EMPLOYEE_NOT_FOUND("EDOT0013404", "The employee with the given ID does not exist.", HttpStatus.NOT_FOUND),
-    TEAM_NOT_FOUND("EDOT0014404", "Team not found", HttpStatus.NOT_FOUND),
-    YEARLY_DAYS_OFF_NOT_SET("EDOT0015400", "The vacation days for this employee have not been set for this year.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_NOT_FOUND("EDOT0016400", "The leave request with the given ID does not exist.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_REJECTED("EDOT0017400", "Leave request already rejected.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_PAST_DATE("EDOT0018400", "Leave request cannot be submitted for past dates.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_PRECEDING_VERSION("EDOT0019409", "Leave request version cannot precede version from database.", HttpStatus.CONFLICT),
-    EMAIL_DUPLICATE("EDOT0008409", "An employee with this email already exists.", HttpStatus.CONFLICT);
+    USERNAME_ALREADY_EXISTS("EDOT0011409", "An employee with this username already exists.", HttpStatus.CONFLICT),
+    EMPLOYEE_NOT_FOUND("EDOT0012404", "The employee with the given ID does not exist.", HttpStatus.NOT_FOUND),
+    TEAM_NOT_FOUND("EDOT0013404", "Team not found", HttpStatus.NOT_FOUND),
+    YEARLY_DAYS_OFF_NOT_SET("EDOT0014400", "The vacation days for this employee have not been set for this year.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_NOT_FOUND("EDOT0015404", "The leave request with the given ID does not exist.", HttpStatus.NOT_FOUND),
+    LEAVE_REQUEST_REJECTED("EDOT0016400", "Leave request already rejected.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_PAST_DATE("EDOT0017400", "Leave request cannot be submitted for past dates.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_PRECEDING_VERSION("EDOT0018409", "Leave request version cannot precede version from database.", HttpStatus.CONFLICT),
+    EMAIL_DUPLICATE("EDOT0019409", "An employee with this email already exists.", HttpStatus.CONFLICT);
 
     private final String errorCode;
     private final String devMsg;
