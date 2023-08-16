@@ -226,8 +226,7 @@ public class EmployeeService {
 
     if(isPendingOrApprovedLeaveRequest(leaveRequest)){
 
-      employee.getLeaveRequests().remove(leaveRequest);
-      leaveRequestRepository.delete(leaveRequest);
+      employee.removeLeaveRequests(leaveRequest);
       employeeRepository.save(employee);
     }
   }
@@ -269,6 +268,7 @@ public class EmployeeService {
         leaveRequest.getStatus().equals(LeaveRequestEtyStatusEnum.APPROVED);
   }
 
+  @Transactional
   public LeaveRequestDetailsList getLeaveRequests(String idEmployee, LocalDate startDate, LocalDate endDate) {
       Optional<EmployeeEty> employeeOptional = employeeRepository.findById(idEmployee);
       if (employeeOptional.isEmpty())
