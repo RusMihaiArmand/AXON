@@ -76,12 +76,9 @@ class EmployeeServiceTest {
   LegallyDaysOffService legallyDaysOffService;
 
 
-    @Mock
-    EmpYearlyDaysOffHistRepository empYearlyDaysOffHistoryRepository;
-
-    @BeforeEach
-    void setUp() {
-        employeeService = new EmployeeService(employeeRepository, leaveRequestRepository);
+  @BeforeEach
+  void setUp() {
+    employeeService = new EmployeeService(employeeRepository, leaveRequestRepository, legallyDaysOffService);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");

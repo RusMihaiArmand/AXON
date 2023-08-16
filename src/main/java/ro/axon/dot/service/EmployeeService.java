@@ -4,7 +4,6 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Calendar;
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmpYearlyDaysOffHistEty;
-import ro.axon.dot.domain.EmpYearlyDaysOffHistRepository;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.domain.LeaveRequestEty;
@@ -43,7 +41,6 @@ public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
   private final LeaveRequestRepository leaveRequestRepository;
-  private final EmpYearlyDaysOffHistRepository empYearlyDaysOffHistRepository;
   private final LegallyDaysOffService legallyDaysOffService;
 
   public EmployeeDetailsList getEmployeesDetails(String name) {
