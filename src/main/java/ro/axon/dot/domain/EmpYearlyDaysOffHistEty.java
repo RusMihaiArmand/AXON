@@ -43,14 +43,9 @@ public class EmpYearlyDaysOffHistEty{
   @Column(name = "CRT_TMS")
   private Instant crtTms;
 
-  //@Column(name = "EMP_YEARLY_DAYS_OFF_ID")
- // private Long yearlyDaysOffId;
 
   @ManyToOne
- // @JoinColumn(name = "EMP_YEARLY_DAYS_OFF_ID")
   @JoinColumn(name = "EMP_YEARLY_DAYS_OFF_ID", referencedColumnName = "ID")
   private EmpYearlyDaysOffEty empYearlyDaysOffEty;
-
-
 
 }
