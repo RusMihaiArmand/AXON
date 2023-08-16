@@ -37,6 +37,7 @@ import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.LeaveRequestService;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -381,6 +382,16 @@ class EmployeeApiTest {
             .content(editLeaveRequestContent))
         .andExpect(status().isConflict());
   }
+
+  @Test
+  public void deleteLeaveRequestSuccess() throws Exception{
+    mockMvc.perform(delete("/api/v1/employees/" + employeeId + "/requests/" + requestId))
+        .andExpect(status().isNoContent());
+
+    verify(employeeService, times(1)).deleteLeaveRequest(anyString(), anyLong());
+  }
+
+
   private EmployeeDetailsListItem initEmployee(){
 
     EmployeeDetailsListItem employee = new EmployeeDetailsListItem();
