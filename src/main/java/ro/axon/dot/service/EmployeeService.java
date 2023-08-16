@@ -33,7 +33,9 @@ import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.LegallyDaysOffItem;
 import ro.axon.dot.model.RemainingDaysOff;
-import ro.axon.dot.model.EmployeeDto;
+import ro.axon.dot.model.EmployeeUpdateRequest;
+import ro.axon.dot.domain.TeamRepository;
+import ro.axon.dot.domain.TeamEty;
 
 import ro.axon.dot.model.VacationDaysModifyDetails;
 
@@ -44,6 +46,7 @@ public class EmployeeService {
   private final EmployeeRepository employeeRepository;
   private final LeaveRequestRepository leaveRequestRepository;
   private final LegallyDaysOffService legallyDaysOffService;
+  private final TeamRepository teamRepository;
 
   public EmployeeDetailsList getEmployeesDetails(String name) {
     var employeeDetailsList = new EmployeeDetailsList();
@@ -498,28 +501,35 @@ public class EmployeeService {
     employeeRepository.save(emp);
   }
   @Transactional
-  public void updateEmployeeDetails(String employeeId, EmployeeDto employeeDto) {
+  public void updateEmployeeDetails(String employeeId, EmployeeUpdateRequest employeeUpdateRequest) {
     EmployeeEty employeeEty = employeeRepository.findById(employeeId)
             .orElseThrow(() -> new BusinessException(
-                    new BusinessExceptionElement(
-                            BusinessErrorCode.EMPLOYEE_NOT_FOUND,
-                            null
-                    )
+                    BusinessExceptionElement.builder()
+                            .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                            .build()
             ));
 
-    if (employeeDto.getV() < employeeEty.getV()) {
+
+    TeamEty teamEty = teamRepository.findById(Long.parseLong(employeeUpdateRequest.getTeamId()))
+            .orElseThrow(() -> new BusinessException(
+                    BusinessExceptionElement.builder()
+                            .errorDescription(BusinessErrorCode.TEAM_NOT_FOUND)
+                            .build()
+            ));
+
+    if (employeeUpdateRequest.getV() < employeeEty.getV()) {
       throw new BusinessException(
-              new BusinessExceptionElement(
-                      BusinessErrorCode.EMPLOYEE_VERSION_CONFLICT,
-                      null
-              )
+              BusinessExceptionElement.builder()
+                      .errorDescription(BusinessErrorCode.EMPLOYEE_VERSION_CONFLICT)
+                      .build()
       );
     }
 
-    employeeEty.setFirstName(employeeDto.getFirstName());
-    employeeEty.setLastName(employeeDto.getLastName());
-    employeeEty.setEmail(employeeDto.getEmail());
-    employeeEty.setRole(employeeDto.getRole());
+    employeeEty.setFirstName(employeeUpdateRequest.getFirstName());
+    employeeEty.setLastName(employeeUpdateRequest.getLastName());
+    employeeEty.setEmail(employeeUpdateRequest.getEmail());
+    employeeEty.setRole(employeeUpdateRequest.getRole());
+    employeeEty.setTeam(teamEty);
 
 
     employeeRepository.save(employeeEty);

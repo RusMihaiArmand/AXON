@@ -17,14 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ro.axon.dot.model.CreateLeaveRequestDetails;
-import ro.axon.dot.model.EditLeaveRequestDetails;
-import ro.axon.dot.model.EmployeeDetailsList;
-import ro.axon.dot.model.LeaveRequestDetailsList;
-import ro.axon.dot.model.LeaveRequestReview;
-import ro.axon.dot.model.RemainingDaysOff;
-import ro.axon.dot.model.EmployeeDto;
-import ro.axon.dot.model.VacationDaysModifyDetails;
+import ro.axon.dot.model.*;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.LeaveRequestService;
 
@@ -123,10 +116,9 @@ public class EmployeeApi {
   }
 
   @PatchMapping("/employees/{employeeId}")
-  public ResponseEntity<Void> updateEmployeeDetails(@PathVariable String employeeId,
-                                                    @RequestBody EmployeeDetailsList employeeDetails) {
+  public ResponseEntity<Void> updateEmployeeDetails(@PathVariable String employeeId) {
 
-    employeeService.updateEmployeeDetails(employeeId, new EmployeeDto());
+    employeeService.updateEmployeeDetails(employeeId, new EmployeeUpdateRequest());
     return ResponseEntity.noContent().build();
   }
 

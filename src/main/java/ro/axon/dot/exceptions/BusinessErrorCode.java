@@ -22,8 +22,8 @@ public enum BusinessErrorCode {
     LEAVE_RQST_INVALID_NUMBER_DAYS("ED0T0012400", "Leave request has too many days", HttpStatus.BAD_REQUEST),
     LEAVE_RQST_INVALID_MONTH("ED0T0013400", "Invalid month for leave request", HttpStatus.BAD_REQUEST),
     NEGATIVE_DAYS_OFF("EDOT0001500", "Number of days off became negative.", HttpStatus.BAD_REQUEST),
-    EMPLOYEE_VERSION_CONFLICT("EDOT0010409", "Conflict on employee version.", HttpStatus.CONFLICT);
-
+    EMPLOYEE_VERSION_CONFLICT("EDOT0010409", "Conflict on employee version.", HttpStatus.CONFLICT),
+    TEAM_NOT_FOUND("EDOT0011400", "The given team ID does not exist", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String devMsg;

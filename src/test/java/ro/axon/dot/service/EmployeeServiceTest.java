@@ -22,6 +22,8 @@ import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 import java.time.LocalDate;
+import java.util.*;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -55,8 +57,8 @@ import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
+import ro.axon.dot.model.EmployeeUpdateRequest;
 import ro.axon.dot.model.RemainingDaysOff;
-import ro.axon.dot.model.EmployeeDto;
 import ro.axon.dot.model.VacationDaysModifyDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -925,18 +927,18 @@ class EmployeeServiceTest {
     existingEmployee.setV(1L);
 
 
-    EmployeeDto updatedEmployeeDto = new EmployeeDto();
-    updatedEmployeeDto.setFirstName("Updated First Name");
-    updatedEmployeeDto.setLastName("Updated Last Name");
-    updatedEmployeeDto.setEmail("updated@axonsoft.com");
-    updatedEmployeeDto.setRole("USER");
-    updatedEmployeeDto.setV(2L);
+    EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
+    updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
+    updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
+    updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
+    updatedEmployeeUpdateRequest.setRole("USER");
+    updatedEmployeeUpdateRequest.setV(2L);
 
 
     when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
 
 
-    assertDoesNotThrow(() -> employeeService.updateEmployeeDetails("1", updatedEmployeeDto));
+    assertDoesNotThrow(() -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest));
 
 
     verify(employeeRepository).save(existingEmployee);
@@ -949,17 +951,17 @@ class EmployeeServiceTest {
     existingEmployee.setV(2L);
 
 
-    EmployeeDto updatedEmployeeDto = new EmployeeDto();
-    updatedEmployeeDto.setFirstName("Updated First Name");
-    updatedEmployeeDto.setLastName("Updated Last Name");
-    updatedEmployeeDto.setEmail("updated@axonsoft.com");
-    updatedEmployeeDto.setRole("USER");
-    updatedEmployeeDto.setV(1L);
+    EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
+    updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
+    updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
+    updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
+    updatedEmployeeUpdateRequest.setRole("USER");
+    updatedEmployeeUpdateRequest.setV(1L);
 
     when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
 
     assertThrows(BusinessException.class,
-            () -> employeeService.updateEmployeeDetails("1", updatedEmployeeDto),
+            () -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest),
             "Expected BusinessException with CONFLICT error code");
 
     verify(employeeRepository, never()).save(existingEmployee);
