@@ -116,8 +116,6 @@ public class EmployeeApi {
   }
 
   @PatchMapping("/employees/{employeeId}")
-
-
   public ResponseEntity<Void> updateEmployeeDetails(@PathVariable String employeeId,
                                                     @Valid @RequestBody EmployeeUpdateRequest employeeUpdateRequest) {
 

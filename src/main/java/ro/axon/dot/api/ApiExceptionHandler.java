@@ -39,16 +39,4 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetail);
     }
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorDetail> handleConflictException(BusinessException exception) {
-        BusinessErrorCode errorCode = exception.getError().getErrorDescription();
-
-        ErrorDetail errorDetail = new ErrorDetail();
-        errorDetail.setErrorCode(errorCode.getErrorCode());
-        errorDetail.setMessage(errorCode.getDevMsg());
-        errorDetail.setContextVariables(exception.getError().getContextVariables());
-
-        HttpStatus httpStatus = HttpStatus.valueOf(errorCode.getStatus().value());
-        return ResponseEntity.status(httpStatus).body(errorDetail);
-    }
 }
