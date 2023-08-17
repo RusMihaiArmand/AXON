@@ -585,7 +585,6 @@ class EmployeeServiceTest {
     verify(leaveRequestRepository, times(1)).delete(any(LeaveRequestEty.class));
   }
 
-
   private EmployeeEty initEmployee(){
 
     EmployeeEty employee = new EmployeeEty();

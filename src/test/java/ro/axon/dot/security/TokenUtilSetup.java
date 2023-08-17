@@ -1,6 +1,6 @@
 package ro.axon.dot.security;
 
-import java.time.LocalDateTime;
+import java.time.Clock;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -22,6 +22,6 @@ public class TokenUtilSetup {
         "file:src/test/java/ro/axon/dot/security/keys/public_test_key.pem",
         "file:src/test/java/ro/axon/dot/security/keys/private_test_key.pem");
 
-    tokenUtil = new JwtTokenUtil(properties, new DefaultResourceLoader());
+    tokenUtil = new JwtTokenUtil(properties, new DefaultResourceLoader(), Clock.systemDefaultZone());
   }
 }

@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -22,6 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import liquibase.pro.packaged.U;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -43,9 +46,11 @@ public class JwtTokenUtil {
 	private RSAPublicKey publicKey;
 	private RSAPrivateKey privateKey;
 
-	public JwtTokenUtil(JwtTokenUtilProperties properties, ResourceLoader resourceLoader) {
-		this.properties = properties;
+	private final Clock clock;
 
+	public JwtTokenUtil(JwtTokenUtilProperties properties, ResourceLoader resourceLoader, Clock clock) {
+		this.properties = properties;
+		this.clock = clock;
 		readKeys(resourceLoader);
 	}
 
@@ -68,41 +73,42 @@ public class JwtTokenUtil {
 		this.privateKey = RsaKeyConverters.pkcs8().convert(new ByteArrayInputStream(privateKeyString.getBytes()));
 	}
 
-	public SignedJWT generateAccessToken(EmployeeEty employee, LocalDateTime currentTime) {
+	public SignedJWT generateAccessToken(EmployeeEty employee, Instant currentTime) {
 		JWK jwk = new RSAKey.Builder(publicKey).keyID(properties.keyId()).privateKey(privateKey).build();
 
 		return setupToken(employee, jwk, "access", properties.accessTokenDuration(), currentTime);
 	}
 
-	public SignedJWT generateRefreshToken(EmployeeEty employee, LocalDateTime currentTime) {
+	public SignedJWT generateRefreshToken(EmployeeEty employee, Instant currentTime) {
 		JWK jwk = new RSAKey.Builder(publicKey).keyID(String.valueOf(UUID.randomUUID())).privateKey(privateKey).build();
 
 		return setupToken(employee, jwk, "refresh", properties.refreshTokenDuration(), currentTime);
 	}
 
-	public SignedJWT regenerateRefreshToken(EmployeeEty employee, SignedJWT token, LocalDateTime currentTime) {
+	public SignedJWT regenerateRefreshToken(EmployeeEty employee, SignedJWT token, Instant currentTime) {
 		JWK jwk = new RSAKey.Builder(publicKey).keyID(token.getHeader().getKeyID()).privateKey(privateKey).build();
 
 		return setupToken(employee, jwk, "refresh", properties.refreshTokenDuration(), currentTime);
 	}
 
-	private SignedJWT setupToken(EmployeeEty employee, JWK jwk, String tokenType, Long tokenDuration, LocalDateTime currentTime) {
+	private SignedJWT setupToken(EmployeeEty employee, JWK jwk, String tokenType, Long tokenDuration, Instant currentTime) {
 		RSAKey rsaJWK = new RSAKey.Builder(jwk.toRSAKey()).algorithm(JWSAlgorithm.RS256).keyID(jwk.getKeyID()).build();
 
-		final LocalDateTime expDate = currentTime.plusMinutes(tokenDuration);
+		Instant expDate = currentTime.plusSeconds(tokenDuration * 60);
 
 		SignedJWT token = new SignedJWT(
 				new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(rsaJWK.getKeyID()).build(),
 				new JWTClaimsSet.Builder()
 						.subject(String.valueOf(employee.getId()))
-						.issuer(properties.domain())
 						.audience(String.valueOf(employee.getId()))
+						.issuer(properties.domain())
 						.claim("roles", Collections.singletonList(employee.getRole()))
 						.claim("username", employee.getUsername())
 						.claim("email", employee.getEmail())
-						.notBeforeTime(Date.from(currentTime.toInstant(ZoneOffset.UTC)))
 						.claim("typ", tokenType)
-						.expirationTime(Date.from(expDate.toInstant(ZoneOffset.UTC))).build()
+						.notBeforeTime(Date.from(currentTime))
+						.expirationTime(Date.from(expDate))
+						.build()
 		);
 
 		return signToken(token, rsaJWK);
@@ -175,12 +181,12 @@ public class JwtTokenUtil {
 			return username;
 	}
 
-	public LocalDateTime getExpirationDateFromToken(SignedJWT token) {
-		return getClaimSet(token).getExpirationTime().toInstant().atOffset(ZoneOffset.UTC).toLocalDateTime();
+	public Instant getExpirationDateFromToken(SignedJWT token) {
+		return getClaimSet(token).getExpirationTime().toInstant();
 	}
 
 	public void isTokenExpired(LocalDateTime expTime) {
-		if(expTime.isBefore(LocalDateTime.now())){
+		if(expTime.toInstant(ZoneOffset.UTC).isBefore(clock.instant())){
 			throw new BusinessException(BusinessExceptionElement
 					.builder()
 					.errorDescription(BusinessErrorCode.TOKEN_EXPIRED)

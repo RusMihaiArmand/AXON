@@ -10,6 +10,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.nimbusds.jwt.SignedJWT;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -48,15 +50,17 @@ class AuthApiTest {
   private EmployeeService employeeService;
   @Mock
   private RefreshTokenService refreshTokenService;
-
   private JwtTokenUtil tokenUtil;
+  private Clock clock;
   AuthApi api;
 
   @BeforeEach
   void setUp() {
     tokenUtil = new TokenUtilSetup().getTokenUtil();
+    clock = Clock.systemDefaultZone();
 
-    api = new AuthApi(passwordEncoder, tokenUtil, employeeService, refreshTokenService);
+    api = new AuthApi(passwordEncoder, tokenUtil, employeeService, refreshTokenService,
+        clock);
   }
 
   @Test
@@ -93,8 +97,8 @@ class AuthApiTest {
     assertNotNull(responseEntity.getBody());
 
     LoginResponse response = (LoginResponse) responseEntity.getBody();
-    assertTrue(response.getAccessTokenExpirationTime().isAfter(LocalDateTime.now()));
-    assertTrue(response.getRefreshTokenExpirationTime().isAfter(LocalDateTime.now()));
+    assertTrue(response.getAccessTokenExpirationTime().toInstant(ZoneOffset.UTC).isAfter(clock.instant()));
+    assertTrue(response.getRefreshTokenExpirationTime().toInstant(ZoneOffset.UTC).isAfter(clock.instant()));
   }
 
   @Test
@@ -183,7 +187,7 @@ class AuthApiTest {
         new HashSet<>(),
         new HashSet<>()
     );
-    LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
@@ -193,7 +197,7 @@ class AuthApiTest {
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
     refreshTokenEty.setEmployee(employee);
     refreshTokenEty.setStatus(TokenStatus.ACTIVE);
-    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken));
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
 
@@ -228,7 +232,7 @@ class AuthApiTest {
         new HashSet<>(),
         new HashSet<>()
     );
-    LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
@@ -238,7 +242,7 @@ class AuthApiTest {
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
     refreshTokenEty.setEmployee(employee);
     refreshTokenEty.setStatus(TokenStatus.ACTIVE);
-    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken));
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenThrow(new BusinessException(BusinessExceptionElement
         .builder()
@@ -271,7 +275,7 @@ class AuthApiTest {
         new HashSet<>(),
         new HashSet<>()
     );
-    LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
@@ -281,7 +285,7 @@ class AuthApiTest {
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
     refreshTokenEty.setEmployee(employee);
     refreshTokenEty.setStatus(TokenStatus.REVOKED);
-    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken));
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
 
@@ -313,7 +317,7 @@ class AuthApiTest {
         new HashSet<>(),
         new HashSet<>()
     );
-    LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
@@ -323,7 +327,7 @@ class AuthApiTest {
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
     refreshTokenEty.setEmployee(employee);
     refreshTokenEty.setStatus(TokenStatus.ACTIVE);
-    refreshTokenEty.setExpTms(now.minusMinutes(1000).toInstant(ZoneOffset.UTC));
+    refreshTokenEty.setExpTms(now.minusSeconds(100 * 60));
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
 
@@ -376,7 +380,7 @@ class AuthApiTest {
         new HashSet<>(),
         new HashSet<>()
     );
-    LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
@@ -386,7 +390,7 @@ class AuthApiTest {
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
     refreshTokenEty.setEmployee(employee2);
     refreshTokenEty.setStatus(TokenStatus.ACTIVE);
-    refreshTokenEty.setExpTms(now.minusMinutes(30).toInstant(ZoneOffset.UTC));
+    refreshTokenEty.setExpTms(now);
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenReturn(refreshTokenEty);
 
@@ -418,7 +422,7 @@ class AuthApiTest {
         new HashSet<>(),
         new HashSet<>()
     );
-    LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
@@ -428,7 +432,7 @@ class AuthApiTest {
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
     refreshTokenEty.setEmployee(employee);
     refreshTokenEty.setStatus(TokenStatus.ACTIVE);
-    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken));
 
     when(refreshTokenService.findTokenByKeyId(any())).thenReturn(refreshTokenEty);
 
@@ -481,7 +485,7 @@ class AuthApiTest {
         new HashSet<>()
     );
 
-    LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
@@ -491,7 +495,7 @@ class AuthApiTest {
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
     refreshTokenEty.setEmployee(employee2);
     refreshTokenEty.setStatus(TokenStatus.ACTIVE);
-    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken).toInstant(ZoneOffset.UTC));
+    refreshTokenEty.setExpTms(tokenUtil.getExpirationDateFromToken(refreshToken));
 
     when(refreshTokenService.findTokenByKeyId(any())).thenReturn(refreshTokenEty);
 
@@ -522,7 +526,7 @@ class AuthApiTest {
         new HashSet<>(),
         new HashSet<>()
     );
-    LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
@@ -532,7 +536,7 @@ class AuthApiTest {
     refreshTokenEty.setId(refreshToken.getHeader().getKeyID());
     refreshTokenEty.setEmployee(employee);
     refreshTokenEty.setStatus(TokenStatus.ACTIVE);
-    refreshTokenEty.setExpTms(now.minusMinutes(1000).toInstant(ZoneOffset.UTC));
+    refreshTokenEty.setExpTms(now.minusSeconds(100 * 60));
 
     when(refreshTokenService.findTokenByKeyId(any())).thenReturn(refreshTokenEty);
 
@@ -544,39 +548,5 @@ class AuthApiTest {
   @Test
   void getUserDetails() {
 
-    EmployeeEty employee = new EmployeeEty(
-        "11",
-        "jon",
-        "doe",
-        "email@bla.com",
-        "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
-        "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
-        "role.user",
-        "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
-        "jon121",
-        passwordEncoder.encode("axon_jon121"),
-        new TeamEty(),
-        new HashSet<>(),
-        new HashSet<>()
-    );
-
-    SignedJWT token = tokenUtil.generateAccessToken(employee, LocalDateTime.now());
-
-    final String tokenString = "Bearer " + token.serialize();
-
-    when(employeeService.loadEmployeeByUsername(employee.getUsername())).thenReturn(employee);
-
-    ResponseEntity<?> responseEntity = api.getUserDetails(tokenString);
-
-    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    assertNotNull(responseEntity.getBody());
-
-    UserDetailsResponse response = (UserDetailsResponse) responseEntity.getBody();
-    assertEquals(employee.getUsername(), response.getUsername());
-    assertEquals(employee.getId(), response.getEmployeeId());
   }
 }

@@ -37,6 +37,7 @@ import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.UserDetailsResponse;
+import ro.axon.dot.security.JwtTokenUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +48,9 @@ public class EmployeeService {
   private final LeaveRequestRepository leaveRequestRepository;
 
   private final PasswordEncoder passwordEncoder;
+  private final JwtTokenUtil tokenUtil;
 
+  @Transactional
   public EmployeeDetailsList getEmployeesDetails(String name) {
     var employeeDetailsList = new EmployeeDetailsList();
     List<EmployeeEty> employees;
@@ -187,7 +190,7 @@ public class EmployeeService {
 
       employee.setMdfTms(Instant.now());
 
-      employee.setMdfUsr("User"); //todo change when login ready
+      employee.setMdfUsr(tokenUtil.getLoggedUserId());
 
       employeeRepository.save(employee);
   }
@@ -386,6 +389,17 @@ public class EmployeeService {
                 .build()
         ));
   }
+
+  public EmployeeEty loadEmployeeById(String id) {
+    return employeeRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(
+            BusinessExceptionElement
+                .builder()
+                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                .build()
+        ));
+  }
+
 
   private void verifyEmployeeExists(String username) {
     if (employeeRepository.existsByUsername(username)) {

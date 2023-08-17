@@ -23,6 +23,8 @@ import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import java.text.ParseException;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -38,11 +40,14 @@ class JwtTokenUtilTest {
   private final JwtTokenUtil tokenUtil;
   private EmployeeEty employee;
 
+  private Clock clock;
+
   public JwtTokenUtilTest() {
     TokenUtilSetup tokenUtilSetup = new TokenUtilSetup();
 
     properties = tokenUtilSetup.getProperties();
     tokenUtil = tokenUtilSetup.getTokenUtil();
+    clock = Clock.systemDefaultZone();
 
     setupEmployee();
   }
@@ -69,7 +74,7 @@ class JwtTokenUtilTest {
 
   @Test
   void generateAccessToken() throws ParseException, BusinessException {
-    final LocalDateTime now = LocalDateTime.now();
+    final Instant now = clock.instant();
 
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
@@ -87,7 +92,7 @@ class JwtTokenUtilTest {
 
   @Test
   void generateRefreshToken() throws ParseException, BusinessException {
-    final LocalDateTime now = LocalDateTime.now();
+    final Instant now = clock.instant();
 
     SignedJWT refreshToken = tokenUtil.generateRefreshToken(employee, now);
 
@@ -105,7 +110,7 @@ class JwtTokenUtilTest {
 
   @Test
   void getUsernameFromToken() throws BusinessException {
-    final LocalDateTime now = LocalDateTime.now();
+    final Instant now = clock.instant();
 
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
@@ -115,27 +120,27 @@ class JwtTokenUtilTest {
 
   @Test
   void getExpirationDateFromToken() throws BusinessException, ParseException {
-    final LocalDateTime now = LocalDateTime.now();
+    final Instant now = clock.instant();
 
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
-    assertEquals(accessToken.getJWTClaimsSet().getExpirationTime().toInstant(), tokenUtil.getExpirationDateFromToken(accessToken).toInstant(ZoneOffset.UTC));
+    assertEquals(accessToken.getJWTClaimsSet().getExpirationTime().toInstant(), tokenUtil.getExpirationDateFromToken(accessToken));
   }
 
   @Test
   void isTokenExpired() throws  BusinessException {
-    final LocalDateTime now = LocalDateTime.now();
+    final Instant now = clock.instant();
 
     SignedJWT accessToken = tokenUtil.generateAccessToken(employee, now);
 
     assertNotNull(accessToken);
-    assertDoesNotThrow(() -> tokenUtil.isTokenExpired(tokenUtil.getExpirationDateFromToken(accessToken)));
+    assertDoesNotThrow(() -> tokenUtil.isTokenExpired(tokenUtil.getExpirationDateFromToken(accessToken).atOffset(ZoneOffset.UTC).toLocalDateTime()));
 
-    SignedJWT token2 = tokenUtil.generateAccessToken(employee, now.minusHours(1));
+    SignedJWT token2 = tokenUtil.generateAccessToken(employee, now.minusSeconds(60 * 60));
 
     assertNotNull(token2);
-    assertThrows(BusinessException.class, () -> tokenUtil.isTokenExpired(tokenUtil.getExpirationDateFromToken(token2)));
+    assertThrows(BusinessException.class, () -> tokenUtil.isTokenExpired(tokenUtil.getExpirationDateFromToken(token2).atOffset(ZoneOffset.UTC).toLocalDateTime()));
   }
 
 }
