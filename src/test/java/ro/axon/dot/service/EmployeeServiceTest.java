@@ -1,8 +1,10 @@
 package ro.axon.dot.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -25,12 +27,14 @@ import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,18 +44,24 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import org.springframework.http.HttpStatus;
-import ro.axon.dot.domain.EmpYearlyDaysOffHistRepository;
 import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.TeamRepository;
+import ro.axon.dot.domain.TeamStatus;
+import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.mapper.EmployeeMapperImpl;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
@@ -59,8 +69,12 @@ import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
+import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
+import ro.axon.dot.model.TeamDetails;
+import ro.axon.dot.model.UserDetailsResponse;
+import ro.axon.dot.security.JwtTokenUtil;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
@@ -69,16 +83,25 @@ class EmployeeServiceTest {
   EmployeeService employeeService;
 
   @Mock
+  JwtTokenUtil tokenUtil;
+  @Mock
   EmployeeRepository employeeRepository;
   @Mock
   LeaveRequestRepository leaveRequestRepository;
   @Mock
   LegallyDaysOffService legallyDaysOffService;
+  @Mock
+  TeamRepository teamRepository;
+
+  PasswordEncoder passwordEncoder;
+  EmployeeMapper employeeMapper;
 
 
   @BeforeEach
   void setUp() {
-    employeeService = new EmployeeService(employeeRepository, leaveRequestRepository, legallyDaysOffService);
+    passwordEncoder = new BCryptPasswordEncoder();
+    employeeMapper = new EmployeeMapperImpl();
+    employeeService = new EmployeeService(employeeRepository, teamRepository, leaveRequestRepository, legallyDaysOffService, passwordEncoder, tokenUtil);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -156,10 +179,9 @@ class EmployeeServiceTest {
     var ex = assertThrows(BusinessException.class, () -> {
       employeeService.updateLeaveRequestStatus(1L, 1L, review);
     });
-    assertEquals(ex.getError().getErrorDescription().getErrorCode(), "EDOT0001400");
-    assertEquals(ex.getError().getErrorDescription().getDevMsg(),
-        "The employee with the given ID does not exist.");
-    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+    assertEquals(ex.getError().getErrorDescription().getErrorCode(), BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
+    assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
+    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
   }
 
   @Test
@@ -173,9 +195,9 @@ class EmployeeServiceTest {
     var ex = assertThrows(BusinessException.class, () -> {
       employeeService.updateLeaveRequestStatus(1L, 1L, answer);
     });
-    assertEquals(ex.getError().getErrorDescription().getErrorCode(), "EDOT0003400");
-    assertEquals(ex.getError().getErrorDescription().getDevMsg(), "Request not found");
-    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+    assertEquals(ex.getError().getErrorDescription().getErrorCode(),BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getErrorCode());
+    assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getDevMsg());
+    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
   }
 
   @Test
@@ -194,8 +216,8 @@ class EmployeeServiceTest {
     var ex = assertThrows(BusinessException.class, () -> {
       employeeService.updateLeaveRequestStatus(1L, 1L, review);
     });
-    assertEquals(ex.getError().getErrorDescription().getErrorCode(), "EDOT0004400");
-    assertEquals(ex.getError().getErrorDescription().getDevMsg(), "Request already answered");
+    assertEquals(ex.getError().getErrorDescription().getErrorCode(),BusinessErrorCode.LEAVE_REQUEST_REJECTED.getErrorCode());
+    assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.LEAVE_REQUEST_REJECTED.getDevMsg());
     assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
   }
 
@@ -215,9 +237,8 @@ class EmployeeServiceTest {
       employeeService.updateLeaveRequestStatus(1L, 1L, answer);
     });
 
-    assertEquals(ex.getError().getErrorDescription().getErrorCode(), "EDOT0005400");
-    assertEquals(ex.getError().getErrorDescription().getDevMsg(),
-        "Request version smaller than db version");
+    assertEquals(ex.getError().getErrorDescription().getErrorCode(),BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getErrorCode());
+    assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getDevMsg());
     assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.CONFLICT);
   }
 
@@ -258,11 +279,12 @@ class EmployeeServiceTest {
     EmployeeEty employee = initEmployee();
 
     when(employeeRepository.findById(ID)).thenReturn(Optional.of(employee));
+    when(tokenUtil.getLoggedUserId()).thenReturn("mdf_usr");
 
     employeeService.inactivateEmployee(ID);
 
     assertEquals("INACTIVE", employee.getStatus());
-    assertEquals("User", employee.getMdfUsr());
+    assertEquals("mdf_usr", employee.getMdfUsr());
   }
 
   @Test
@@ -328,9 +350,8 @@ class EmployeeServiceTest {
   @Test
   void checkEmployeeUniqueCredentialsDuplicateUsername() {
     when(employeeRepository.existsByUsername(USERNAME)).thenReturn(true);
-    var ex = assertThrows(BusinessException.class, () -> {
-      employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com");
-    });
+    var ex = assertThrows(BusinessException.class, () ->
+      employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com"));
     assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.USERNAME_DUPLICATE);
   }
 
@@ -608,7 +629,6 @@ class EmployeeServiceTest {
     assertEquals(0, employeeEtyOptional.get().getLeaveRequests().size());
     verify(employeeRepository, times(1)).findById(anyString());
     verify(employeeRepository, times(1)).save(any(EmployeeEty.class));
-    verify(leaveRequestRepository, times(1)).delete(any(LeaveRequestEty.class));
   }
 
 
@@ -707,13 +727,14 @@ class EmployeeServiceTest {
         employeeService.getLeaveRequests("1", LocalDate.of(2023, 8, 1),
             LocalDate.of(2023, 8, 10));
       });
-      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
       assertEquals(ex.getError().getErrorDescription().getDevMsg(),
-          "The employee with the given ID does not exist.");
-      assertEquals(ex.getError().getErrorDescription().getErrorCode(), "EDOT0001400");
+          BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
+      assertEquals(ex.getError().getErrorDescription().getErrorCode(),
+          BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
     }
 
-    @Test
+      @Test
     public void getLeaveRequestsNoDates () {
       EmployeeEty employee = new EmployeeEty();
       employee.setId("1");
@@ -776,10 +797,6 @@ class EmployeeServiceTest {
       assertEquals(requests.getItems().get(1).getId(), 2L);
     }
 
-
-
-
-
   @Test
   void changeVacationDays()
   {
@@ -822,7 +839,7 @@ class EmployeeServiceTest {
 
     yearlyDaysOff1.setTotalNoDays(15);
     yearlyDaysOff1.setYear(2023);
-    yearlyDaysOff1.setEmployeeEty(employee);
+    yearlyDaysOff1.setEmployee(employee);
     yearlyDaysOff1.setId(1L);
 
     Set<EmpYearlyDaysOffEty> set1 = new HashSet<>();
@@ -831,7 +848,7 @@ class EmployeeServiceTest {
 
     yearlyDaysOff2.setTotalNoDays(25);
     yearlyDaysOff2.setYear(2023);
-    yearlyDaysOff2.setEmployeeEty(employee2);
+    yearlyDaysOff2.setEmployee(employee2);
     yearlyDaysOff2.setId(2L);
 
     Set<EmpYearlyDaysOffEty> set2 = new HashSet<>();
@@ -843,7 +860,7 @@ class EmployeeServiceTest {
     lista.add(employee);
     lista.add(employee2);
     when(employeeRepository.findAllById(any())).thenReturn( lista );
-
+    when(tokenUtil.getLoggedUserId()).thenReturn("mdf_usr");
 
     VacationDaysModifyDetails v = new VacationDaysModifyDetails();
 
@@ -888,7 +905,7 @@ class EmployeeServiceTest {
 
     yearlyDaysOff2.setTotalNoDays(25);
     yearlyDaysOff2.setYear(2023);
-    yearlyDaysOff2.setEmployeeEty(employee2);
+    yearlyDaysOff2.setEmployee(employee2);
     yearlyDaysOff2.setId(2L);
 
 
@@ -918,6 +935,129 @@ class EmployeeServiceTest {
 
   }
 
+  @Test
+  void createEmployee() {
 
+    TeamEty team = new TeamEty();
+    team.setId(1L);
+    team.setName("Backend");
+    team.setCrtUsr("crtUsr");
+    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfUsr("mdfUsr");
+    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setStatus(TeamStatus.ACTIVE);
 
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        team,
+        new HashSet<>(),
+        new HashSet<>()
+        );
+
+    when(teamRepository.findById(any())).thenReturn(Optional.of(team));
+    //when(employeeRepository.findEmployeeByUsername(employee.getUsername())).thenReturn(Optional.empty());
+    when(employeeRepository.save(any())).thenReturn(employee);
+
+    RegisterRequest request = new RegisterRequest();
+    request.setFirstname("jon");
+    request.setLastname("doe");
+    request.setUsername("jon121");
+    request.setTeamId(1L);
+    request.setRole("USER");
+    request.setEmail("jon@mail.com");
+    request.setContractStartDate(LocalDate.now());
+    request.setNoDaysOff(20);
+
+    UserDetailsResponse userDetails = new UserDetailsResponse();
+    userDetails.setEmployeeId("11-hr-2323");
+    userDetails.setUsername("user_hr122");
+    userDetails.setRoles(Collections.singletonList("HR"));
+    userDetails.setTeamDetails(new TeamDetails(3L, "HR"));
+
+    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(request, "hr_user_id");
+
+    EmployeeEty returned = employeeMapper.mapEmployeeDtoToEmployeeEty(returnedEmployee);
+
+    assertNotNull(returned);
+    assertEquals(employee.getId(), returned.getId());
+    assertEquals(employee.getFirstName(), returned.getFirstName());
+    assertEquals(employee.getLastName(), returned.getLastName());
+    assertEquals(employee.getEmail(), returned.getEmail());
+    assertEquals(employee.getCrtUsr(), returned.getCrtUsr());
+    assertEquals(employee.getCrtTms(), returned.getCrtTms());
+    assertEquals(employee.getMdfUsr(), returned.getMdfUsr());
+    assertEquals(employee.getMdfTms(), returned.getMdfTms());
+    assertEquals(employee.getRole(), returned.getRole());
+    assertEquals(employee.getStatus(), returned.getStatus());
+    assertEquals(employee.getContractStartDate(), returned.getContractStartDate());
+    assertEquals(employee.getUsername(), returned.getUsername());
+    assertEquals(employee.getTeam(), returned.getTeam());
+    assertTrue(passwordEncoder.matches("axon_" + returned.getUsername(), employee.getPassword()));
+
+  }
+
+  @Test
+  void loadEmployeeByUsername() {
+
+    TeamEty team = new TeamEty();
+    team.setId(1L);
+    team.setName("Backend");
+    team.setCrtUsr("crtUsr");
+    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfUsr("mdfUsr");
+    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setStatus(TeamStatus.ACTIVE);
+
+    EmployeeEty employee = new EmployeeEty(
+        "12",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        team,
+        new HashSet<>(),
+        new HashSet<>()
+    );
+
+    when(employeeRepository.findEmployeeByUsername(any())).thenReturn(Optional.of(employee));
+
+    EmployeeEty loadedEmployee = employeeService.loadEmployeeByUsername("test.user2");
+
+    assertNotNull(loadedEmployee);
+    assertEquals(employee.getId(), loadedEmployee.getId());
+    assertEquals(employee.getFirstName(), loadedEmployee.getFirstName());
+    assertEquals(employee.getLastName(), loadedEmployee.getLastName());
+    assertEquals(employee.getEmail(), loadedEmployee.getEmail());
+    assertEquals(employee.getCrtUsr(), loadedEmployee.getCrtUsr());
+    assertEquals(employee.getCrtTms(), loadedEmployee.getCrtTms());
+    assertEquals(employee.getMdfUsr(), loadedEmployee.getMdfUsr());
+    assertEquals(employee.getMdfTms(), loadedEmployee.getMdfTms());
+    assertEquals(employee.getRole(), loadedEmployee.getRole());
+    assertEquals(employee.getStatus(), loadedEmployee.getStatus());
+    assertEquals(employee.getContractStartDate(), loadedEmployee.getContractStartDate());
+    assertEquals(employee.getUsername(), loadedEmployee.getUsername());
+    assertEquals(employee.getTeam(), loadedEmployee.getTeam());
+  }
 }

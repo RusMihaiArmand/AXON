@@ -8,9 +8,20 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum BusinessErrorCode {
 
-    EMPLOYEE_NOT_FOUND("EDOT0001400", "The employee with the given ID does not exist.", HttpStatus.BAD_REQUEST),
+    FAILED_TO_READ_KEYS("EDOT0000500", "Failed to read jwk keys", HttpStatus.INTERNAL_SERVER_ERROR),
+    TOKEN_PARSING_FAILED("EDOT0001401", "Token failed to parse", HttpStatus.UNAUTHORIZED),
+    TOKEN_CANNOT_BE_SIGNED("EDOT0002500", "Token cannot be signed", HttpStatus.INTERNAL_SERVER_ERROR),
+    SIGNER_CREATION_FAILED("EDOT0003500", "Token signer cannot be created", HttpStatus.INTERNAL_SERVER_ERROR),
+    TOKEN_HAS_NO_USERNAME("EDOT0004401", "Token has no username", HttpStatus.UNAUTHORIZED),
+    CLAIMSET_NOT_AVAILABLE("EDOT0005500", "Token claim set not available", HttpStatus.INTERNAL_SERVER_ERROR),
+    REFRESH_TOKEN_NOT_FOUND("EDOT0006404", "Refresh token not found", HttpStatus.NOT_FOUND),
+    TOKEN_REVOKED("EDOT0007401", "Token is revoked", HttpStatus.UNAUTHORIZED),
+    TOKEN_EXPIRED("EDOT0008401", "Token is expired", HttpStatus.UNAUTHORIZED),
+    PASSWORD_NOT_MATCHING("EDOT0009401", "Password does not match", HttpStatus.UNAUTHORIZED),
+    AUDIENCE_DOES_NOT_MATCH("EDOT0010401", "Audience doesn't match", HttpStatus.UNAUTHORIZED),
+    EMPLOYEE_NOT_FOUND("EDOT0012404", "The employee with the given ID does not exist.", HttpStatus.NOT_FOUND),
     YEARLY_DAYS_OFF_NOT_SET("EDOT0002400", "The vacation days for this employee have not been set for this year.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_NOT_FOUND("EDOT0003400", "The leave request with the given ID does not exist.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_NOT_FOUND("EDOT0003404", "The leave request with the given ID does not exist.", HttpStatus.NOT_FOUND),
     LEAVE_REQUEST_REJECTED("EDOT0004400", "Leave request already rejected.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_PAST_DATE("EDOT0005400", "Leave request cannot be submitted for past dates.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE("EDOT0006400", "Cannot delete approved leave requests from past months.", HttpStatus.BAD_REQUEST),
@@ -21,8 +32,10 @@ public enum BusinessErrorCode {
     LEAVE_RQST_INVALID_PERIOD("ED0T0011400", "Invalid period for leave request", HttpStatus.BAD_REQUEST),
     LEAVE_RQST_INVALID_NUMBER_DAYS("ED0T0012400", "Leave request has too many days", HttpStatus.BAD_REQUEST),
     LEAVE_RQST_INVALID_MONTH("ED0T0013400", "Invalid month for leave request", HttpStatus.BAD_REQUEST),
-    NEGATIVE_DAYS_OFF("EDOT0001500", "Number of days off became negative.", HttpStatus.BAD_REQUEST);
+    NEGATIVE_DAYS_OFF("EDOT0001500", "Number of days off became negative.", HttpStatus.BAD_REQUEST),
 
+    TEAM_NOT_FOUND("EDOT0013404", "Team not found", HttpStatus.NOT_FOUND),
+    NO_JWT_AUTH_FOUND("EDOT0021401", "No JWT Auth found in Security Context!", HttpStatus.UNAUTHORIZED);
 
     private final String errorCode;
     private final String devMsg;
