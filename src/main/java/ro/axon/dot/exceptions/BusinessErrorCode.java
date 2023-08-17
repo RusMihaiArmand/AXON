@@ -20,7 +20,9 @@ public enum BusinessErrorCode {
     LEAVE_RQST_DIFF_YEARS("ED0T0010400", "Leave request has different years", HttpStatus.BAD_REQUEST),
     LEAVE_RQST_INVALID_PERIOD("ED0T0011400", "Invalid period for leave request", HttpStatus.BAD_REQUEST),
     LEAVE_RQST_INVALID_NUMBER_DAYS("ED0T0012400", "Leave request has too many days", HttpStatus.BAD_REQUEST),
-    LEAVE_RQST_INVALID_MONTH("ED0T0013400", "Invalid month for leave request", HttpStatus.BAD_REQUEST);
+    LEAVE_RQST_INVALID_MONTH("ED0T0013400", "Invalid month for leave request", HttpStatus.BAD_REQUEST),
+    NEGATIVE_DAYS_OFF("EDOT0001500", "Number of days off became negative.", HttpStatus.BAD_REQUEST);
+
 
     private final String errorCode;
     private final String devMsg;

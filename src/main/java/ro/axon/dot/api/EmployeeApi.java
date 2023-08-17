@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
 import ro.axon.dot.model.EditLeaveRequestDetails;
@@ -22,6 +23,7 @@ import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.LeaveRequestService;
 
@@ -110,5 +112,12 @@ public class EmployeeApi {
       @RequestParam(name = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
       @RequestParam(name = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
     return ResponseEntity.ok(employeeService.getLeaveRequests(idEmployee, startDate, endDate));
+  }
+
+  @PostMapping("/employees/days-off")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void modifyEmployeesDaysOff(@Valid @RequestBody VacationDaysModifyDetails vacationDaysModifyDetails)
+  {
+    employeeService.changeVacationDays(vacationDaysModifyDetails);
   }
 }

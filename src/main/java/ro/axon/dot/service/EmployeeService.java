@@ -4,6 +4,7 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -11,12 +12,14 @@ import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
+import ro.axon.dot.domain.EmpYearlyDaysOffHistEty;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
+import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
@@ -30,6 +33,7 @@ import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.LegallyDaysOffItem;
 import ro.axon.dot.model.RemainingDaysOff;
+import ro.axon.dot.model.VacationDaysModifyDetails;
 
 @Service
 @RequiredArgsConstructor
@@ -419,5 +423,76 @@ public class EmployeeService {
         .collect(Collectors.toList()));
 
     return leaveRequestsDTO;
+  }
+
+
+  private int getDaysToModify(VacationDaysModifyDetails vacationDaysModifyDetails)
+  {
+    if(vacationDaysModifyDetails.getType().equals(VacationDaysChangeTypeEnum.DECREASE))
+      return -vacationDaysModifyDetails.getNoDays();
+    else {
+      return vacationDaysModifyDetails.getNoDays();
+    }
+  }
+
+  @Transactional
+  public void changeVacationDays(VacationDaysModifyDetails vacationDaysModifyDetails)
+  {
+    int dayChanger = this.getDaysToModify(vacationDaysModifyDetails);
+
+    employeeRepository.findAllById(vacationDaysModifyDetails.getEmployeeIds())
+        .forEach(employee -> updateDaysForEmployee(dayChanger,vacationDaysModifyDetails.getDescription(),employee));
+  }
+
+  EmpYearlyDaysOffEty createDaysOffEty(EmployeeEty employee){
+    EmpYearlyDaysOffEty empDaysOffEty = new EmpYearlyDaysOffEty();
+
+    empDaysOffEty.setEmployeeEty(employee);
+    empDaysOffEty.setYear( LocalDate.now().getYear() );
+    empDaysOffEty.setTotalNoDays(0);
+    empDaysOffEty.setEmpYearlyDaysOffHistEtySet( new HashSet<>() );
+
+    employee.getEmpYearlyDaysOff().add(empDaysOffEty);
+
+    return empDaysOffEty;
+  }
+
+  private void updateDaysForEmployee(int daysChanger, String description, EmployeeEty emp) throws BusinessException
+  {
+    EmpYearlyDaysOffEty daysOffEty;
+    daysOffEty = emp.getEmpYearlyDaysOff().stream()
+        .filter(yearlyDaysOff -> yearlyDaysOff.getYear().equals(LocalDate.now().getYear()))
+        .findFirst()
+        .orElseGet( () -> createDaysOffEty(emp));
+
+    int daysLeft = daysOffEty.getTotalNoDays() + daysChanger;
+
+    if (daysLeft < 0) {
+      throw new BusinessException(BusinessExceptionElement
+          .builder().errorDescription(BusinessErrorCode.NEGATIVE_DAYS_OFF).build());
+    }
+
+    daysOffEty.setTotalNoDays(daysLeft);
+    daysOffEty.setYear( LocalDate.now().getYear() );
+
+    EmpYearlyDaysOffHistEty daysOffHistory = new EmpYearlyDaysOffHistEty();
+
+    daysOffHistory.setNoDays(Math.abs(daysChanger));
+    daysOffHistory.setDescription(description);
+
+    if (daysChanger > 0) {
+      daysOffHistory.setType(VacationDaysChangeTypeEnum.INCREASE);
+    } else {
+      daysOffHistory.setType(VacationDaysChangeTypeEnum.DECREASE);
+    }
+
+    daysOffHistory.setCrtUsr("CREATION-USER"); //to be modified when login endpoint is finished
+    daysOffHistory.setCrtTms(Instant.now());
+
+    daysOffHistory.setEmpYearlyDaysOffEty(daysOffEty);
+
+    daysOffEty.getEmpYearlyDaysOffHistEtySet().add(daysOffHistory);
+
+    employeeRepository.save(emp);
   }
 }

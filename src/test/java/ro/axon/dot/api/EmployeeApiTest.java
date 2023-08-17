@@ -31,7 +31,10 @@ import static ro.axon.dot.EmployeeTestAttributes.V;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +48,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ro.axon.dot.EmployeeTestAttributes;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
+import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
@@ -56,7 +60,9 @@ import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
+import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.service.EmployeeService;
+
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeApiTest {
@@ -569,5 +575,31 @@ class EmployeeApiTest {
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("The employee with the given ID does not exist."))
         .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
+  }
+
+
+
+  @Test
+  void changeVacationDays() throws Exception
+  {
+    VacationDaysModifyDetails v = new VacationDaysModifyDetails();
+    v.setDescription("desc");
+    v.setNoDays(2);
+
+    List<String> ids = new ArrayList<>();
+    ids.add( employee.getId() );
+    v.setEmployeeIds(ids);
+
+    v.setType(VacationDaysChangeTypeEnum.INCREASE);
+
+    org.codehaus.jackson.map.ObjectMapper objectMapper = new org.codehaus.jackson.map.ObjectMapper();
+
+    mockMvc.perform(post("/api/v1/employees/days-off")
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(v))
+        )
+        .andExpect(status().is(204));
+
   }
 }
