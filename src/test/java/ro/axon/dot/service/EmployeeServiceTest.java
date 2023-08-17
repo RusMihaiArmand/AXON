@@ -26,6 +26,7 @@ import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 import java.time.LocalDate;
 import java.util.*;
 
+import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import java.util.Optional;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
@@ -63,6 +65,14 @@ import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.EmployeeUpdateRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
+import ro.axon.dot.model.EmployeeUpdateRequest;
+import ro.axon.dot.exceptions.BusinessException;
+
+import ro.axon.dot.api.ApiExceptionHandler;
+import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.mapper.EmployeeMapper;
+
+
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
@@ -925,43 +935,44 @@ class EmployeeServiceTest {
   @Test
   void updateEmployeeDetails_Success() {
 
-    EmployeeEty existingEmployee = new EmployeeEty();
-    existingEmployee.setId("1");
-    existingEmployee.setV(1L);
+        EmployeeEty existingEmployee = new EmployeeEty();
+        existingEmployee.setId("1");
+        existingEmployee.setV(1L);
 
 
-    EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
-    updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
-    updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
-    updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
-    updatedEmployeeUpdateRequest.setRole("USER");
-    updatedEmployeeUpdateRequest.setV(2L);
+        EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
+        updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
+        updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
+        updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
+        updatedEmployeeUpdateRequest.setRole("USER");
+        updatedEmployeeUpdateRequest.setV(2L);
 
 
-    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
+        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
 
 
-    assertDoesNotThrow(() -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest));
+        assertDoesNotThrow(() -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest));
 
 
-    verify(employeeRepository).save(existingEmployee);
-  }
-  @Test
-  void updateEmployeeDetails_Conflict() {
+        verify(employeeRepository).save(existingEmployee);
+    }
 
-    EmployeeEty existingEmployee = new EmployeeEty();
-    existingEmployee.setId("1");
-    existingEmployee.setV(2L);
+    @Test
+    void updateEmployeeDetails_Conflict() {
+
+        EmployeeEty existingEmployee = new EmployeeEty();
+        existingEmployee.setId("1");
+        existingEmployee.setV(2L);
 
 
-    EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
-    updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
-    updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
-    updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
-    updatedEmployeeUpdateRequest.setRole("USER");
-    updatedEmployeeUpdateRequest.setV(1L);
+        EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
+        updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
+        updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
+        updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
+        updatedEmployeeUpdateRequest.setRole("USER");
+        updatedEmployeeUpdateRequest.setV(1L);
 
-    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
+        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
 
     assertThrows(BusinessException.class,
             () -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest),
@@ -969,6 +980,5 @@ class EmployeeServiceTest {
 
     verify(employeeRepository, never()).save(existingEmployee);
   }
-
 
 }

@@ -5,6 +5,8 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @SequenceGenerator(name = "TEAM_ID_SQ", sequenceName = "TEAM_ID_SQ", allocationSize = 1)
@@ -31,6 +33,8 @@ public class TeamEty extends SrgKeyEntityTml<Long> {
     @Enumerated(value = EnumType.STRING)
     private TeamStatus status;
 
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
+    private Set<EmployeeEty> employees = new HashSet<>();
     @Override
     protected Class<? extends SrgKeyEntityTml<Long>> entityRefClass() {
         return TeamEty.class;
