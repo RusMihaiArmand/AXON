@@ -213,6 +213,19 @@ public class EmployeeService {
 
     if (isPendingOrApprovedLeaveRequest(leaveRequest)) {
 
+      long countedDaysOff = calculateCountedDaysOff(editLeaveRequestDetails.getStartDate(), editLeaveRequestDetails.getEndDate());
+
+      Integer remainingDaysOff = getCalculatedRemainingDaysOff(employee);
+
+      if (countedDaysOff > remainingDaysOff) {
+        throw new BusinessException(
+            BusinessException.BusinessExceptionElement
+                .builder()
+                .errorDescription(BusinessErrorCode.LEAVE_RQST_INVALID_NUMBER_DAYS)
+                .build());
+      }
+
+      leaveRequest.setNoDays((int) countedDaysOff);
       leaveRequest.setStartDate(editLeaveRequestDetails.getStartDate());
       leaveRequest.setEndDate(editLeaveRequestDetails.getEndDate());
       leaveRequest.setType(editLeaveRequestDetails.getType());
