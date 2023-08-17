@@ -1,11 +1,11 @@
-package ro.axon.dot.config;
+package ro.axon.dot.domain.persistence;
 
 import java.util.List;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
-import ro.axon.dot.domain.LegallyDaysOffEty;
-import ro.axon.dot.domain.LegallyDaysOffRepository;
+import ro.axon.dot.domain.entity.LegallyDaysOffEty;
+import ro.axon.dot.domain.repositories.LegallyDaysOffRepository;
 
 @Component
 public class LegallyDaysOffPersistenceManager {

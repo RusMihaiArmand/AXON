@@ -5,13 +5,13 @@ import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ro.axon.dot.domain.TeamEty;
-import ro.axon.dot.domain.TeamRepository;
-import ro.axon.dot.domain.TeamStatus;
+import ro.axon.dot.domain.entity.TeamEty;
+import ro.axon.dot.domain.repositories.TeamRepository;
+import ro.axon.dot.domain.enums.TeamStatus;
 import ro.axon.dot.mapper.TeamMapper;
 import ro.axon.dot.model.CreateTeamDetails;
 import ro.axon.dot.model.TeamDetailsList;
-import ro.axon.dot.security.JwtTokenUtil;
+import ro.axon.dot.config.component.JwtTokenUtil;
 
 @Service
 @RequiredArgsConstructor

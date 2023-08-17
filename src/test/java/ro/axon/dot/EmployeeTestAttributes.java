@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.entity.TeamEty;
 
 public class EmployeeTestAttributes {
   public static final String ID = "000003e8-3121-21ee-8100-325096b39f47";

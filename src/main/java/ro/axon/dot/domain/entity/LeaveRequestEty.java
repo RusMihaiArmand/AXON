@@ -1,4 +1,4 @@
-package ro.axon.dot.domain;
+package ro.axon.dot.domain.entity;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,6 +6,9 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.Instant;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.enums.LeaveRequestType;
+import ro.axon.dot.domain.SrgKeyEntityTml;
 
 @Entity
 @SequenceGenerator(name = "LEAVE_REQUEST_ID_SQ", sequenceName = "LEAVE_REQUEST_ID_SQ", allocationSize = 1)
@@ -38,10 +41,10 @@ public class LeaveRequestEty extends SrgKeyEntityTml<Long> {
     private Integer noDays;
     @Column(name = "TYPE")
     @Enumerated(value = EnumType.STRING)
-    private LeaveRequestEtyTypeEnum type;
+    private LeaveRequestType type;
     @Column(name = "STATUS")
     @Enumerated(value = EnumType.STRING)
-    private LeaveRequestEtyStatusEnum status;
+    private LeaveRequestStatus status;
     @Column(name = "DESCRIPTION")
     private String description;
     @Column(name = "REJECT_REASON")

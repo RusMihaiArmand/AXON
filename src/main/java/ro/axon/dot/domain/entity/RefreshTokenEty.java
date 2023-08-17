@@ -1,4 +1,4 @@
-package ro.axon.dot.domain;
+package ro.axon.dot.domain.entity;
 
 import java.time.Instant;
 import javax.persistence.Column;
@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ro.axon.dot.domain.enums.TokenStatus;
 
 @Entity
 @Getter

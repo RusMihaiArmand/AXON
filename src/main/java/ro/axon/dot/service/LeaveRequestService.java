@@ -4,7 +4,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ro.axon.dot.domain.*;
+import ro.axon.dot.domain.entity.LeaveRequestEty;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 
@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import ro.axon.dot.domain.repositories.LeaveRequestRepository;
 
 @Service
 @RequiredArgsConstructor

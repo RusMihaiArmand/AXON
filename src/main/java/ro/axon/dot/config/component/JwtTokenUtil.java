@@ -1,4 +1,4 @@
-package ro.axon.dot.security;
+package ro.axon.dot.config.component;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import liquibase.pro.packaged.U;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -32,7 +31,8 @@ import org.springframework.security.converter.RsaKeyConverters;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
-import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.config.properties.JwtTokenUtilProperties;
+import ro.axon.dot.domain.entity.EmployeeEty;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;

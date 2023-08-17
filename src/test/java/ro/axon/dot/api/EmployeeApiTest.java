@@ -55,13 +55,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ro.axon.dot.EmployeeTestAttributes;
-import ro.axon.dot.domain.LeaveRequestEty;
-import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
-import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
-import ro.axon.dot.domain.TeamEty;
-import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.TeamStatus;
+import ro.axon.dot.domain.entity.LeaveRequestEty;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.enums.LeaveRequestType;
+import ro.axon.dot.domain.enums.VacationDaysChangeType;
+import ro.axon.dot.domain.entity.TeamEty;
+import ro.axon.dot.domain.entity.EmployeeEty;
+import ro.axon.dot.domain.enums.TeamStatus;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
@@ -76,7 +76,7 @@ import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.model.VacationDaysModifyDetails;
-import ro.axon.dot.security.JwtTokenUtil;
+import ro.axon.dot.config.component.JwtTokenUtil;
 import ro.axon.dot.service.EmployeeService;
 
 @ExtendWith(MockitoExtension.class)
@@ -300,7 +300,7 @@ class EmployeeApiTest {
 
       LeaveRequestEty request = new LeaveRequestEty();
       request.setId(1L);
-      request.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+      request.setStatus(LeaveRequestStatus.APPROVED);
       when(employeeService.updateLeaveRequestStatus(anyString(), anyLong(), any())).thenReturn(request);
 
     mockMvc.perform(patch("/api/v1/employees/1/requests/1")
@@ -457,7 +457,7 @@ class EmployeeApiTest {
     String createLeaveRequestContent = "{ \"startDate\": \"2023-08-15\", \"endDate\": \"2023-08-17\", \"type\": \"MEDICAL\", \"description\": \"description\"}";
 
     CreateLeaveRequestDetails createLeaveRequestDetails = new CreateLeaveRequestDetails();
-    createLeaveRequestDetails.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+    createLeaveRequestDetails.setType(LeaveRequestType.MEDICAL);
     createLeaveRequestDetails.setStartDate(LocalDate.of(2023,8, 15));
     createLeaveRequestDetails.setEndDate(LocalDate.of(2023,8, 17));
     createLeaveRequestDetails.setDescription("description");
@@ -609,7 +609,7 @@ class EmployeeApiTest {
     ids.add( employee.getId() );
     v.setEmployeeIds(ids);
 
-    v.setType(VacationDaysChangeTypeEnum.INCREASE);
+    v.setType(VacationDaysChangeType.INCREASE);
 
     org.codehaus.jackson.map.ObjectMapper objectMapper = new org.codehaus.jackson.map.ObjectMapper();
 
