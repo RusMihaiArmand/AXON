@@ -44,27 +44,10 @@ import org.mockito.Mock;
 import java.util.Optional;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
+import ro.axon.dot.domain.*;
 import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.domain.EmpYearlyDaysOffEty;
-import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.EmployeeRepository;
-import ro.axon.dot.domain.LeaveRequestEty;
-import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
-import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
-import ro.axon.dot.model.CreateLeaveRequestDetails;
-import ro.axon.dot.model.EditLeaveRequestDetails;
-import ro.axon.dot.model.EmployeeDetailsList;
-import ro.axon.dot.model.EmployeeDetailsListItem;
-import ro.axon.dot.model.EmployeeDto;
-import ro.axon.dot.model.LeaveRequestDetailsList;
-import ro.axon.dot.model.LeaveRequestDetailsListItem;
-import ro.axon.dot.model.LeaveRequestReview;
-import ro.axon.dot.model.EmployeeUpdateRequest;
-import ro.axon.dot.model.RemainingDaysOff;
-import ro.axon.dot.model.VacationDaysModifyDetails;
+import ro.axon.dot.model.*;
 import ro.axon.dot.model.EmployeeUpdateRequest;
 import ro.axon.dot.exceptions.BusinessException;
 
@@ -86,11 +69,14 @@ class EmployeeServiceTest {
   LeaveRequestRepository leaveRequestRepository;
   @Mock
   LegallyDaysOffService legallyDaysOffService;
+  @Mock
+  TeamRepository teamRepository;
 
 
   @BeforeEach
   void setUp() {
-    employeeService = new EmployeeService(employeeRepository, leaveRequestRepository, legallyDaysOffService);
+    employeeService = new EmployeeService(employeeRepository, leaveRequestRepository,
+            legallyDaysOffService, teamRepository);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");

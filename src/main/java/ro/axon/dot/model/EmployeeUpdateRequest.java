@@ -1,9 +1,11 @@
 package ro.axon.dot.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @Data
+@NoArgsConstructor
 public class EmployeeUpdateRequest {
 
   @NonNull
