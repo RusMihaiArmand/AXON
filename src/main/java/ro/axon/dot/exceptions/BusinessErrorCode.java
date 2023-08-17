@@ -19,17 +19,22 @@ public enum BusinessErrorCode {
     TOKEN_EXPIRED("EDOT0008401", "Token is expired", HttpStatus.UNAUTHORIZED),
     PASSWORD_NOT_MATCHING("EDOT0009401", "Password does not match", HttpStatus.UNAUTHORIZED),
     AUDIENCE_DOES_NOT_MATCH("EDOT0010401", "Audience doesn't match", HttpStatus.UNAUTHORIZED),
-
-    USERNAME_ALREADY_EXISTS("EDOT0011409", "An employee with this username already exists.", HttpStatus.CONFLICT),
     EMPLOYEE_NOT_FOUND("EDOT0012404", "The employee with the given ID does not exist.", HttpStatus.NOT_FOUND),
+    YEARLY_DAYS_OFF_NOT_SET("EDOT0002400", "The vacation days for this employee have not been set for this year.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_NOT_FOUND("EDOT0003404", "The leave request with the given ID does not exist.", HttpStatus.NOT_FOUND),
+    LEAVE_REQUEST_REJECTED("EDOT0004400", "Leave request already rejected.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_PAST_DATE("EDOT0005400", "Leave request cannot be submitted for past dates.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE("EDOT0006400", "Cannot delete approved leave requests from past months.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_PRECEDING_VERSION("EDOT0007409", "Leave request version cannot precede version from database.", HttpStatus.CONFLICT),
+    USERNAME_DUPLICATE("EDOT0008409", "An employee with this username already exists.", HttpStatus.CONFLICT),
+    EMAIL_DUPLICATE("EDOT0009409", "An employee with this email already exists.", HttpStatus.CONFLICT),
+    LEAVE_RQST_DIFF_YEARS("ED0T0010400", "Leave request has different years", HttpStatus.BAD_REQUEST),
+    LEAVE_RQST_INVALID_PERIOD("ED0T0011400", "Invalid period for leave request", HttpStatus.BAD_REQUEST),
+    LEAVE_RQST_INVALID_NUMBER_DAYS("ED0T0012400", "Leave request has too many days", HttpStatus.BAD_REQUEST),
+    LEAVE_RQST_INVALID_MONTH("ED0T0013400", "Invalid month for leave request", HttpStatus.BAD_REQUEST),
+    NEGATIVE_DAYS_OFF("EDOT0001500", "Number of days off became negative.", HttpStatus.BAD_REQUEST),
+
     TEAM_NOT_FOUND("EDOT0013404", "Team not found", HttpStatus.NOT_FOUND),
-    YEARLY_DAYS_OFF_NOT_SET("EDOT0014400", "The vacation days for this employee have not been set for this year.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_NOT_FOUND("EDOT0015404", "The leave request with the given ID does not exist.", HttpStatus.NOT_FOUND),
-    LEAVE_REQUEST_REJECTED("EDOT0016400", "Leave request already rejected.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_PAST_DATE("EDOT0017400", "Leave request contains days from past months.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_PRECEDING_VERSION("EDOT0018409", "Leave request version cannot precede version from database.", HttpStatus.CONFLICT),
-    EMAIL_DUPLICATE("EDOT0019409", "An employee with this email already exists.", HttpStatus.CONFLICT),
-    LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE("EDOT0020400", "Cannot delete approved leave requests from past months.", HttpStatus.BAD_REQUEST),
     NO_JWT_AUTH_FOUND("EDOT0021401", "No JWT Auth found in Security Context!", HttpStatus.UNAUTHORIZED);
 
     private final String errorCode;

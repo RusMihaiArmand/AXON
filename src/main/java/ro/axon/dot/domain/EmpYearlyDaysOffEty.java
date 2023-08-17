@@ -5,7 +5,6 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -33,14 +32,14 @@ public class EmpYearlyDaysOffEty{
   @Column(name = "ID")
   private Long id;
 
-  @ManyToOne
-  @JoinColumn(name = "EMPLOYEE_ID")
-  private EmployeeEty employee;
-
   @Column(name = "TOTAL_NO_DAYS")
   private Integer totalNoDays;
   @Column(name = "YEAR")
   private Integer year;
+
+  @ManyToOne
+  @JoinColumn(name = "EMPLOYEE_ID")
+  private EmployeeEty employee;
 
   @OneToMany(mappedBy = "empYearlyDaysOffEty", cascade = CascadeType.ALL)
   private Set<EmpYearlyDaysOffHistEty> empYearlyDaysOffHistEtySet = new HashSet<>();

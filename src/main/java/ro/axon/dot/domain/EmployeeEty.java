@@ -66,13 +66,19 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "employee")
   private Set<EmpYearlyDaysOffEty> empYearlyDaysOff = new HashSet<>();
 
-  @Override
-  protected Class<? extends SrgKeyEntityTml<String>> entityRefClass() {
-    return EmployeeEty.class;
+  public void addLeaveRequest(LeaveRequestEty leaveRequestEty) {
+    leaveRequests.add(leaveRequestEty);
+    leaveRequestEty.setEmployee(this);
   }
 
   public void removeLeaveRequests(LeaveRequestEty leaveRequestEty){
     leaveRequests.remove(leaveRequestEty);
     leaveRequestEty.setEmployee(null);
   }
+
+  @Override
+  protected Class<? extends SrgKeyEntityTml<String>> entityRefClass() {
+    return EmployeeEty.class;
+  }
+
 }
