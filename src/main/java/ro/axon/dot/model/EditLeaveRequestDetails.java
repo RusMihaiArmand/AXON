@@ -9,7 +9,7 @@ import ro.axon.dot.validation.DateRangeConstraint;
 
 @Data
 @DateRangeConstraint
-public class EditLeaveRequestDetails {
+public class EditLeaveRequestDetails implements DateRangeDetails{
 
   private LocalDate startDate;
   private LocalDate endDate;

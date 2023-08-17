@@ -32,6 +32,7 @@ import static ro.axon.dot.EmployeeTestAttributes.V;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.Arrays;
 
 import java.util.List;
@@ -48,6 +49,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ro.axon.dot.EmployeeTestAttributes;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
+import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
@@ -194,11 +196,11 @@ class EmployeeApiTest {
 
 
   private String getJsonAnswer() throws IOException {
-    LeaveRequestReview review = new LeaveRequestReview();
-    review.setLeaveRequestStatus("APPROVED");
-    review.setVersion(1L);
-    ObjectMapper mapper = new ObjectMapper();
-    return mapper.writeValueAsString(review);
+      LeaveRequestReview review = new LeaveRequestReview();
+      review.setType("APPROVAL");
+      review.setV(1L);
+      ObjectMapper mapper = new ObjectMapper();
+      return mapper.writeValueAsString(review);
   }
 
 
@@ -209,7 +211,7 @@ class EmployeeApiTest {
             .builder()
             .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
             .build()))
-        .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
+        .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
     mockMvc.perform(patch("/api/v1/employees/1/requests/1")
             .contentType(MediaType.APPLICATION_JSON)
@@ -222,70 +224,70 @@ class EmployeeApiTest {
 
   @Test
   void answerLeaveRequestRequestNotFound() throws Exception {
-    doThrow(new BusinessException(
-        BusinessException.BusinessExceptionElement
-            .builder()
-            .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND)
-            .build()))
-        .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
+      doThrow(new BusinessException(
+              BusinessException.BusinessExceptionElement
+                      .builder()
+                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND)
+                      .build()))
+              .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
-    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .content(getJsonAnswer()))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Request not found"))
-        .andExpect(jsonPath("$.errorCode").value("EDOT0003400"));
+      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .accept(MediaType.APPLICATION_JSON)
+                      .content(getJsonAnswer()))
+              .andExpect(status().isBadRequest())
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getErrorCode()));
   }
 
   @Test
   void answerLeaveRequestRequestResolved() throws Exception {
-    doThrow(new BusinessException(
-        BusinessException.BusinessExceptionElement
-            .builder()
-            .errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED)
-            .build()))
-        .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
+      doThrow(new BusinessException(
+              BusinessException.BusinessExceptionElement
+                      .builder()
+                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING)
+                      .build()))
+              .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
-    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .content(getJsonAnswer()))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Request already answered"))
-        .andExpect(jsonPath("$.errorCode").value("EDOT0004400"));
+      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .accept(MediaType.APPLICATION_JSON)
+                      .content(getJsonAnswer()))
+              .andExpect(status().isBadRequest())
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getErrorCode()));
   }
 
   @Test
   void answerLeaveRequestOutdatedVersion() throws Exception {
-    doThrow(new BusinessException(
-        BusinessException.BusinessExceptionElement
-            .builder()
-            .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
-            .build()))
-        .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
+      doThrow(new BusinessException(
+              BusinessException.BusinessExceptionElement
+                      .builder()
+                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+                      .build()))
+              .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
-    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .content(getJsonAnswer()))
-        .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.message").value("Request version smaller than db version"))
-        .andExpect(jsonPath("$.errorCode").value("EDOT0005400"));
+      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .accept(MediaType.APPLICATION_JSON)
+                      .content(getJsonAnswer()))
+              .andExpect(status().isConflict())
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getErrorCode()));
   }
 
   @Test
   void answerLeaveRequestEmployeeOk() throws Exception {
-    LeaveRequestReview review = new LeaveRequestReview();
-    review.setLeaveRequestStatus("APPROVED");
-    review.setVersion(1L);
-    ObjectMapper mapper = new ObjectMapper();
-    String jsonAnswer = mapper.writeValueAsString(review);
+      LeaveRequestReview review = new LeaveRequestReview();
+      review.setType("APPROVAL");
+      review.setV(1L);
+      ObjectMapper mapper = new ObjectMapper();
+      String jsonAnswer = mapper.writeValueAsString(review);
 
-    LeaveRequestEty request = new LeaveRequestEty();
-    request.setId(1L);
-    request.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-    when(employeeService.updateLeaveRequestStatus(anyLong(), anyLong(), any())).thenReturn(request);
+      LeaveRequestEty request = new LeaveRequestEty();
+      request.setId(1L);
+      request.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+      when(employeeService.updateLeaveRequestStatus(anyString(), anyLong(), any())).thenReturn(request);
 
     mockMvc.perform(patch("/api/v1/employees/1/requests/1")
             .contentType(MediaType.APPLICATION_JSON)
@@ -438,14 +440,18 @@ class EmployeeApiTest {
   @Test
   @DisplayName("When add leave request then return status code")
   void whenAddLeaveRequestThenReturnStatus() throws Exception {
+    String createLeaveRequestContent = "{ \"startDate\": \"2023-08-15\", \"endDate\": \"2023-08-17\", \"type\": \"MEDICAL\", \"description\": \"description\"}";
 
-    ObjectMapper objectMapper = new ObjectMapper();
     CreateLeaveRequestDetails createLeaveRequestDetails = new CreateLeaveRequestDetails();
+    createLeaveRequestDetails.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+    createLeaveRequestDetails.setStartDate(LocalDate.of(2023,8, 15));
+    createLeaveRequestDetails.setEndDate(LocalDate.of(2023,8, 17));
+    createLeaveRequestDetails.setDescription("description");
 
     mockMvc.perform(post("/api/v1/employees/1/requests")
             .accept(MediaType.APPLICATION_JSON)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(createLeaveRequestDetails)))
+            .content(createLeaveRequestContent))
         .andExpect(status().isCreated());
 
     verify(employeeService, times(1)).createLeaveRequest(eq("1"),
