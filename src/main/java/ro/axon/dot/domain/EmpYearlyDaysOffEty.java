@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -36,6 +35,13 @@ public class EmpYearlyDaysOffEty{
   private Integer totalNoDays;
   @Column(name = "YEAR")
   private Integer year;
+
+
+
+  @ManyToOne
+  @JoinColumn(name = "EMPLOYEE_ID")
+  private EmployeeEty employeeEty;
+
 
   @OneToMany(mappedBy = "empYearlyDaysOffEty")
   private Set<EmpYearlyDaysOffHistEty> empYearlyDaysOffHistEtySet = new HashSet<>();

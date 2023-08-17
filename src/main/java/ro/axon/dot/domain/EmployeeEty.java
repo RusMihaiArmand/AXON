@@ -64,6 +64,11 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   @JoinColumn(name = "EMPLOYEE_ID")
   private Set<EmpYearlyDaysOffEty> empYearlyDaysOff = new HashSet<>();
 
+  public void addLeaveRequest(LeaveRequestEty leaveRequestEty) {
+    leaveRequests.add(leaveRequestEty);
+    leaveRequestEty.setEmployee(this);
+  }
+
   @Override
   protected Class<? extends SrgKeyEntityTml<String>> entityRefClass() {
     return EmployeeEty.class;
