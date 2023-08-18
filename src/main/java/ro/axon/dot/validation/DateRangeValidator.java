@@ -3,19 +3,19 @@ package ro.axon.dot.validation;
 import java.time.LocalDate;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import ro.axon.dot.model.EditLeaveRequestDetails;
+import ro.axon.dot.model.LeaveRequestCreateEditDetails;
 
-public class DateRangeValidator implements ConstraintValidator<DateRangeConstraint, EditLeaveRequestDetails> {
+public class DateRangeValidator implements ConstraintValidator<DateRangeConstraint, LeaveRequestCreateEditDetails> {
 
   @Override
-  public boolean isValid(EditLeaveRequestDetails leaveRequest, ConstraintValidatorContext context){
+  public boolean isValid(LeaveRequestCreateEditDetails value, ConstraintValidatorContext context){
 
-    if(leaveRequest == null){
+    if(value == null){
       return true; // nulls are taken care of by @NotNull annotations
     }
 
-    LocalDate startDate = leaveRequest.getStartDate();
-    LocalDate endDate = leaveRequest.getEndDate();
+    LocalDate startDate = value.getStartDate();
+    LocalDate endDate = value.getEndDate();
 
     if(startDate == null || endDate == null) {
       sentNullDateErrorMessage(context);

@@ -3,6 +3,7 @@ package ro.axon.dot.service;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ro.axon.dot.domain.*;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.LeaveRequestDetailsList;
@@ -18,6 +19,7 @@ public class LeaveRequestService {
 
     private final LeaveRequestRepository leaveRequestRepository;
 
+    @Transactional(readOnly = true)
     public LeaveRequestDetailsList getLeaveRequestsDetailsSorted(BooleanExpression query) {
         var leaveRequestDetailsList = new LeaveRequestDetailsList();
         Comparator<LeaveRequestEty> leaveRequestStatusComparator = Comparator.comparing(LeaveRequestEty::getStatus);

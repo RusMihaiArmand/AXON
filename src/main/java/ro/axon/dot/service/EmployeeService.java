@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,6 +49,7 @@ import ro.axon.dot.model.*;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
@@ -60,7 +61,7 @@ public class EmployeeService {
   private final JwtTokenUtil tokenUtil;
   private final Clock clock;
 
-  @Transactional
+  @Transactional(readOnly = true)
   public EmployeeDetailsList getEmployeesDetails(String name) {
     var employeeDetailsList = new EmployeeDetailsList();
     List<EmployeeEty> employees;
@@ -102,9 +103,8 @@ public class EmployeeService {
             && !(request.getStatus().equals(LeaveRequestEtyStatusEnum.REJECTED))).toList();
   }
 
-  private void checkEmployeeExists(Long idEmployee) throws BusinessException {
-    Optional<EmployeeEty> employeeOptional = employeeRepository.findById(
-        String.valueOf(idEmployee));
+  private void checkEmployeeExists(String idEmployee) throws BusinessException {
+    Optional<EmployeeEty> employeeOptional = employeeRepository.findById(idEmployee);
     if (employeeOptional.isEmpty()) {
       throw new BusinessException(
           BusinessException.BusinessExceptionElement
@@ -126,40 +126,40 @@ public class EmployeeService {
     return requestOptional.get();
   }
 
-  private void checkVersion(LeaveRequestEty request, LeaveRequestReview review)
-      throws BusinessException {
-    if (review.getVersion() < request.getV()) {
-      throw new BusinessException(
-          BusinessException.BusinessExceptionElement
-              .builder()
-              .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
-              .build());
+    private void checkVersion(LeaveRequestEty request, LeaveRequestReview review) throws BusinessException {
+        if (review.getV() < request.getV()) throw new BusinessException(
+                BusinessException.BusinessExceptionElement
+                        .builder()
+                        .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+                        .build());
     }
-  }
 
   private void checkStatus(LeaveRequestEty request) {
     if (request.getStatus() != LeaveRequestEtyStatusEnum.PENDING) {
       throw new BusinessException(
           BusinessException.BusinessExceptionElement
               .builder()
-              .errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED)
+              .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING)
               .build());
     }
   }
 
-  public LeaveRequestEty updateLeaveRequestStatus(Long idEmployee, Long idRequest,
-      LeaveRequestReview review) throws BusinessException {
-    checkEmployeeExists(idEmployee);
-    LeaveRequestEty request = checkLeaveRequestExists(idRequest);
-    checkVersion(request, review);
-    checkStatus(request);
+    public LeaveRequestEty updateLeaveRequestStatus(String idEmployee, Long idRequest, LeaveRequestReview review) throws BusinessException {
+        checkEmployeeExists(idEmployee);
+        LeaveRequestEty request = checkLeaveRequestExists(idRequest);
+        checkVersion(request, review);
+        checkStatus(request);
 
-    request.setStatus(LeaveRequestEtyStatusEnum.valueOf(review.getLeaveRequestStatus()));
-    request.setRejectReason(review.getRejectReason());
-    request.setV(review.getVersion());
-    leaveRequestRepository.save(request);
-    return request;
-  }
+        if(review.getType().equals("APPROVAL"))
+          request.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+        if(review.getType().equals("REJECTION"))
+          request.setStatus(LeaveRequestEtyStatusEnum.REJECTED);
+
+        request.setRejectReason(review.getRejectionReason());
+        request.setV(review.getV());
+        leaveRequestRepository.save(request);
+        return request;
+    }
 
 
   private boolean isUsernameFound(String usernameParam, EmployeeRepository employeeRepository) {
@@ -178,6 +178,7 @@ public class EmployeeService {
     return false;
   }
 
+  @Transactional(readOnly = true)
   public boolean checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
 
     if (isUsernameFound(usernameParam, employeeRepository)) {
@@ -204,7 +205,6 @@ public class EmployeeService {
     employeeRepository.save(employee);
   }
 
-  @Transactional
   public LeaveRequestDetailsListItem editLeaveRequest(String employeeId,
       Long requestId,
       EditLeaveRequestDetails editLeaveRequestDetails) {
@@ -226,7 +226,7 @@ public class EmployeeService {
         .mapLeaveRequestEtyToLeaveRequestDto(leaveRequestRepository.save(leaveRequest));
   }
 
-  @Transactional
+
   public void deleteLeaveRequest(String employeeId, Long requestId) {
 
     EmployeeEty employee = findEmployeeById(employeeId);
@@ -306,6 +306,7 @@ public class EmployeeService {
 
   }
 
+  @Transactional(readOnly = true)
   public RemainingDaysOff getEmployeeRemainingDaysOff(String employeeId) {
     var remainingDaysOff = new RemainingDaysOff();
     EmployeeEty employee;
@@ -321,7 +322,6 @@ public class EmployeeService {
 
   }
 
-  @Transactional
   public void createLeaveRequest(String employeeId,
       CreateLeaveRequestDetails createLeaveRequestDetails) {
 
@@ -423,6 +423,7 @@ public class EmployeeService {
         .noneMatch(offDay -> offDay.getDate().equals(date));
   }
 
+  @Transactional(readOnly = true)
   public LeaveRequestDetailsList getLeaveRequests(String idEmployee, LocalDate startDate,
       LocalDate endDate) {
     Optional<EmployeeEty> employeeOptional = employeeRepository.findById(idEmployee);

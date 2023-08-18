@@ -29,6 +29,7 @@ import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.model.*;
 import ro.axon.dot.service.EmployeeService;
 
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
@@ -43,8 +44,7 @@ public class EmployeeApi {
   }
 
   @GetMapping(value = "/employees")
-  public ResponseEntity<EmployeeDetailsList> getEmployeesList(
-      @RequestParam(required = false) String name) {
+  public ResponseEntity<EmployeeDetailsList> getEmployeesList(@RequestParam(required = false) String name){
 
     EmployeeDetailsList employeesList = employeeService.getEmployeesDetails(name);
 
@@ -52,7 +52,7 @@ public class EmployeeApi {
   }
 
   @PatchMapping(value = "/employees/{employeeId}/inactivate")
-  public ResponseEntity<Void> inactivateEmployee(@PathVariable String employeeId) {
+  public ResponseEntity<Void> inactivateEmployee(@PathVariable String employeeId){
     employeeService.inactivateEmployee(employeeId);
     return ResponseEntity.noContent().build();
   }
@@ -60,7 +60,7 @@ public class EmployeeApi {
   @PutMapping("employees/{employeeId}/requests/{requestId}")
   public ResponseEntity<Void> editLeaveRequest(@PathVariable String employeeId,
       @PathVariable Long requestId,
-      @Valid @RequestBody EditLeaveRequestDetails leaveRequestDetails) {
+      @Valid @RequestBody EditLeaveRequestDetails leaveRequestDetails){
 
     employeeService.editLeaveRequest(employeeId, requestId, leaveRequestDetails);
 
@@ -68,25 +68,23 @@ public class EmployeeApi {
   }
 
   @PatchMapping("employees/{idEmployee}/requests/{idRequest}")
-  public ResponseEntity<Void> handleLeaveRequest(@PathVariable(name = "idEmployee") Long idEmployee,
-      @PathVariable(name = "idRequest") Long idRequest, @RequestBody LeaveRequestReview review) {
-    employeeService.updateLeaveRequestStatus(idEmployee, idRequest, review);
-    return ResponseEntity.noContent().build();
+  public ResponseEntity<Void> handleLeaveRequest(@PathVariable(name = "idEmployee") String idEmployee,
+      @PathVariable(name = "idRequest") Long idRequest, @Valid @RequestBody LeaveRequestReview review) {
+      employeeService.updateLeaveRequestStatus(idEmployee, idRequest, review);
+      return ResponseEntity.noContent().build();
   }
 
   @DeleteMapping("employees/{employeeId}/requests/{requestId}")
   public ResponseEntity<Void> deleteLeaveRequest(@PathVariable String employeeId,
-      @PathVariable Long requestId) {
+                                                 @PathVariable Long requestId){
 
     employeeService.deleteLeaveRequest(employeeId, requestId);
 
     return ResponseEntity.noContent().build();
   }
 
-
   @GetMapping(value = {"/employees/{employeeId}/remaining-days-off"})
-  public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(
-      @PathVariable String employeeId) {
+  public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(@PathVariable String employeeId){
 
     RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(employeeId);
 
