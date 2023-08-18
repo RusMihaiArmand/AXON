@@ -19,7 +19,6 @@ import ro.axon.dot.domain.EmpYearlyDaysOffHistEty;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
-import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.domain.LeaveRequestEty;
@@ -29,8 +28,6 @@ import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 import ro.axon.dot.domain.TeamEty;
 import ro.axon.dot.domain.TeamRepository;
-import ro.axon.dot.exceptions.BusinessErrorCode;
-import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.model.EmployeeDetailsListItem;
@@ -48,8 +45,6 @@ import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.model.*;
-import ro.axon.dot.domain.TeamRepository;
-import ro.axon.dot.domain.TeamEty;
 
 @Service
 @RequiredArgsConstructor
@@ -59,7 +54,6 @@ public class EmployeeService {
   private final TeamRepository teamRepository;
   private final LeaveRequestRepository leaveRequestRepository;
   private final LegallyDaysOffService legallyDaysOffService;
-  private final TeamRepository teamRepository;
 
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenUtil tokenUtil;

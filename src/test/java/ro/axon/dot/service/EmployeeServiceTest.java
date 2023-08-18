@@ -105,9 +105,8 @@ class EmployeeServiceTest {
   void setUp() {
     passwordEncoder = new BCryptPasswordEncoder();
     employeeMapper = new EmployeeMapperImpl();
-    employeeService = new EmployeeService(employeeRepository, teamRepository, leaveRequestRepository, legallyDaysOffService, passwordEncoder, tokenUtil);
-    employeeService = new EmployeeService(employeeRepository, leaveRequestRepository,
-            legallyDaysOffService, teamRepository);
+    employeeService = new EmployeeService(employeeRepository, teamRepository, leaveRequestRepository,
+            legallyDaysOffService, passwordEncoder, tokenUtil);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
