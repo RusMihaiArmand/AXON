@@ -21,7 +21,7 @@ public enum BusinessErrorCode {
     AUDIENCE_DOES_NOT_MATCH("EDOT0010401", "Audience doesn't match", HttpStatus.UNAUTHORIZED),
     EMPLOYEE_NOT_FOUND("EDOT0011404", "The employee with the given ID does not exist.", HttpStatus.NOT_FOUND),
     YEARLY_DAYS_OFF_NOT_SET("EDOT0012400", "The vacation days for this employee have not been set for this year.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_NOT_FOUND("EDOT0013400", "The leave request with the given ID does not exist.", HttpStatus.BAD_REQUEST),
+    LEAVE_REQUEST_NOT_FOUND("EDOT0013404", "The leave request with the given ID does not exist.", HttpStatus.NOT_FOUND),
     LEAVE_REQUEST_REJECTED("EDOT0014400", "Leave request already rejected.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_PAST_DATE("EDOT0015400", "Leave request cannot be submitted for past dates.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE("EDOT0016400", "Cannot delete approved leave requests from past months.", HttpStatus.BAD_REQUEST),
