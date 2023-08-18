@@ -1,6 +1,8 @@
 package ro.axon.dot.api;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -32,9 +34,13 @@ import static ro.axon.dot.EmployeeTestAttributes.V;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 
 import java.util.List;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,17 +48,25 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ro.axon.dot.EmployeeTestAttributes;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
+import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.domain.TeamStatus;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
+import ro.axon.dot.mapper.EmployeeMapper;
+import ro.axon.dot.model.*;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.LeaveRequestDetailsList;
@@ -61,8 +75,8 @@ import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.model.VacationDaysModifyDetails;
+import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.service.EmployeeService;
-
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeApiTest {
@@ -75,7 +89,8 @@ class EmployeeApiTest {
   public static final TeamDetailsListItem teamDetails2 = new TeamDetailsListItem();
   public static final EmployeeDetailsListItem employee = new EmployeeDetailsListItem();
 
-
+  @Mock
+  JwtTokenUtil tokenUtil;
   @Mock
   EmployeeService employeeService;
 
@@ -212,12 +227,12 @@ class EmployeeApiTest {
         .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
 
     mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .content(getJsonAnswer()))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("The employee with the given ID does not exist."))
-        .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .accept(MediaType.APPLICATION_JSON)
+                      .content(getJsonAnswer()))
+              .andExpect(status().isNotFound())
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
   }
 
   @Test
@@ -229,13 +244,13 @@ class EmployeeApiTest {
             .build()))
         .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
 
-    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .content(getJsonAnswer()))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Request not found"))
-        .andExpect(jsonPath("$.errorCode").value("EDOT0003400"));
+      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .accept(MediaType.APPLICATION_JSON)
+                      .content(getJsonAnswer()))
+              .andExpect(status().isNotFound())
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getErrorCode()));
   }
 
   @Test
@@ -247,13 +262,13 @@ class EmployeeApiTest {
             .build()))
         .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
 
-    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .content(getJsonAnswer()))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Request already answered"))
-        .andExpect(jsonPath("$.errorCode").value("EDOT0004400"));
+      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .accept(MediaType.APPLICATION_JSON)
+                      .content(getJsonAnswer()))
+              .andExpect(status().isBadRequest())
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_REJECTED.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_REJECTED.getErrorCode()));
   }
 
   @Test
@@ -265,13 +280,13 @@ class EmployeeApiTest {
             .build()))
         .when(employeeService).updateLeaveRequestStatus(anyLong(), anyLong(), any());
 
-    mockMvc.perform(patch("/api/v1/employees/1/requests/1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .content(getJsonAnswer()))
-        .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.message").value("Request version smaller than db version"))
-        .andExpect(jsonPath("$.errorCode").value("EDOT0005400"));
+      mockMvc.perform(patch("/api/v1/employees/1/requests/1")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .accept(MediaType.APPLICATION_JSON)
+                      .content(getJsonAnswer()))
+              .andExpect(status().isConflict())
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getErrorCode()));
   }
 
   @Test
@@ -311,7 +326,7 @@ class EmployeeApiTest {
     )).when(employeeService).inactivateEmployee(employeeId);
 
     mockMvc.perform(patch("/api/v1/employees/{employeeId}/inactivate", employeeId))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isNotFound());
 
     verify(employeeService, times(1)).inactivateEmployee(employeeId);
   }
@@ -349,7 +364,7 @@ class EmployeeApiTest {
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(editLeaveRequestContent))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -362,7 +377,7 @@ class EmployeeApiTest {
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(editLeaveRequestContent))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -464,10 +479,9 @@ class EmployeeApiTest {
         .when(employeeService).getEmployeeRemainingDaysOff(ID);
 
     mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
   }
 
   @Test
@@ -572,9 +586,9 @@ class EmployeeApiTest {
 
     mockMvc.perform(get("/api/v1/employees/1/requests")
             .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("The employee with the given ID does not exist."))
-        .andExpect(jsonPath("$.errorCode").value("EDOT0001400"));
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg()))
+        .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
   }
 
 
@@ -601,5 +615,62 @@ class EmployeeApiTest {
         )
         .andExpect(status().is(204));
 
+  }
+
+  @Test
+  void registerNewEmployee() {
+    TeamEty team = new TeamEty();
+    team.setId(1L);
+    team.setName("Backend");
+    team.setCrtUsr("crtUsr");
+    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfUsr("mdfUsr");
+    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setStatus(TeamStatus.ACTIVE);
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "jon@mail.com",
+        "user_hr_id",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "user_hr_id",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        new BCryptPasswordEncoder().encode("axon_jon121"),
+        team,
+        new HashSet<>(),
+        new HashSet<>()
+    );
+    EmployeeDetailsListItem employeeDto = EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(employee);
+
+    RegisterRequest request = new RegisterRequest();
+    request.setFirstname("jon");
+    request.setLastname("doe");
+    request.setUsername("jon121");
+    request.setTeamId(1L);
+    request.setRole("USER");
+    request.setEmail("jon@mail.com");
+    request.setContractStartDate(LocalDate.now());
+    request.setNoDaysOff(20);
+
+
+    when(employeeService.createEmployee(request,"user_hr_id")).thenReturn(employeeDto);
+    when(tokenUtil.getLoggedUserId()).thenReturn("user_hr_id");
+
+
+    ResponseEntity<?> responseEntity = employeeApi.register(request);
+
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    assertNotNull(responseEntity.getBody());
+
+    EmployeeDetailsListItem response = (EmployeeDetailsListItem) responseEntity.getBody();
+    assertEquals(response.getUsername(), request.getUsername());
+    assertEquals(response.getTeamDetails().getId(), request.getTeamId());
   }
 }

@@ -2,6 +2,7 @@ package ro.axon.dot.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,12 +20,15 @@ import ro.axon.dot.domain.TeamRepository;
 import ro.axon.dot.domain.TeamStatus;
 import ro.axon.dot.model.CreateTeamDetails;
 import ro.axon.dot.model.TeamDetailsListItem;
+import ro.axon.dot.security.JwtTokenUtil;
 
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
 
   @Mock
   private TeamRepository teamRepository;
+  @Mock
+  private JwtTokenUtil tokenUtil;
   @InjectMocks
   private TeamService teamService;
 
@@ -52,12 +56,21 @@ class TeamServiceTest {
     CreateTeamDetails teamDetails = new CreateTeamDetails();
     teamDetails.setName("Test Team");
 
+    TeamEty team1 = new TeamEty();
+    team1.setId(1L);
+    team1.setName("Test Team");
+    team1.setCrtUsr("usr_hr");
+    team1.setMdfUsr("usr_hr");
+
+    when(tokenUtil.getLoggedUserId()).thenReturn("usr_hr");
+    when(teamRepository.save(any())).thenReturn(team1);
+
     teamService.saveTeam(teamDetails);
 
     verify(teamRepository).save(Mockito.argThat(saveTeamEty ->
         "Test Team".equals(saveTeamEty.getName()) &&
-            "User".equals(saveTeamEty.getCrtUsr()) &&
-            "User".equals(saveTeamEty.getMdfUsr()) &&
+            "usr_hr".equals(saveTeamEty.getCrtUsr()) &&
+            "usr_hr".equals(saveTeamEty.getMdfUsr()) &&
             saveTeamEty.getCrtTms() != null &&
             saveTeamEty.getMdfTms() != null &&
             TeamStatus.ACTIVE.equals(saveTeamEty.getStatus())
@@ -72,6 +85,7 @@ class TeamServiceTest {
     teamDetails.setName("Test Team");
 
     when(teamRepository.save(Mockito.any(TeamEty.class))).thenThrow(RuntimeException.class);
+    when(tokenUtil.getLoggedUserId()).thenReturn("mdf_usr");
 
     assertThatCode(() -> teamService.saveTeam(teamDetails)).isInstanceOf(RuntimeException.class);
 

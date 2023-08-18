@@ -11,12 +11,14 @@ import ro.axon.dot.domain.TeamStatus;
 import ro.axon.dot.mapper.TeamMapper;
 import ro.axon.dot.model.CreateTeamDetails;
 import ro.axon.dot.model.TeamDetailsList;
+import ro.axon.dot.security.JwtTokenUtil;
 
 @Service
 @RequiredArgsConstructor
 public class TeamService {
 
   private final TeamRepository teamRepository;
+  private final JwtTokenUtil tokenUtil;
 
   public TeamDetailsList getActiveTeams() {
     var teamDetailsList = new TeamDetailsList();
@@ -32,10 +34,10 @@ public class TeamService {
   public void saveTeam(CreateTeamDetails teamDetails) {
 
     TeamEty teamEty = new TeamEty();
-    teamEty.setCrtUsr("User");        //todo to be modified when login endpoint is available
+    teamEty.setCrtUsr(tokenUtil.getLoggedUserId());
     teamEty.setCrtTms(Instant.now());
     teamEty.setMdfTms(Instant.now());
-    teamEty.setMdfUsr("User");
+    teamEty.setMdfUsr(tokenUtil.getLoggedUserId());
     teamEty.setStatus(TeamStatus.ACTIVE);
     teamEty.setName(teamDetails.getName());
     TeamMapper.INSTANCE.mapTeamEtyToTeamDto(teamRepository.save(teamEty));

@@ -1,5 +1,6 @@
 package ro.axon.dot.domain;
 
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
@@ -9,4 +10,5 @@ public interface EmployeeRepository extends
 
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+  Optional<EmployeeEty> findEmployeeByUsername(String username);
 }

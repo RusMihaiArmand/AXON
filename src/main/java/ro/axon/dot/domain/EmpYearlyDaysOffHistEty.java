@@ -32,17 +32,14 @@ public class EmpYearlyDaysOffHistEty{
   @Column(name = "DESCRIPTION")
   private String description;
 
-
   @Enumerated(EnumType.STRING)
   @Column(name = "TYPE")
   private VacationDaysChangeTypeEnum type;
-
 
   @Column(name = "CRT_USR")
   private String crtUsr;
   @Column(name = "CRT_TMS")
   private Instant crtTms;
-
 
   @ManyToOne
   @JoinColumn(name = "EMP_YEARLY_DAYS_OFF_ID", referencedColumnName = "ID")

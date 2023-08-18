@@ -3,6 +3,7 @@ package ro.axon.dot.domain;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 @Table(name = "EMPLOYEE")
@@ -60,8 +62,7 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   )
   private Set<LeaveRequestEty> leaveRequests = new HashSet<>();
 
-  @OneToMany
-  @JoinColumn(name = "EMPLOYEE_ID")
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "employee")
   private Set<EmpYearlyDaysOffEty> empYearlyDaysOff = new HashSet<>();
 
   public void addLeaveRequest(LeaveRequestEty leaveRequestEty) {
@@ -69,13 +70,14 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
     leaveRequestEty.setEmployee(this);
   }
 
+  public void removeLeaveRequests(LeaveRequestEty leaveRequestEty){
+    leaveRequests.remove(leaveRequestEty);
+    leaveRequestEty.setEmployee(null);
+  }
+
   @Override
   protected Class<? extends SrgKeyEntityTml<String>> entityRefClass() {
     return EmployeeEty.class;
   }
 
-  public void removeLeaveRequests(LeaveRequestEty leaveRequestEty){
-    leaveRequests.remove(leaveRequestEty);
-    leaveRequestEty.setEmployee(null);
-  }
 }
