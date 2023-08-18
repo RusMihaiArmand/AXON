@@ -6,11 +6,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ro.axon.dot.config.LegallyDaysOffPersistenceManager;
 import ro.axon.dot.mapper.LegallyDaysOffMapper;
 import ro.axon.dot.model.LegallyDaysOffList;
 
 @Service
+@Transactional(readOnly = true)
 public class LegallyDaysOffService  {
 
     private final LegallyDaysOffPersistenceManager legallyDaysOffPersistenceManager;
@@ -69,7 +71,6 @@ public class LegallyDaysOffService  {
 
         return dayListFinal;
     }
-
 
     public LegallyDaysOffList getOffDays(List<String> periods, List<String> years) {
 

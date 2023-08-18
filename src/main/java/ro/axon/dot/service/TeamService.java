@@ -2,7 +2,7 @@ package ro.axon.dot.service;
 
 import java.time.Instant;
 import java.util.stream.Collectors;
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ro.axon.dot.domain.TeamEty;
@@ -15,11 +15,13 @@ import ro.axon.dot.security.JwtTokenUtil;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class TeamService {
 
   private final TeamRepository teamRepository;
   private final JwtTokenUtil tokenUtil;
 
+  @Transactional(readOnly = true)
   public TeamDetailsList getActiveTeams() {
     var teamDetailsList = new TeamDetailsList();
     teamDetailsList
@@ -30,7 +32,6 @@ public class TeamService {
     return teamDetailsList;
   }
 
-  @Transactional
   public void saveTeam(CreateTeamDetails teamDetails) {
 
     TeamEty teamEty = new TeamEty();
