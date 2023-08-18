@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -25,16 +26,15 @@ import static ro.axon.dot.EmployeeTestAttributes.ROLE;
 import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,6 +75,9 @@ import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.model.TeamDetails;
 import ro.axon.dot.model.UserDetailsResponse;
 import ro.axon.dot.security.JwtTokenUtil;
+import ro.axon.dot.model.EmployeeUpdateRequest;
+
+
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
@@ -97,11 +100,13 @@ class EmployeeServiceTest {
   EmployeeMapper employeeMapper;
 
 
+
   @BeforeEach
   void setUp() {
     passwordEncoder = new BCryptPasswordEncoder();
     employeeMapper = new EmployeeMapperImpl();
-    employeeService = new EmployeeService(employeeRepository, teamRepository, leaveRequestRepository, legallyDaysOffService, passwordEncoder, tokenUtil);
+    employeeService = new EmployeeService(employeeRepository, teamRepository, leaveRequestRepository,
+            legallyDaysOffService, passwordEncoder, tokenUtil);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -1060,4 +1065,53 @@ class EmployeeServiceTest {
     assertEquals(employee.getUsername(), loadedEmployee.getUsername());
     assertEquals(employee.getTeam(), loadedEmployee.getTeam());
   }
+  @Test
+  void updateEmployeeDetails_Success() {
+
+        EmployeeEty existingEmployee = new EmployeeEty();
+        existingEmployee.setId("1");
+        existingEmployee.setV(1L);
+
+
+        EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
+        updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
+        updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
+        updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
+        updatedEmployeeUpdateRequest.setRole("USER");
+        updatedEmployeeUpdateRequest.setV(2L);
+
+
+        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
+
+
+        assertDoesNotThrow(() -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest));
+
+
+        verify(employeeRepository).save(existingEmployee);
+    }
+
+    @Test
+    void updateEmployeeDetails_Conflict() {
+
+        EmployeeEty existingEmployee = new EmployeeEty();
+        existingEmployee.setId("1");
+        existingEmployee.setV(2L);
+
+
+        EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
+        updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
+        updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
+        updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
+        updatedEmployeeUpdateRequest.setRole("USER");
+        updatedEmployeeUpdateRequest.setV(1L);
+
+        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
+
+    assertThrows(BusinessException.class,
+            () -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest),
+            "Expected BusinessException with CONFLICT error code");
+
+    verify(employeeRepository, never()).save(existingEmployee);
+  }
+
 }
