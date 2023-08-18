@@ -3,16 +3,20 @@ package ro.axon.dot.service;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmpYearlyDaysOffHistEty;
+import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
 import ro.axon.dot.domain.LeaveRequestEty;
@@ -20,10 +24,13 @@ import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
+import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.TeamRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.EmployeeMapper;
+import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
 import ro.axon.dot.model.EditLeaveRequestDetails;
@@ -32,17 +39,24 @@ import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.LegallyDaysOffItem;
+import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
+import ro.axon.dot.security.JwtTokenUtil;
 
 @Service
 @RequiredArgsConstructor
 public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
+  private final TeamRepository teamRepository;
   private final LeaveRequestRepository leaveRequestRepository;
   private final LegallyDaysOffService legallyDaysOffService;
 
+  private final PasswordEncoder passwordEncoder;
+  private final JwtTokenUtil tokenUtil;
+
+  @Transactional
   public EmployeeDetailsList getEmployeesDetails(String name) {
     var employeeDetailsList = new EmployeeDetailsList();
     List<EmployeeEty> employees;
@@ -181,7 +195,7 @@ public class EmployeeService {
 
     employee.setMdfTms(Instant.now());
 
-    employee.setMdfUsr("User"); //todo change when login ready
+    employee.setMdfUsr(tokenUtil.getLoggedUserId());
 
     employeeRepository.save(employee);
   }
@@ -365,9 +379,9 @@ public class EmployeeService {
     leaveRequestEty.setType(createLeaveRequestDetails.getType());
     leaveRequestEty.setDescription(createLeaveRequestDetails.getDescription());
 
-    leaveRequestEty.setCrtUsr("user");    //todo to be modified when login endpoint is available
+    leaveRequestEty.setCrtUsr(tokenUtil.getLoggedUserId());
     leaveRequestEty.setCrtTms(Instant.now());
-    leaveRequestEty.setMdfUsr("user");
+    leaveRequestEty.setMdfUsr(tokenUtil.getLoggedUserId());
     leaveRequestEty.setMdfTms(Instant.now());
     leaveRequestEty.setStatus(LeaveRequestEtyStatusEnum.PENDING);
 
@@ -447,7 +461,7 @@ public class EmployeeService {
   EmpYearlyDaysOffEty createDaysOffEty(EmployeeEty employee){
     EmpYearlyDaysOffEty empDaysOffEty = new EmpYearlyDaysOffEty();
 
-    empDaysOffEty.setEmployeeEty(employee);
+    empDaysOffEty.setEmployee(employee);
     empDaysOffEty.setYear( LocalDate.now().getYear() );
     empDaysOffEty.setTotalNoDays(0);
     empDaysOffEty.setEmpYearlyDaysOffHistEtySet( new HashSet<>() );
@@ -486,7 +500,7 @@ public class EmployeeService {
       daysOffHistory.setType(VacationDaysChangeTypeEnum.DECREASE);
     }
 
-    daysOffHistory.setCrtUsr("CREATION-USER"); //to be modified when login endpoint is finished
+    daysOffHistory.setCrtUsr(tokenUtil.getLoggedUserId());
     daysOffHistory.setCrtTms(Instant.now());
 
     daysOffHistory.setEmpYearlyDaysOffEty(daysOffEty);
@@ -495,4 +509,103 @@ public class EmployeeService {
 
     employeeRepository.save(emp);
   }
+
+  @Transactional
+  public EmployeeDetailsListItem createEmployee(RegisterRequest request, String loggedUserId) {
+
+    verifyEmployeeExists(request.getUsername());
+
+    TeamEty team = loadTeamById(request.getTeamId());
+    final LocalDateTime now = LocalDateTime.now();
+
+    EmployeeEty toSave = setEmployeeDetails(request, loggedUserId, team, now);
+    EmpYearlyDaysOffEty daysOff = setDaysOffDetails(request, loggedUserId, toSave, now);
+
+    toSave.setEmpYearlyDaysOff(Set.of(daysOff));
+    team.getEmployees().add(toSave);
+
+    EmployeeEty saved = employeeRepository.save(toSave);
+    return EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(saved);
+  }
+
+  private EmpYearlyDaysOffEty setDaysOffDetails(RegisterRequest request, String loggedUserId, EmployeeEty employee, LocalDateTime now){
+    EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
+
+    daysOff.setYear(request.getContractStartDate().getYear());
+    daysOff.setTotalNoDays(request.getNoDaysOff());
+
+    EmpYearlyDaysOffHistEty daysOffHistEty = new EmpYearlyDaysOffHistEty();
+    daysOffHistEty.setEmpYearlyDaysOffEty(daysOff);
+    daysOffHistEty.setNoDays(request.getNoDaysOff());
+    daysOffHistEty.setDescription("Initial number of days off for the current year");
+    daysOffHistEty.setType(VacationDaysChangeTypeEnum.INCREASE);
+    daysOffHistEty.setCrtUsr(loggedUserId);
+    daysOffHistEty.setCrtTms(now.toInstant(ZoneOffset.UTC));
+
+    daysOff.setEmpYearlyDaysOffHistEtySet(Set.of(daysOffHistEty));
+    daysOff.setEmployee(employee);
+
+    return daysOff;
+  }
+  private EmployeeEty setEmployeeDetails(RegisterRequest request, String loggedUserId, TeamEty team, LocalDateTime now){
+    EmployeeEty toSave = new EmployeeEty();
+
+    toSave.setTeam(team);
+    toSave.setFirstName(request.getFirstname());
+    toSave.setLastName(request.getLastname());
+    toSave.setUsername(request.getUsername());
+    toSave.setTeam(team);
+    toSave.setRole(request.getRole());
+    toSave.setEmail(request.getEmail());
+    toSave.setContractStartDate(request.getContractStartDate());
+    toSave.setCrtUsr(loggedUserId);
+    toSave.setMdfUsr(loggedUserId);
+    toSave.setCrtTms(now.toInstant(ZoneOffset.UTC));
+    toSave.setMdfTms(now.toInstant(ZoneOffset.UTC));
+    toSave.setStatus("ACTIVE");
+    toSave.setPassword(passwordEncoder.encode("axon_" + toSave.getUsername()));
+
+    return toSave;
+  }
+
+  public TeamEty loadTeamById(Long id){
+    return teamRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(
+            BusinessExceptionElement
+                .builder()
+                .errorDescription(BusinessErrorCode.TEAM_NOT_FOUND)
+                .build())
+        );
+  }
+
+  public EmployeeEty loadEmployeeByUsername(String username) {
+    return employeeRepository.findEmployeeByUsername(username)
+        .orElseThrow(() -> new BusinessException(
+            BusinessExceptionElement
+                .builder()
+                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                .build()
+        ));
+  }
+
+  public EmployeeEty loadEmployeeById(String id) {
+    return employeeRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(
+            BusinessExceptionElement
+                .builder()
+                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                .build()
+        ));
+  }
+
+
+  private void verifyEmployeeExists(String username) {
+    if (employeeRepository.existsByUsername(username)) {
+      throw new BusinessException(BusinessExceptionElement
+          .builder()
+          .errorDescription(BusinessErrorCode.USERNAME_DUPLICATE)
+          .build());
+    }
+  }
+
 }

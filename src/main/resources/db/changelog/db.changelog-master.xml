@@ -221,4 +221,41 @@
                   tableName="LEGALLY_DAYS_OFF"/>
     </changeSet>
 
+    <changeSet author="gabriel.salajan" id="003">
+        <comment>Create refresh token table</comment>
+        <createTable remarks="Refresh token details" tableName="REFRESH_TOKEN">
+            <column name="ID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true"
+                  primaryKeyName="REFRESH_TOKEN_PK"/>
+            </column>
+            <column name="STATUS" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="AUDIENCE" remarks="Id of employee" type="VARCHAR(255)">
+                <constraints foreignKeyName="REFRESH_TOKEN_EMPLOYEE_FK"
+                  nullable="false"
+                  references="EMPLOYEE(EMPLOYEE_ID)"/>
+            </column>
+            <column name="CRT_TMS" remarks="Timestamp of the record's creation" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MDF_TMS" remarks="Timestamp of the record's last modification" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EXP_TMS" remarks="Timestamp of the record's expiration" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="gabriel.salajan" id="004">
+        <comment>Initial Employees load</comment>
+        <loadData file="includes/data-employee-initial-load.csv" tableName="EMPLOYEE"
+          relativeToChangelogFile="true"/>
+        <loadData file="includes/data-emp-yearly-days-off-initial-load.csv" tableName="EMP_YEARLY_DAYS_OFF"
+          relativeToChangelogFile="true"/>
+        <loadData file="includes/data-emp-yearly-days-off-hist-initial-load.csv" tableName="EMP_YEARLY_DAYS_OFF_HIST"
+          relativeToChangelogFile="true"/>
+    </changeSet>
+
 </databaseChangeLog>

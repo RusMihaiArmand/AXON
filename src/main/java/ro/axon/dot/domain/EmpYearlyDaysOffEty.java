@@ -2,6 +2,7 @@ package ro.axon.dot.domain;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -36,14 +37,11 @@ public class EmpYearlyDaysOffEty{
   @Column(name = "YEAR")
   private Integer year;
 
-
-
   @ManyToOne
   @JoinColumn(name = "EMPLOYEE_ID")
-  private EmployeeEty employeeEty;
+  private EmployeeEty employee;
 
-
-  @OneToMany(mappedBy = "empYearlyDaysOffEty")
+  @OneToMany(mappedBy = "empYearlyDaysOffEty", cascade = CascadeType.ALL)
   private Set<EmpYearlyDaysOffHistEty> empYearlyDaysOffHistEtySet = new HashSet<>();
 
 }

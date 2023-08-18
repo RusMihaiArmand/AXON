@@ -22,10 +22,11 @@ import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestReview;
+import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
+import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.service.EmployeeService;
-import ro.axon.dot.service.LeaveRequestService;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,7 +34,12 @@ import ro.axon.dot.service.LeaveRequestService;
 public class EmployeeApi {
 
   private final EmployeeService employeeService;
-  private final LeaveRequestService leaveRequestService;
+  private final JwtTokenUtil jwtTokenUtil;
+
+  @PostMapping(value = "/employees/register")
+  public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
+    return ResponseEntity.ok(employeeService.createEmployee(request, jwtTokenUtil.getLoggedUserId()));
+  }
 
   @GetMapping(value = "/employees")
   public ResponseEntity<EmployeeDetailsList> getEmployeesList(
