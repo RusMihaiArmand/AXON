@@ -5,7 +5,7 @@ import lombok.Data;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
 
 @Data
-public class CreateLeaveRequestDetails {
+public class CreateLeaveRequestDetails implements LeaveRequestCreateEditDetails {
 
   private LocalDate startDate;
   private LocalDate endDate;
