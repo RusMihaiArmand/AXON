@@ -3,13 +3,12 @@ package ro.axon.dot.validation;
 import java.time.LocalDate;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import ro.axon.dot.model.DateRangeDetails;
-import ro.axon.dot.model.EditLeaveRequestDetails;
+import ro.axon.dot.model.LeaveRequestCreateEditDetails;
 
-public class DateRangeValidator implements ConstraintValidator<DateRangeConstraint, DateRangeDetails> {
+public class DateRangeValidator implements ConstraintValidator<DateRangeConstraint, LeaveRequestCreateEditDetails> {
 
   @Override
-  public boolean isValid(DateRangeDetails value, ConstraintValidatorContext context){
+  public boolean isValid(LeaveRequestCreateEditDetails value, ConstraintValidatorContext context){
 
     if(value == null){
       return true; // nulls are taken care of by @NotNull annotations

@@ -12,6 +12,7 @@ import ro.axon.dot.mapper.LegallyDaysOffMapper;
 import ro.axon.dot.model.LegallyDaysOffList;
 
 @Service
+@Transactional(readOnly = true)
 public class LegallyDaysOffService  {
 
     private final LegallyDaysOffPersistenceManager legallyDaysOffPersistenceManager;
@@ -71,8 +72,6 @@ public class LegallyDaysOffService  {
         return dayListFinal;
     }
 
-
-    @Transactional(readOnly = true)
     public LegallyDaysOffList getOffDays(List<String> periods, List<String> years) {
 
         if(periods!=null)

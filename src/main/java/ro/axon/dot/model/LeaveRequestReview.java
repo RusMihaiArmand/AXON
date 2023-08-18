@@ -1,5 +1,6 @@
 package ro.axon.dot.model;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -16,7 +17,7 @@ import ro.axon.dot.validation.RejectionReasonRequired;
 @RejectionReasonRequired
 public class LeaveRequestReview {
 
-    @NotNull(message = "Leave request type cannot be null.")
+    @NotEmpty(message = "Leave request type cannot be empty or null.")
     @Pattern(regexp = "APPROVAL|REJECTION", message = "Invalid leave request review type.")
     private String type;
 

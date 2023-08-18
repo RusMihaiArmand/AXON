@@ -102,8 +102,7 @@ public class EmployeeService {
   }
 
   private void checkEmployeeExists(String idEmployee) throws BusinessException {
-    Optional<EmployeeEty> employeeOptional = employeeRepository.findById(
-        String.valueOf(idEmployee));
+    Optional<EmployeeEty> employeeOptional = employeeRepository.findById(idEmployee);
     if (employeeOptional.isEmpty()) {
       throw new BusinessException(
           BusinessException.BusinessExceptionElement

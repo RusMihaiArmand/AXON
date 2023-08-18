@@ -218,12 +218,12 @@ class EmployeeServiceTest {
       when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
       when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(request));
 
-    var ex = assertThrows(BusinessException.class, () -> {
-      employeeService.updateLeaveRequestStatus("1", 1L, review);
-    });
-    assertEquals(ex.getError().getErrorDescription().getErrorCode(),BusinessErrorCode.LEAVE_REQUEST_REJECTED.getErrorCode());
-    assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.LEAVE_REQUEST_REJECTED.getDevMsg());
-    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+      var ex = assertThrows(BusinessException.class, () -> {
+          employeeService.updateLeaveRequestStatus("1", 1L, review);
+      });
+      assertEquals(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getErrorCode(), ex.getError().getErrorDescription().getErrorCode());
+      assertEquals(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getDevMsg(), ex.getError().getErrorDescription().getDevMsg());
+      assertEquals(HttpStatus.BAD_REQUEST, ex.getError().getErrorDescription().getStatus());
   }
 
   @Test
@@ -238,10 +238,9 @@ class EmployeeServiceTest {
     when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
     when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(request));
 
-
-      var ex = assertThrows(BusinessException.class, () -> {
-          employeeService.updateLeaveRequestStatus("1", 1L, answer);
-        });
+    var ex = assertThrows(BusinessException.class, () -> {
+      employeeService.updateLeaveRequestStatus("1", 1L, answer);
+    });
 
       assertEquals(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getErrorCode(), ex.getError().getErrorDescription().getErrorCode());
       assertEquals(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getDevMsg(), ex.getError().getErrorDescription().getDevMsg());
@@ -255,28 +254,28 @@ class EmployeeServiceTest {
     request.setStatus(LeaveRequestEtyStatusEnum.PENDING);
     request.setV(1L);
 
-      LeaveRequestReview answer = new LeaveRequestReview();
-      answer.setV(1L);
-      answer.setType("APPROVAL");
+    LeaveRequestReview answer = new LeaveRequestReview();
+    answer.setV(1L);
+    answer.setType("APPROVAL");
 
-      when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
-      when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(request));
-      // accept
-      request.setV(1L);
-      LeaveRequestEty updatedRequest = employeeService.updateLeaveRequestStatus("1", 1L, answer);
-      assertEquals(updatedRequest.getStatus(), LeaveRequestEtyStatusEnum.APPROVED);
-      assertEquals(updatedRequest.getV(), 1L);
-      assertNull(updatedRequest.getRejectReason());
+    when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
+    when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(request));
+    // accept
+    request.setV(1L);
+    LeaveRequestEty updatedRequest = employeeService.updateLeaveRequestStatus("1", 1L, answer);
+    assertEquals(updatedRequest.getStatus(), LeaveRequestEtyStatusEnum.APPROVED);
+    assertEquals(updatedRequest.getV(), 1L);
+    assertNull(updatedRequest.getRejectReason());
 
-      // reject
-      request.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-      answer.setType("REJECTION");
-      answer.setRejectionReason("Not a good time");
-      answer.setV(3L);
-      updatedRequest = employeeService.updateLeaveRequestStatus("1", 1L, answer);
-      assertEquals(updatedRequest.getStatus(), LeaveRequestEtyStatusEnum.REJECTED);
-      assertEquals(updatedRequest.getRejectReason(), "Not a good time");
-      assertEquals(updatedRequest.getV(), 3L);
+    // reject
+    request.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+    answer.setType("REJECTION");
+    answer.setRejectionReason("Not a good time");
+    answer.setV(3L);
+    updatedRequest = employeeService.updateLeaveRequestStatus("1", 1L, answer);
+    assertEquals(updatedRequest.getStatus(), LeaveRequestEtyStatusEnum.REJECTED);
+    assertEquals(updatedRequest.getRejectReason(), "Not a good time");
+    assertEquals(updatedRequest.getV(), 3L);
 
   }
 
@@ -740,7 +739,7 @@ class EmployeeServiceTest {
           BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
     }
 
-      @Test
+    @Test
     public void getLeaveRequestsNoDates () {
       EmployeeEty employee = new EmployeeEty();
       employee.setId("1");

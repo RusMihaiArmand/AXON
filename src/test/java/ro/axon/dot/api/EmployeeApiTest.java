@@ -268,8 +268,8 @@ class EmployeeApiTest {
                       .accept(MediaType.APPLICATION_JSON)
                       .content(getJsonAnswer()))
               .andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_REJECTED.getDevMsg()))
-              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_REJECTED.getErrorCode()));
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getErrorCode()));
   }
 
   @Test
