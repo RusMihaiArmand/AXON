@@ -26,6 +26,7 @@ import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.security.JwtTokenUtil;
+import ro.axon.dot.model.*;
 import ro.axon.dot.service.EmployeeService;
 
 @RestController
@@ -125,5 +126,14 @@ public class EmployeeApi {
   public void modifyEmployeesDaysOff(@Valid @RequestBody VacationDaysModifyDetails vacationDaysModifyDetails)
   {
     employeeService.changeVacationDays(vacationDaysModifyDetails);
+  }
+
+  @PatchMapping("/employees/{employeeId}")
+  public ResponseEntity<Void> updateEmployeeDetails(@PathVariable String employeeId,
+                                                    @Valid @RequestBody EmployeeUpdateRequest employeeUpdateRequest) {
+
+    employeeService.updateEmployeeDetails(employeeId, employeeUpdateRequest);
+
+    return ResponseEntity.noContent().build();
   }
 }

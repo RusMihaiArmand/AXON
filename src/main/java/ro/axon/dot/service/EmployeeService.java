@@ -19,6 +19,8 @@ import ro.axon.dot.domain.EmpYearlyDaysOffHistEty;
 import ro.axon.dot.domain.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.EmployeeRepository;
+import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.domain.LeaveRequestEty;
 import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
 import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
@@ -26,8 +28,6 @@ import ro.axon.dot.domain.LeaveRequestRepository;
 import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
 import ro.axon.dot.domain.TeamEty;
 import ro.axon.dot.domain.TeamRepository;
-import ro.axon.dot.exceptions.BusinessErrorCode;
-import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.model.EmployeeDetailsListItem;
@@ -44,6 +44,7 @@ import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.security.JwtTokenUtil;
+import ro.axon.dot.model.*;
 
 @Service
 @RequiredArgsConstructor
@@ -368,7 +369,7 @@ public class EmployeeService {
 
   private LeaveRequestEty setLeaveRequestFromDTO(LeaveRequestEty leaveRequestEty,
       LeaveRequestCreateEditDetails leaveRequestDTO, int countedDaysOff){
-    
+
     leaveRequestEty.setNoDays(countedDaysOff);
     leaveRequestEty.setStartDate(leaveRequestDTO.getStartDate());
     leaveRequestEty.setEndDate(leaveRequestDTO.getEndDate());
@@ -619,6 +620,44 @@ public class EmployeeService {
           .errorDescription(BusinessErrorCode.USERNAME_DUPLICATE)
           .build());
     }
+  }
+
+  @Transactional
+  public void updateEmployeeDetails(String employeeId, EmployeeUpdateRequest employeeUpdateRequest) {
+    EmployeeEty employeeEty = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new BusinessException(
+                    BusinessExceptionElement.builder()
+                            .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                            .build()
+            ));
+
+    if (employeeUpdateRequest.getV() < employeeEty.getV()) {
+        throw new BusinessException(
+                BusinessExceptionElement.builder()
+                        .errorDescription(BusinessErrorCode.EMPLOYEE_VERSION_CONFLICT)
+                        .build()
+        );
+    }
+    TeamEty teamEty = teamRepository.findById(Long.parseLong(employeeUpdateRequest.getTeamId()))
+            .orElseThrow(() -> new BusinessException(
+                    BusinessExceptionElement.builder()
+                            .errorDescription(BusinessErrorCode.TEAM_NOT_FOUND)
+                            .build()
+            ));
+
+
+
+    employeeEty.setFirstName(employeeUpdateRequest.getFirstName());
+    employeeEty.setLastName(employeeUpdateRequest.getLastName());
+    employeeEty.setEmail(employeeUpdateRequest.getEmail());
+    employeeEty.setRole(employeeUpdateRequest.getRole());
+    employeeEty.setTeam(teamEty);
+
+
+    teamEty.getEmployees().add(employeeEty);
+
+
+    employeeRepository.save(employeeEty);
   }
 
 }

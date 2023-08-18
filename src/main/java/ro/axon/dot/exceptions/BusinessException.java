@@ -10,6 +10,7 @@ import lombok.Getter;
 public class BusinessException extends RuntimeException {
     private final BusinessExceptionElement error;
 
+
     public BusinessException(Throwable cause, BusinessExceptionElement error) {
         super(cause);
         this.error = error;

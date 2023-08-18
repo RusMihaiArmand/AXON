@@ -51,7 +51,6 @@ public class EmployeeEty extends SrgKeyEntityTml<String>{
   private String username;
   @Column(name = "PASSWORD")
   private String password;
-
   @ManyToOne
   @JoinColumn(name = "TEAM_ID")
   private TeamEty team;
