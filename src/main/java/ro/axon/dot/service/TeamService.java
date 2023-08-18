@@ -1,5 +1,6 @@
 package ro.axon.dot.service;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
@@ -19,6 +20,7 @@ public class TeamService {
 
   private final TeamRepository teamRepository;
   private final JwtTokenUtil tokenUtil;
+  private final Clock clock;
 
   public TeamDetailsList getActiveTeams() {
     var teamDetailsList = new TeamDetailsList();
@@ -32,11 +34,12 @@ public class TeamService {
 
   @Transactional
   public void saveTeam(CreateTeamDetails teamDetails) {
+    Instant now = clock.instant();
 
     TeamEty teamEty = new TeamEty();
     teamEty.setCrtUsr(tokenUtil.getLoggedUserId());
-    teamEty.setCrtTms(Instant.now());
-    teamEty.setMdfTms(Instant.now());
+    teamEty.setCrtTms(now);
+    teamEty.setMdfTms(now);
     teamEty.setMdfUsr(tokenUtil.getLoggedUserId());
     teamEty.setStatus(TeamStatus.ACTIVE);
     teamEty.setName(teamDetails.getName());

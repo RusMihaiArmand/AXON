@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.nimbusds.jwt.SignedJWT;
@@ -16,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashSet;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,8 +27,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ro.axon.dot.domain.EmployeeEty;
 import ro.axon.dot.domain.RefreshTokenEty;
 import ro.axon.dot.domain.TeamEty;
@@ -36,6 +37,7 @@ import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.LoginRequest;
 import ro.axon.dot.model.LoginResponse;
 import ro.axon.dot.model.RefreshTokenRequest;
+import ro.axon.dot.model.TeamDetails;
 import ro.axon.dot.model.UserDetailsResponse;
 import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.security.TokenUtilSetup;
@@ -547,6 +549,50 @@ class AuthApiTest {
 
   @Test
   void getUserDetails() {
+    tokenUtil = mock(JwtTokenUtil.class);
+    api = new AuthApi(passwordEncoder, tokenUtil, employeeService, refreshTokenService, clock);
 
+    TeamEty teamEty = new TeamEty();
+    teamEty.setId(1L);
+    teamEty.setName("Test");
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "mdfUsr",
+        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        "role.user",
+        "status.active",
+        LocalDate.now(),
+        LocalDate.now(),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        teamEty,
+        new HashSet<>(),
+        new HashSet<>()
+    );
+
+    when(tokenUtil.getLoggedUserId()).thenReturn("11");
+    when(employeeService.loadEmployeeById("11")).thenReturn(employee);
+
+    ResponseEntity<?> response = api.getUserDetails();
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    UserDetailsResponse expectedResponse = UserDetailsResponse.builder()
+        .employeeId("11")
+        .username("jon121")
+        .roles(List.of("role.user"))
+        .teamDetails(new TeamDetails(teamEty.getId(), teamEty.getName()))
+        .build();
+
+    UserDetailsResponse actualResponse = (UserDetailsResponse) response.getBody();
+    assertEquals(expectedResponse, actualResponse);
+
+    verify(employeeService).loadEmployeeById("11");
   }
 }

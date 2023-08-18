@@ -1,5 +1,6 @@
 package ro.axon.dot.service;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -57,6 +58,7 @@ public class EmployeeService {
 
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenUtil tokenUtil;
+  private final Clock clock;
 
   @Transactional
   public EmployeeDetailsList getEmployeesDetails(String name) {
@@ -195,7 +197,7 @@ public class EmployeeService {
 
     employee.setStatus("INACTIVE");
 
-    employee.setMdfTms(Instant.now());
+    employee.setMdfTms(clock.instant());
 
     employee.setMdfUsr(tokenUtil.getLoggedUserId());
 
@@ -217,13 +219,11 @@ public class EmployeeService {
 
       int countedDaysOff = checkCountedDaysOff(editLeaveRequestDetails, employee);
 
-      leaveRequest = setLeaveRequestFromDTO(leaveRequest, editLeaveRequestDetails, countedDaysOff);
+      setLeaveRequestFromDTO(leaveRequest, editLeaveRequestDetails, countedDaysOff);
     }
 
-    LeaveRequestDetailsListItem leaveRequestDetailsListItem = LeaveRequestMapper.INSTANCE
+    return LeaveRequestMapper.INSTANCE
         .mapLeaveRequestEtyToLeaveRequestDto(leaveRequestRepository.save(leaveRequest));
-
-    return leaveRequestDetailsListItem;
   }
 
   @Transactional
@@ -238,6 +238,7 @@ public class EmployeeService {
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
           BusinessErrorCode.LEAVE_REQUEST_REJECTED).build());
     }
+
     if (leaveRequest.getStatus().equals(LeaveRequestEtyStatusEnum.APPROVED) &&
         leaveRequest.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))) {
 
@@ -360,14 +361,14 @@ public class EmployeeService {
 
     LeaveRequestEty leaveRequestEty = new LeaveRequestEty();
 
-    leaveRequestEty = setLeaveRequestFromDTO(leaveRequestEty, createLeaveRequestDetails, countedDaysOff);
+    setLeaveRequestFromDTO(leaveRequestEty, createLeaveRequestDetails, countedDaysOff);
 
     employee.addLeaveRequest(leaveRequestEty);
     employeeRepository.save(employee);
 
   }
 
-  private LeaveRequestEty setLeaveRequestFromDTO(LeaveRequestEty leaveRequestEty,
+  private void setLeaveRequestFromDTO(LeaveRequestEty leaveRequestEty,
       LeaveRequestCreateEditDetails leaveRequestDTO, int countedDaysOff){
 
     leaveRequestEty.setNoDays(countedDaysOff);
@@ -377,12 +378,12 @@ public class EmployeeService {
     leaveRequestEty.setDescription(leaveRequestDTO.getDescription());
     leaveRequestEty.setStatus(LeaveRequestEtyStatusEnum.PENDING);
 
-    leaveRequestEty.setCrtUsr(tokenUtil.getLoggedUserId());
-    leaveRequestEty.setCrtTms(Instant.now());
-    leaveRequestEty.setMdfUsr(tokenUtil.getLoggedUserId());
-    leaveRequestEty.setMdfTms(Instant.now());
+    Instant now = clock.instant();
 
-    return leaveRequestEty;
+    leaveRequestEty.setCrtUsr(tokenUtil.getLoggedUserId());
+    leaveRequestEty.setCrtTms(now);
+    leaveRequestEty.setMdfUsr(tokenUtil.getLoggedUserId());
+    leaveRequestEty.setMdfTms(now);
   }
 
   private int checkCountedDaysOff(LeaveRequestCreateEditDetails leaveRequestDate, EmployeeEty employee){
@@ -515,8 +516,7 @@ public class EmployeeService {
     }
 
     daysOffHistory.setCrtUsr(tokenUtil.getLoggedUserId());
-    daysOffHistory.setCrtTms(Instant.now());
-
+    daysOffHistory.setCrtTms(clock.instant());
     daysOffHistory.setEmpYearlyDaysOffEty(daysOffEty);
 
     daysOffEty.getEmpYearlyDaysOffHistEtySet().add(daysOffHistory);
@@ -530,7 +530,7 @@ public class EmployeeService {
     verifyEmployeeExists(request.getUsername());
 
     TeamEty team = loadTeamById(request.getTeamId());
-    final LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     EmployeeEty toSave = setEmployeeDetails(request, loggedUserId, team, now);
     EmpYearlyDaysOffEty daysOff = setDaysOffDetails(request, loggedUserId, toSave, now);
@@ -542,7 +542,7 @@ public class EmployeeService {
     return EmployeeMapper.INSTANCE.mapEmployeeEtyToEmployeeDto(saved);
   }
 
-  private EmpYearlyDaysOffEty setDaysOffDetails(RegisterRequest request, String loggedUserId, EmployeeEty employee, LocalDateTime now){
+  private EmpYearlyDaysOffEty setDaysOffDetails(RegisterRequest request, String loggedUserId, EmployeeEty employee, Instant now){
     EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
 
     daysOff.setYear(request.getContractStartDate().getYear());
@@ -554,14 +554,14 @@ public class EmployeeService {
     daysOffHistEty.setDescription("Initial number of days off for the current year");
     daysOffHistEty.setType(VacationDaysChangeTypeEnum.INCREASE);
     daysOffHistEty.setCrtUsr(loggedUserId);
-    daysOffHistEty.setCrtTms(now.toInstant(ZoneOffset.UTC));
+    daysOffHistEty.setCrtTms(now);
 
     daysOff.setEmpYearlyDaysOffHistEtySet(Set.of(daysOffHistEty));
     daysOff.setEmployee(employee);
 
     return daysOff;
   }
-  private EmployeeEty setEmployeeDetails(RegisterRequest request, String loggedUserId, TeamEty team, LocalDateTime now){
+  private EmployeeEty setEmployeeDetails(RegisterRequest request, String loggedUserId, TeamEty team, Instant now){
     EmployeeEty toSave = new EmployeeEty();
 
     toSave.setTeam(team);
@@ -574,8 +574,8 @@ public class EmployeeService {
     toSave.setContractStartDate(request.getContractStartDate());
     toSave.setCrtUsr(loggedUserId);
     toSave.setMdfUsr(loggedUserId);
-    toSave.setCrtTms(now.toInstant(ZoneOffset.UTC));
-    toSave.setMdfTms(now.toInstant(ZoneOffset.UTC));
+    toSave.setCrtTms(now);
+    toSave.setMdfTms(now);
     toSave.setStatus("ACTIVE");
     toSave.setPassword(passwordEncoder.encode("axon_" + toSave.getUsername()));
 

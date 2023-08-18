@@ -5,6 +5,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
@@ -67,9 +68,9 @@ public class AuthApi {
         .accessToken(accessToken.serialize())
         .refreshToken(refreshToken.serialize())
         .accessTokenExpirationTime(
-            OffsetDateTime.ofInstant(accessTokenExpiration, ZoneOffset.UTC).toLocalDateTime())
+            OffsetDateTime.ofInstant(accessTokenExpiration, ZoneId.systemDefault()).toLocalDateTime())
         .refreshTokenExpirationTime(
-            OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneOffset.UTC).toLocalDateTime())
+            OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneId.systemDefault()).toLocalDateTime())
         .build());
   }
 
@@ -92,7 +93,7 @@ public class AuthApi {
     Pair<SignedJWT, RefreshTokenEty> tokenEtyPair = parseAndCheckToken(request.getRefreshToken());
 
     RefreshTokenEty fromDB = tokenEtyPair.getSecond();
-    fromDB.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    fromDB.setMdfTms(clock.instant());
     fromDB.setStatus(TokenStatus.REVOKED);
 
     refreshTokenService.saveRefreshToken(fromDB);
@@ -168,7 +169,7 @@ public class AuthApi {
   }
 
   private ResponseEntity<?> regenerateToken(SignedJWT token, RefreshTokenEty tokenEty) {
-    final Instant now = clock.instant();
+    Instant now = clock.instant();
 
     SignedJWT accessToken = jwtTokenUtil.generateAccessToken(tokenEty.getEmployee(), now);
     SignedJWT refreshToken = jwtTokenUtil.regenerateRefreshToken(tokenEty.getEmployee(), token, now);
@@ -185,9 +186,9 @@ public class AuthApi {
             .accessToken(accessToken.serialize())
             .refreshToken(refreshToken.serialize())
             .accessTokenExpirationTime(
-                OffsetDateTime.ofInstant(accessTokenExpiration, ZoneOffset.UTC).toLocalDateTime())
+                OffsetDateTime.ofInstant(accessTokenExpiration, ZoneId.systemDefault()).toLocalDateTime())
             .refreshTokenExpirationTime(
-                OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneOffset.UTC).toLocalDateTime())
+                OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneId.systemDefault()).toLocalDateTime())
         .build());
   }
 

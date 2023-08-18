@@ -26,6 +26,9 @@ import static ro.axon.dot.EmployeeTestAttributes.ROLE;
 import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
+
+import java.sql.Date;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -69,6 +72,8 @@ import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
+import ro.axon.dot.model.LegallyDaysOffItem;
+import ro.axon.dot.model.LegallyDaysOffList;
 import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
@@ -98,15 +103,16 @@ class EmployeeServiceTest {
 
   PasswordEncoder passwordEncoder;
   EmployeeMapper employeeMapper;
-
-
+  Clock clock;
 
   @BeforeEach
   void setUp() {
     passwordEncoder = new BCryptPasswordEncoder();
     employeeMapper = new EmployeeMapperImpl();
-    employeeService = new EmployeeService(employeeRepository, teamRepository, leaveRequestRepository,
-            legallyDaysOffService, passwordEncoder, tokenUtil);
+    clock = Clock.systemDefaultZone();
+
+    employeeService = new EmployeeService(employeeRepository, teamRepository,
+        leaveRequestRepository, legallyDaysOffService, passwordEncoder, tokenUtil, clock);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -116,7 +122,7 @@ class EmployeeServiceTest {
   }
 
   @Test
-  void getEmployeesDetails() throws Exception {
+  void getEmployeesDetails() {
 
     EmployeeEty employee = initEmployee();
 
@@ -519,6 +525,15 @@ class EmployeeServiceTest {
     employee.setId(ID);
     employee.getLeaveRequests().add(leaveRequest);
 
+    EmpYearlyDaysOffEty yearlyDaysOffEty = new EmpYearlyDaysOffEty();
+    yearlyDaysOffEty.setEmployee(employee);
+    yearlyDaysOffEty.setTotalNoDays(20);
+    yearlyDaysOffEty.setEmpYearlyDaysOffHistEtySet(new HashSet<>());
+    yearlyDaysOffEty.setId(1L);
+    yearlyDaysOffEty.setYear(LocalDate.now().getYear());
+
+    employee.setEmpYearlyDaysOff(Set.of(yearlyDaysOffEty));
+
     LeaveRequestEty savedLeaveRequest = new LeaveRequestEty();
     savedLeaveRequest.setId(leaveRequestIdValue);
     savedLeaveRequest.setType(LeaveRequestEtyTypeEnum.VACATION);
@@ -528,8 +543,15 @@ class EmployeeServiceTest {
     savedLeaveRequest.setStatus(LeaveRequestEtyStatusEnum.PENDING);
     savedLeaveRequest.setV(1L);
 
+    LegallyDaysOffItem daysOffItem = new LegallyDaysOffItem();
+    daysOffItem.setDate(Date.from(clock.instant().plusSeconds(100000)));
+
+    LegallyDaysOffList daysOffList = new LegallyDaysOffList();
+    daysOffList.addDay(daysOffItem);
+
     when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
     when(leaveRequestRepository.save(any())).thenReturn(savedLeaveRequest);
+    when(legallyDaysOffService.getAllLegallyOffDays()).thenReturn(daysOffList);
 
     LeaveRequestDetailsListItem leaveRequestItem = employeeService.editLeaveRequest(ID,
         leaveRequestIdValue,
@@ -1067,49 +1089,50 @@ class EmployeeServiceTest {
   }
   @Test
   void updateEmployeeDetails_Success() {
+    TeamEty teamEty = new TeamEty();
+    teamEty.setId(1L);
+    teamEty.setName("Test_Team");
 
-        EmployeeEty existingEmployee = new EmployeeEty();
-        existingEmployee.setId("1");
-        existingEmployee.setV(1L);
+    EmployeeEty existingEmployee = new EmployeeEty();
+    existingEmployee.setId("1");
+    existingEmployee.setV(1L);
+    existingEmployee.setTeam(teamEty);
 
+    EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
+    updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
+    updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
+    updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
+    updatedEmployeeUpdateRequest.setRole("USER");
+    updatedEmployeeUpdateRequest.setV(2L);
+    updatedEmployeeUpdateRequest.setTeamId("1");
 
-        EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
-        updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
-        updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
-        updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
-        updatedEmployeeUpdateRequest.setRole("USER");
-        updatedEmployeeUpdateRequest.setV(2L);
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
+    when(teamRepository.findById(teamEty.getId())).thenReturn(Optional.of(teamEty));
 
+    assertDoesNotThrow(() -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest));
 
-        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
+    verify(employeeRepository).save(existingEmployee);
+  }
 
+  @Test
+  void updateEmployeeDetails_Conflict() {
 
-        assertDoesNotThrow(() -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest));
+    EmployeeEty existingEmployee = new EmployeeEty();
+    existingEmployee.setId("1");
+    existingEmployee.setV(2L);
 
+    EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
+    updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
+    updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
+    updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
+    updatedEmployeeUpdateRequest.setRole("USER");
+    updatedEmployeeUpdateRequest.setV(1L);
 
-        verify(employeeRepository).save(existingEmployee);
-    }
-
-    @Test
-    void updateEmployeeDetails_Conflict() {
-
-        EmployeeEty existingEmployee = new EmployeeEty();
-        existingEmployee.setId("1");
-        existingEmployee.setV(2L);
-
-
-        EmployeeUpdateRequest updatedEmployeeUpdateRequest = new EmployeeUpdateRequest();
-        updatedEmployeeUpdateRequest.setFirstName("Updated First Name");
-        updatedEmployeeUpdateRequest.setLastName("Updated Last Name");
-        updatedEmployeeUpdateRequest.setEmail("updated@axonsoft.com");
-        updatedEmployeeUpdateRequest.setRole("USER");
-        updatedEmployeeUpdateRequest.setV(1L);
-
-        when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(existingEmployee));
 
     assertThrows(BusinessException.class,
-            () -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest),
-            "Expected BusinessException with CONFLICT error code");
+        () -> employeeService.updateEmployeeDetails("1", updatedEmployeeUpdateRequest),
+        "Expected BusinessException with CONFLICT error code");
 
     verify(employeeRepository, never()).save(existingEmployee);
   }
