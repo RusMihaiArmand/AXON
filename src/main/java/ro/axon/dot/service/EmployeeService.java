@@ -33,6 +33,7 @@ import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
+import ro.axon.dot.model.LeaveRequestCreateEditDetails;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsList;
@@ -213,11 +214,9 @@ public class EmployeeService {
 
     if (isPendingOrApprovedLeaveRequest(leaveRequest)) {
 
-      leaveRequest.setStartDate(editLeaveRequestDetails.getStartDate());
-      leaveRequest.setEndDate(editLeaveRequestDetails.getEndDate());
-      leaveRequest.setType(editLeaveRequestDetails.getType());
-      leaveRequest.setDescription(editLeaveRequestDetails.getDescription());
-      leaveRequest.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+      int countedDaysOff = checkCountedDaysOff(editLeaveRequestDetails, employee);
+
+      leaveRequest = setLeaveRequestFromDTO(leaveRequest, editLeaveRequestDetails, countedDaysOff);
     }
 
     LeaveRequestDetailsListItem leaveRequestDetailsListItem = LeaveRequestMapper.INSTANCE
@@ -324,9 +323,7 @@ public class EmployeeService {
   public void createLeaveRequest(String employeeId,
       CreateLeaveRequestDetails createLeaveRequestDetails) {
 
-    EmployeeEty employee = employeeRepository.findById(employeeId)
-        .orElseThrow(() -> new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
+    EmployeeEty employee = findEmployeeById(employeeId);
 
     if (createLeaveRequestDetails.getEndDate()
         .isBefore(createLeaveRequestDetails.getStartDate())) {
@@ -358,8 +355,39 @@ public class EmployeeService {
               .build());
     }
 
-    long countedDaysOff = calculateCountedDaysOff(createLeaveRequestDetails.getStartDate(),
-        createLeaveRequestDetails.getEndDate());
+    int countedDaysOff = checkCountedDaysOff(createLeaveRequestDetails, employee);
+
+    LeaveRequestEty leaveRequestEty = new LeaveRequestEty();
+
+    leaveRequestEty = setLeaveRequestFromDTO(leaveRequestEty, createLeaveRequestDetails, countedDaysOff);
+
+    employee.addLeaveRequest(leaveRequestEty);
+    employeeRepository.save(employee);
+
+  }
+
+  private LeaveRequestEty setLeaveRequestFromDTO(LeaveRequestEty leaveRequestEty,
+      LeaveRequestCreateEditDetails leaveRequestDTO, int countedDaysOff){
+    
+    leaveRequestEty.setNoDays(countedDaysOff);
+    leaveRequestEty.setStartDate(leaveRequestDTO.getStartDate());
+    leaveRequestEty.setEndDate(leaveRequestDTO.getEndDate());
+    leaveRequestEty.setType(leaveRequestDTO.getType());
+    leaveRequestEty.setDescription(leaveRequestDTO.getDescription());
+    leaveRequestEty.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+
+    leaveRequestEty.setCrtUsr(tokenUtil.getLoggedUserId());
+    leaveRequestEty.setCrtTms(Instant.now());
+    leaveRequestEty.setMdfUsr(tokenUtil.getLoggedUserId());
+    leaveRequestEty.setMdfTms(Instant.now());
+
+    return leaveRequestEty;
+  }
+
+  private int checkCountedDaysOff(LeaveRequestCreateEditDetails leaveRequestDate, EmployeeEty employee){
+
+    long countedDaysOff = calculateCountedDaysOff(leaveRequestDate.getStartDate(),
+        leaveRequestDate.getEndDate());
 
     Integer remainingDaysOff = getCalculatedRemainingDaysOff(employee);
 
@@ -371,24 +399,9 @@ public class EmployeeService {
               .build());
     }
 
-    LeaveRequestEty leaveRequestEty = new LeaveRequestEty();
-
-    leaveRequestEty.setNoDays((int) countedDaysOff);
-    leaveRequestEty.setStartDate(createLeaveRequestDetails.getStartDate());
-    leaveRequestEty.setEndDate(createLeaveRequestDetails.getEndDate());
-    leaveRequestEty.setType(createLeaveRequestDetails.getType());
-    leaveRequestEty.setDescription(createLeaveRequestDetails.getDescription());
-
-    leaveRequestEty.setCrtUsr(tokenUtil.getLoggedUserId());
-    leaveRequestEty.setCrtTms(Instant.now());
-    leaveRequestEty.setMdfUsr(tokenUtil.getLoggedUserId());
-    leaveRequestEty.setMdfTms(Instant.now());
-    leaveRequestEty.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-
-    employee.addLeaveRequest(leaveRequestEty);
-    employeeRepository.save(employee);
-
+    return (int)countedDaysOff;
   }
+
 
   protected long calculateCountedDaysOff(LocalDate startDate, LocalDate endDate) {
     return startDate.datesUntil(endDate.plusDays(1))
