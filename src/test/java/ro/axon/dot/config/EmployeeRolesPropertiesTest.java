@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import ro.axon.dot.config.properties.EmployeeRolesProperties;
 
 @EnableConfigurationProperties(EmployeeRolesProperties.class)
 class EmployeeRolesPropertiesTest {

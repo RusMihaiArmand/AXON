@@ -6,16 +6,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ro.axon.dot.domain.*;
-import ro.axon.dot.domain.LeaveRequestEty;
-import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.domain.LeaveRequestRepository;
+import ro.axon.dot.domain.entity.LeaveRequestEty;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.repositories.LeaveRequestRepository;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import ro.axon.dot.domain.repositories.EmployeeRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -45,25 +45,25 @@ class LeaveRequestServiceTest {
         LeaveRequestEty leaveRequest1 = new LeaveRequestEty();
         Long leaveRequest1IdValue = 1L;
         leaveRequest1.setId(leaveRequest1IdValue);
-        leaveRequest1.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+        leaveRequest1.setStatus(LeaveRequestStatus.APPROVED);
         leaveRequest1.setCrtTms(Instant.ofEpochSecond(2));
 
         LeaveRequestEty leaveRequest2 = new LeaveRequestEty();
         Long leaveRequest2IdValue = 2L;
         leaveRequest2.setId(leaveRequest2IdValue);
-        leaveRequest2.setStatus(LeaveRequestEtyStatusEnum.REJECTED);
+        leaveRequest2.setStatus(LeaveRequestStatus.REJECTED);
         leaveRequest2.setCrtTms(Instant.ofEpochSecond(1));
 
         LeaveRequestEty leaveRequest3 = new LeaveRequestEty();
         Long leaveRequest3IdValue = 3L;
         leaveRequest3.setId(leaveRequest3IdValue);
-        leaveRequest3.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+        leaveRequest3.setStatus(LeaveRequestStatus.PENDING);
         leaveRequest3.setCrtTms(Instant.ofEpochSecond(4));
 
         LeaveRequestEty leaveRequest4 = new LeaveRequestEty();
         Long leaveRequest4IdValue = 4L;
         leaveRequest4.setId(leaveRequest4IdValue);
-        leaveRequest4.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+        leaveRequest4.setStatus(LeaveRequestStatus.PENDING);
         leaveRequest4.setCrtTms(Instant.ofEpochSecond(3));
 
         when(leaveRequestRepository.findAll(Expressions.TRUE.isTrue())).thenReturn(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));
@@ -86,19 +86,19 @@ class LeaveRequestServiceTest {
         LeaveRequestEty leaveRequest2 = new LeaveRequestEty();
         Long leaveRequest2IdValue = 2L;
         leaveRequest2.setId(leaveRequest2IdValue);
-        leaveRequest2.setStatus(LeaveRequestEtyStatusEnum.REJECTED);
+        leaveRequest2.setStatus(LeaveRequestStatus.REJECTED);
         leaveRequest2.setCrtTms(Instant.ofEpochSecond(1));
 
         LeaveRequestEty leaveRequest3 = new LeaveRequestEty();
         Long leaveRequest3IdValue = 3L;
         leaveRequest3.setId(leaveRequest3IdValue);
-        leaveRequest3.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+        leaveRequest3.setStatus(LeaveRequestStatus.PENDING);
         leaveRequest3.setCrtTms(Instant.ofEpochSecond(4));
 
         LeaveRequestEty leaveRequest4 = new LeaveRequestEty();
         Long leaveRequest4IdValue = 4L;
         leaveRequest4.setId(leaveRequest4IdValue);
-        leaveRequest4.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+        leaveRequest4.setStatus(LeaveRequestStatus.PENDING);
         leaveRequest4.setCrtTms(Instant.ofEpochSecond(3));
 
         when(leaveRequestRepository.findAll(Expressions.TRUE.isTrue())).thenReturn(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));

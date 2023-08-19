@@ -4,6 +4,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 
 import java.time.LocalDate;
+import ro.axon.dot.domain.entity.QLeaveRequestEty;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.enums.LeaveRequestType;
 
 public class LeaveRequestQuery {
 
@@ -14,7 +17,7 @@ public class LeaveRequestQuery {
     private BooleanExpression startDateExp = Expressions.TRUE.isTrue();
     private BooleanExpression endDateExp = Expressions.TRUE.isTrue();
 
-    public LeaveRequestQuery withStatus(LeaveRequestEtyStatusEnum status) {
+    public LeaveRequestQuery withStatus(LeaveRequestStatus status) {
         if (status != null) statusExp = root.status.eq(status);
         return this;
     }
@@ -24,7 +27,7 @@ public class LeaveRequestQuery {
         return this;
     }
 
-    public LeaveRequestQuery withType(LeaveRequestEtyTypeEnum type) {
+    public LeaveRequestQuery withType(LeaveRequestType type) {
         if (type != null) typeExp = root.type.eq(type);
         return this;
     }

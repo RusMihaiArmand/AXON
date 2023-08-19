@@ -1,8 +1,8 @@
 package ro.axon.dot.model;
 
 import lombok.Data;
-import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.enums.LeaveRequestType;
 
 import java.time.LocalDate;
 import java.time.Instant;
@@ -19,8 +19,8 @@ public class LeaveRequestDetailsListItem {
     private LocalDate startDate;
     private LocalDate endDate;
     private Integer noDays;
-    private LeaveRequestEtyTypeEnum type;
-    private LeaveRequestEtyStatusEnum status;
+    private LeaveRequestType type;
+    private LeaveRequestStatus status;
     private String description;
     private String rejectReason;
 

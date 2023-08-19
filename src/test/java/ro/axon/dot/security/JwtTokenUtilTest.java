@@ -29,7 +29,9 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Date;
 import org.junit.jupiter.api.Test;
-import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.config.component.JwtTokenUtil;
+import ro.axon.dot.config.properties.JwtTokenUtilProperties;
+import ro.axon.dot.domain.entity.EmployeeEty;
 import ro.axon.dot.exceptions.BusinessException;
 
 class JwtTokenUtilTest {

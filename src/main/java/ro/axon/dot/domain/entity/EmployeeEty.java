@@ -1,4 +1,4 @@
-package ro.axon.dot.domain;
+package ro.axon.dot.domain.entity;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -10,6 +10,7 @@ import lombok.Setter;
 import java.time.Instant;
 import javax.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
+import ro.axon.dot.domain.SrgKeyEntityTml;
 
 @Entity
 @NoArgsConstructor
@@ -17,7 +18,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Getter
 @Setter
 @Table(name = "EMPLOYEE")
-public class EmployeeEty extends SrgKeyEntityTml<String>{
+public class EmployeeEty extends SrgKeyEntityTml<String> {
 
   @Id
   @GeneratedValue(generator = "employee-uuid")
