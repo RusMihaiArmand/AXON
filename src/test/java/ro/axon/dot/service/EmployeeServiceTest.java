@@ -538,7 +538,7 @@ class EmployeeServiceTest {
     yearlyDaysOffEty.setTotalNoDays(20);
     yearlyDaysOffEty.setEmpYearlyDaysOffHistEtySet(new HashSet<>());
     yearlyDaysOffEty.setId(1L);
-    yearlyDaysOffEty.setYear(LocalDate.now().getYear());
+    yearlyDaysOffEty.setYear(LocalDate.ofInstant(clock.instant(), clock.getZone()).getYear());
 
     employee.setEmpYearlyDaysOff(Set.of(yearlyDaysOffEty));
 
@@ -708,8 +708,8 @@ class EmployeeServiceTest {
     when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
 
     CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
-    leaveRequestDetails.setStartDate(LocalDate.now());
-    leaveRequestDetails.setEndDate(LocalDate.now().minusDays(1));
+    leaveRequestDetails.setStartDate(LocalDate.ofInstant(clock.instant(), clock.getZone()));
+    leaveRequestDetails.setEndDate(LocalDate.ofInstant(clock.instant(), clock.getZone()).minusDays(1));
 
     assertThrows(BusinessException.class,
         () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
@@ -740,8 +740,8 @@ class EmployeeServiceTest {
     when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
 
     CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
-    leaveRequestDetails.setStartDate(LocalDate.now().minusMonths(1));
-    leaveRequestDetails.setEndDate(LocalDate.now());
+    leaveRequestDetails.setStartDate(LocalDate.ofInstant(clock.instant(), clock.getZone()).minusMonths(1));
+    leaveRequestDetails.setEndDate(LocalDate.ofInstant(clock.instant(), clock.getZone()));
 
     assertThrows(BusinessException.class,
         () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
@@ -967,9 +967,9 @@ class EmployeeServiceTest {
     team.setId(1L);
     team.setName("Backend");
     team.setCrtUsr("crtUsr");
-    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setCrtTms(clock.instant());
     team.setMdfUsr("mdfUsr");
-    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfTms(clock.instant());
     team.setStatus(TeamStatus.ACTIVE);
 
     EmployeeEty employee = new EmployeeEty(
@@ -978,13 +978,13 @@ class EmployeeServiceTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         team,
@@ -1003,7 +1003,7 @@ class EmployeeServiceTest {
     request.setTeamId(1L);
     request.setRole("USER");
     request.setEmail("jon@mail.com");
-    request.setContractStartDate(LocalDate.now());
+    request.setContractStartDate(LocalDate.ofInstant(clock.instant(), clock.getZone()));
     request.setNoDaysOff(20);
 
     UserDetailsResponse userDetails = new UserDetailsResponse();
@@ -1042,9 +1042,9 @@ class EmployeeServiceTest {
     team.setId(1L);
     team.setName("Backend");
     team.setCrtUsr("crtUsr");
-    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setCrtTms(clock.instant());
     team.setMdfUsr("mdfUsr");
-    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfTms(clock.instant());
     team.setStatus(TeamStatus.ACTIVE);
 
     EmployeeEty employee = new EmployeeEty(
@@ -1053,13 +1053,13 @@ class EmployeeServiceTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         team,

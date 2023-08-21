@@ -244,7 +244,7 @@ public class EmployeeService {
           BusinessErrorCode.LEAVE_REQUEST_DELETE_ALREADY_REJECTED).build());
     }
     if (leaveRequest.getStatus().equals(LeaveRequestStatus.APPROVED) &&
-        leaveRequest.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))) {
+        leaveRequest.getStartDate().isBefore(LocalDate.ofInstant(clock.instant(), clock.getZone()).withDayOfMonth(1))) {
 
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
           BusinessErrorCode.LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE).build());
@@ -278,7 +278,7 @@ public class EmployeeService {
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
           BusinessErrorCode.LEAVE_REQUEST_UPDATE_ALREADY_REJECTED).build());
     }
-    if (editLeaveRequestDetails.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))) {
+    if (editLeaveRequestDetails.getStartDate().isBefore(LocalDate.ofInstant(clock.instant(), clock.getZone()).withDayOfMonth(1))) {
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
           BusinessErrorCode.LEAVE_REQUEST_UPDATE_IN_PAST).build());
     }
@@ -343,7 +343,7 @@ public class EmployeeService {
 
     }
 
-    var currentDate = LocalDate.now();
+    var currentDate = LocalDate.ofInstant(clock.instant(), clock.getZone());
 
     if (createLeaveRequestDetails.getStartDate().getMonthValue()
         < currentDate.getMonthValue()) {
@@ -478,7 +478,7 @@ public class EmployeeService {
     EmpYearlyDaysOffEty empDaysOffEty = new EmpYearlyDaysOffEty();
 
     empDaysOffEty.setEmployee(employee);
-    empDaysOffEty.setYear(LocalDate.now().getYear());
+    empDaysOffEty.setYear(LocalDate.ofInstant(clock.instant(), clock.getZone()).getYear());
     empDaysOffEty.setTotalNoDays(0);
     empDaysOffEty.setEmpYearlyDaysOffHistEtySet(new HashSet<>());
 
@@ -491,7 +491,7 @@ public class EmployeeService {
       throws BusinessException {
     EmpYearlyDaysOffEty daysOffEty;
     daysOffEty = emp.getEmpYearlyDaysOff().stream()
-        .filter(yearlyDaysOff -> yearlyDaysOff.getYear().equals(LocalDate.now().getYear()))
+        .filter(yearlyDaysOff -> yearlyDaysOff.getYear().equals(LocalDate.ofInstant(clock.instant(), clock.getZone()).getYear()))
         .findFirst()
         .orElseGet(() -> createDaysOffEty(emp));
 
@@ -503,7 +503,7 @@ public class EmployeeService {
     }
 
     daysOffEty.setTotalNoDays(daysLeft);
-    daysOffEty.setYear(LocalDate.now().getYear());
+    daysOffEty.setYear(LocalDate.ofInstant(clock.instant(), clock.getZone()).getYear());
 
     EmpYearlyDaysOffHistEty daysOffHistory = new EmpYearlyDaysOffHistEty();
 
