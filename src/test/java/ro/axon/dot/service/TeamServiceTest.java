@@ -16,12 +16,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ro.axon.dot.domain.TeamEty;
-import ro.axon.dot.domain.TeamRepository;
-import ro.axon.dot.domain.TeamStatus;
+import ro.axon.dot.domain.entity.TeamEty;
+import ro.axon.dot.domain.repositories.TeamRepository;
+import ro.axon.dot.domain.enums.TeamStatus;
 import ro.axon.dot.model.CreateTeamDetails;
 import ro.axon.dot.model.TeamDetailsListItem;
-import ro.axon.dot.security.JwtTokenUtil;
+import ro.axon.dot.config.component.JwtTokenUtil;
 
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {

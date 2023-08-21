@@ -28,10 +28,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.RefreshTokenEty;
-import ro.axon.dot.domain.RefreshTokenRepository;
-import ro.axon.dot.domain.TokenStatus;
+import ro.axon.dot.domain.entity.EmployeeEty;
+import ro.axon.dot.domain.entity.RefreshTokenEty;
+import ro.axon.dot.domain.repositories.RefreshTokenRepository;
+import ro.axon.dot.domain.enums.TokenStatus;
 
 
 class RefreshTokenServiceTest {

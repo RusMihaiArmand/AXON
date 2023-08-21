@@ -55,13 +55,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ro.axon.dot.EmployeeTestAttributes;
-import ro.axon.dot.domain.LeaveRequestEty;
-import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
-import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
-import ro.axon.dot.domain.TeamEty;
-import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.TeamStatus;
+import ro.axon.dot.domain.entity.LeaveRequestEty;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.enums.LeaveRequestType;
+import ro.axon.dot.domain.enums.VacationDaysChangeType;
+import ro.axon.dot.domain.entity.TeamEty;
+import ro.axon.dot.domain.entity.EmployeeEty;
+import ro.axon.dot.domain.enums.TeamStatus;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
@@ -76,7 +76,7 @@ import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.model.VacationDaysModifyDetails;
-import ro.axon.dot.security.JwtTokenUtil;
+import ro.axon.dot.config.component.JwtTokenUtil;
 import ro.axon.dot.service.EmployeeService;
 
 @ExtendWith(MockitoExtension.class)
@@ -277,7 +277,7 @@ class EmployeeApiTest {
       doThrow(new BusinessException(
               BusinessException.BusinessExceptionElement
                       .builder()
-                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT)
                       .build()))
               .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
@@ -286,8 +286,8 @@ class EmployeeApiTest {
                       .accept(MediaType.APPLICATION_JSON)
                       .content(getJsonAnswer()))
               .andExpect(status().isConflict())
-              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getDevMsg()))
-              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getErrorCode()));
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT.getErrorCode()));
   }
 
   @Test
@@ -300,7 +300,7 @@ class EmployeeApiTest {
 
       LeaveRequestEty request = new LeaveRequestEty();
       request.setId(1L);
-      request.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+      request.setStatus(LeaveRequestStatus.APPROVED);
       when(employeeService.updateLeaveRequestStatus(anyString(), anyLong(), any())).thenReturn(request);
 
     mockMvc.perform(patch("/api/v1/employees/1/requests/1")
@@ -386,7 +386,7 @@ class EmployeeApiTest {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PAST_DATE).build()));
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_UPDATE_IN_PAST).build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
@@ -399,7 +399,7 @@ class EmployeeApiTest {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED).build()));
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_UPDATE_ALREADY_REJECTED).build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
@@ -412,7 +412,7 @@ class EmployeeApiTest {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT)
             .build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
@@ -457,7 +457,7 @@ class EmployeeApiTest {
     String createLeaveRequestContent = "{ \"startDate\": \"2023-08-15\", \"endDate\": \"2023-08-17\", \"type\": \"MEDICAL\", \"description\": \"description\"}";
 
     CreateLeaveRequestDetails createLeaveRequestDetails = new CreateLeaveRequestDetails();
-    createLeaveRequestDetails.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+    createLeaveRequestDetails.setType(LeaveRequestType.MEDICAL);
     createLeaveRequestDetails.setStartDate(LocalDate.of(2023,8, 15));
     createLeaveRequestDetails.setEndDate(LocalDate.of(2023,8, 17));
     createLeaveRequestDetails.setDescription("description");
@@ -509,7 +509,7 @@ class EmployeeApiTest {
   void checkEmployeeUniqueCredentials() throws Exception {
     when(employeeService.checkEmployeeUniqueCredentials(anyString(), anyString())).thenReturn(true);
 
-    mockMvc.perform(get("/api/v1/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/validation")
             .param("username", USERNAME)
             .param("email", EMAIL))
         .andExpect(status().isOk());
@@ -521,7 +521,7 @@ class EmployeeApiTest {
         .builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build()
     )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
 
-    mockMvc.perform(get("/api/v1/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/validation")
             .param("username", USERNAME)
             .param("email", EMAIL)
             .contentType(MediaType.APPLICATION_JSON))
@@ -536,7 +536,7 @@ class EmployeeApiTest {
         .builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build()
     )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
 
-    mockMvc.perform(get("/api/v1/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/validation")
             .param("username", USERNAME)
             .param("email", EMAIL)
             .contentType(MediaType.APPLICATION_JSON))
@@ -609,7 +609,7 @@ class EmployeeApiTest {
     ids.add( employee.getId() );
     v.setEmployeeIds(ids);
 
-    v.setType(VacationDaysChangeTypeEnum.INCREASE);
+    v.setType(VacationDaysChangeType.INCREASE);
 
     org.codehaus.jackson.map.ObjectMapper objectMapper = new org.codehaus.jackson.map.ObjectMapper();
 

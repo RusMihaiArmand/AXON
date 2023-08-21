@@ -17,81 +17,86 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ro.axon.dot.config.component.JwtTokenUtil;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
+import ro.axon.dot.model.EmployeeUpdateRequest;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestReview;
 import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
-import ro.axon.dot.security.JwtTokenUtil;
-import ro.axon.dot.model.*;
 import ro.axon.dot.service.EmployeeService;
 
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/employees")
 public class EmployeeApi {
 
   private final EmployeeService employeeService;
   private final JwtTokenUtil jwtTokenUtil;
 
-  @PostMapping(value = "/employees/register")
+  @PostMapping(value = "/register")
   public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
-    return ResponseEntity.ok(employeeService.createEmployee(request, jwtTokenUtil.getLoggedUserId()));
+    return ResponseEntity.ok(
+        employeeService.createEmployee(request, jwtTokenUtil.getLoggedUserId()));
   }
 
-  @GetMapping(value = "/employees")
-  public ResponseEntity<EmployeeDetailsList> getEmployeesList(@RequestParam(required = false) String name){
+  @GetMapping
+  public ResponseEntity<EmployeeDetailsList> getEmployeesList(
+      @RequestParam(required = false) String name) {
 
     EmployeeDetailsList employeesList = employeeService.getEmployeesDetails(name);
 
     return ResponseEntity.ok(employeesList);
   }
 
-  @PatchMapping(value = "/employees/{employeeId}/inactivate")
-  public ResponseEntity<Void> inactivateEmployee(@PathVariable String employeeId){
+  @PatchMapping(value = "/{employeeId}/inactivate")
+  public ResponseEntity<Void> inactivateEmployee(@PathVariable String employeeId) {
     employeeService.inactivateEmployee(employeeId);
     return ResponseEntity.noContent().build();
   }
 
-  @PutMapping("employees/{employeeId}/requests/{requestId}")
+  @PutMapping("/{employeeId}/requests/{requestId}")
   public ResponseEntity<Void> editLeaveRequest(@PathVariable String employeeId,
       @PathVariable Long requestId,
-      @Valid @RequestBody EditLeaveRequestDetails leaveRequestDetails){
+      @Valid @RequestBody EditLeaveRequestDetails leaveRequestDetails) {
 
     employeeService.editLeaveRequest(employeeId, requestId, leaveRequestDetails);
 
     return ResponseEntity.noContent().build();
   }
 
-  @PatchMapping("employees/{idEmployee}/requests/{idRequest}")
-  public ResponseEntity<Void> handleLeaveRequest(@PathVariable(name = "idEmployee") String idEmployee,
-      @PathVariable(name = "idRequest") Long idRequest, @Valid @RequestBody LeaveRequestReview review) {
-      employeeService.updateLeaveRequestStatus(idEmployee, idRequest, review);
-      return ResponseEntity.noContent().build();
+  @PatchMapping("/{idEmployee}/requests/{idRequest}")
+  public ResponseEntity<Void> handleLeaveRequest(
+      @PathVariable(name = "idEmployee") String idEmployee,
+      @PathVariable(name = "idRequest") Long idRequest,
+      @Valid @RequestBody LeaveRequestReview review) {
+    employeeService.updateLeaveRequestStatus(idEmployee, idRequest, review);
+    return ResponseEntity.noContent().build();
   }
 
-  @DeleteMapping("employees/{employeeId}/requests/{requestId}")
+  @DeleteMapping("/{employeeId}/requests/{requestId}")
   public ResponseEntity<Void> deleteLeaveRequest(@PathVariable String employeeId,
-                                                 @PathVariable Long requestId){
+      @PathVariable Long requestId) {
 
     employeeService.deleteLeaveRequest(employeeId, requestId);
 
     return ResponseEntity.noContent().build();
   }
 
-  @GetMapping(value = {"/employees/{employeeId}/remaining-days-off"})
-  public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(@PathVariable String employeeId){
+  @GetMapping(value = {"/{employeeId}/remaining-days-off"})
+  public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(
+      @PathVariable String employeeId) {
 
     RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(employeeId);
 
     return ResponseEntity.ok(remainingDaysOff);
   }
 
-  @PostMapping("/employees/{employeeId}/requests")
+  @PostMapping("/{employeeId}/requests")
   public ResponseEntity<Void> addLeaveRequest(@PathVariable String employeeId,
       @Valid @RequestBody CreateLeaveRequestDetails createLeaveRequestDetails) {
 
@@ -100,7 +105,7 @@ public class EmployeeApi {
 
   }
 
-  @GetMapping(value = "/employee/validation")
+  @GetMapping(value = "/validation")
   public ResponseEntity<Void> checkEmployeeUniqueCredentials(
       @RequestParam(name = "username", required = false) String username,
       @RequestParam(name = "email", required = false) String email) {
@@ -111,7 +116,7 @@ public class EmployeeApi {
     return ResponseEntity.badRequest().build();
   }
 
-  @GetMapping(value = "/employees/{employeeId}/requests")
+  @GetMapping(value = "/{employeeId}/requests")
   public ResponseEntity<LeaveRequestDetailsList> getLeaveRequests(
       @PathVariable(name = "employeeId") String idEmployee,
       @RequestParam(name = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -119,16 +124,16 @@ public class EmployeeApi {
     return ResponseEntity.ok(employeeService.getLeaveRequests(idEmployee, startDate, endDate));
   }
 
-  @PostMapping("/employees/days-off")
+  @PostMapping("/days-off")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void modifyEmployeesDaysOff(@Valid @RequestBody VacationDaysModifyDetails vacationDaysModifyDetails)
-  {
+  public void modifyEmployeesDaysOff(
+      @Valid @RequestBody VacationDaysModifyDetails vacationDaysModifyDetails) {
     employeeService.changeVacationDays(vacationDaysModifyDetails);
   }
 
-  @PatchMapping("/employees/{employeeId}")
+  @PatchMapping("/{employeeId}")
   public ResponseEntity<Void> updateEmployeeDetails(@PathVariable String employeeId,
-                                                    @Valid @RequestBody EmployeeUpdateRequest employeeUpdateRequest) {
+      @Valid @RequestBody EmployeeUpdateRequest employeeUpdateRequest) {
 
     employeeService.updateEmployeeDetails(employeeId, employeeUpdateRequest);
 

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ro.axon.dot.config.EmployeeRolesProperties;
+import ro.axon.dot.config.properties.EmployeeRolesProperties;
 import ro.axon.dot.model.EmployeeRolesList;
 
 @Service

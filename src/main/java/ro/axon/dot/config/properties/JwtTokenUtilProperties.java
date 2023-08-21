@@ -1,4 +1,4 @@
-package ro.axon.dot.security;
+package ro.axon.dot.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;

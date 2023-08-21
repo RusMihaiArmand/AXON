@@ -35,7 +35,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.config.component.JwtTokenUtil;
+import ro.axon.dot.config.properties.JwtTokenUtilProperties;
+import ro.axon.dot.domain.entity.EmployeeEty;
 import ro.axon.dot.exceptions.BusinessException;
 
 class JwtTokenUtilTest {

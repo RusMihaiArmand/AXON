@@ -6,6 +6,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import ro.axon.dot.domain.entity.QLeaveRequestEty;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.enums.LeaveRequestType;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,7 +26,7 @@ class LeaveRequestQueryTest {
 
     @Test
     void withStatusNull() {
-        LeaveRequestEtyStatusEnum status = null;
+        LeaveRequestStatus status = null;
         leaveRequestQuery.withStatus(status);
         BooleanExpression expectedExpression = TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP))));
         assertEquals(expectedExpression, leaveRequestQuery.build());
@@ -31,7 +34,7 @@ class LeaveRequestQueryTest {
 
     @Test
     void withStatus() {
-        LeaveRequestEtyStatusEnum status = LeaveRequestEtyStatusEnum.PENDING;
+        LeaveRequestStatus status = LeaveRequestStatus.PENDING;
         leaveRequestQuery.withStatus(status);
         BooleanExpression expectedExpression = root.status.eq(status).and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP))));
         assertEquals(expectedExpression, leaveRequestQuery.build());
@@ -55,7 +58,7 @@ class LeaveRequestQueryTest {
 
     @Test
     void withTypeNull() {
-        LeaveRequestEtyTypeEnum type = null;
+        LeaveRequestType type = null;
         leaveRequestQuery.withType(type);
         BooleanExpression expectedExpression = TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP.and(TRUE_EXP))));
         assertEquals(expectedExpression, leaveRequestQuery.build());
@@ -63,7 +66,7 @@ class LeaveRequestQueryTest {
 
     @Test
     void withType() {
-        LeaveRequestEtyTypeEnum type = LeaveRequestEtyTypeEnum.VACATION;
+        LeaveRequestType type = LeaveRequestType.VACATION;
         leaveRequestQuery.withType(type);
         BooleanExpression expectedExpression = TRUE_EXP.and(TRUE_EXP.and(root.type.eq(type).and(TRUE_EXP.and(TRUE_EXP))));
         assertEquals(expectedExpression, leaveRequestQuery.build());

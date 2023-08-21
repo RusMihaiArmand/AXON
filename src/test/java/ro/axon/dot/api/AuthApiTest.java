@@ -27,19 +27,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.RefreshTokenEty;
-import ro.axon.dot.domain.TeamEty;
-import ro.axon.dot.domain.TokenStatus;
+import ro.axon.dot.domain.entity.EmployeeEty;
+import ro.axon.dot.domain.entity.RefreshTokenEty;
+import ro.axon.dot.domain.entity.TeamEty;
+import ro.axon.dot.domain.enums.TokenStatus;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.model.LoginRequest;
 import ro.axon.dot.model.LoginResponse;
 import ro.axon.dot.model.RefreshTokenRequest;
+import ro.axon.dot.config.component.JwtTokenUtil;
 import ro.axon.dot.model.TeamDetails;
 import ro.axon.dot.model.UserDetailsResponse;
-import ro.axon.dot.security.JwtTokenUtil;
 import ro.axon.dot.security.TokenUtilSetup;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.RefreshTokenService;
@@ -99,8 +99,8 @@ class AuthApiTest {
     assertNotNull(responseEntity.getBody());
 
     LoginResponse response = (LoginResponse) responseEntity.getBody();
-    assertTrue(response.getAccessTokenExpirationTime().toInstant(ZoneOffset.UTC).isAfter(clock.instant()));
-    assertTrue(response.getRefreshTokenExpirationTime().toInstant(ZoneOffset.UTC).isAfter(clock.instant()));
+    assertTrue(response.getAccessTokenExpirationTime().toInstant().isAfter(clock.instant()));
+    assertTrue(response.getRefreshTokenExpirationTime().toInstant().isAfter(clock.instant()));
   }
 
   @Test

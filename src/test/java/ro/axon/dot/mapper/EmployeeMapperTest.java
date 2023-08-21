@@ -6,8 +6,8 @@ import static ro.axon.dot.EmployeeTestAttributes.*;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import ro.axon.dot.domain.EmpYearlyDaysOffEty;
-import ro.axon.dot.domain.EmployeeEty;
+import ro.axon.dot.domain.entity.EmpYearlyDaysOffEty;
+import ro.axon.dot.domain.entity.EmployeeEty;
 import ro.axon.dot.model.EmployeeDetailsListItem;
 
 class EmployeeMapperTest {

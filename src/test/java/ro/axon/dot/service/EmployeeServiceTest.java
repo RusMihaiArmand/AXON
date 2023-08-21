@@ -1,11 +1,11 @@
 package ro.axon.dot.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -27,16 +27,16 @@ import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 
-import java.sql.Date;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -47,28 +47,28 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ro.axon.dot.domain.EmpYearlyDaysOffEty;
-import org.springframework.http.HttpStatus;
-import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
-import ro.axon.dot.exceptions.BusinessException;
-import ro.axon.dot.domain.EmployeeEty;
-import ro.axon.dot.domain.EmployeeRepository;
-import ro.axon.dot.domain.TeamEty;
-import ro.axon.dot.domain.TeamRepository;
-import ro.axon.dot.domain.TeamStatus;
-import ro.axon.dot.mapper.EmployeeMapper;
-import ro.axon.dot.domain.LeaveRequestEty;
-import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
-import ro.axon.dot.domain.LeaveRequestRepository;
+import ro.axon.dot.config.TimeConfiguration;
+import ro.axon.dot.config.component.JwtTokenUtil;
+import ro.axon.dot.domain.entity.EmpYearlyDaysOffEty;
+import ro.axon.dot.domain.entity.EmployeeEty;
+import ro.axon.dot.domain.entity.LeaveRequestEty;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.enums.LeaveRequestType;
+import ro.axon.dot.domain.entity.TeamEty;
+import ro.axon.dot.domain.enums.TeamStatus;
+import ro.axon.dot.domain.enums.VacationDaysChangeType;
 import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
+import ro.axon.dot.mapper.EmployeeMapper;
 import ro.axon.dot.mapper.EmployeeMapperImpl;
 import ro.axon.dot.model.CreateLeaveRequestDetails;
 import ro.axon.dot.model.EditLeaveRequestDetails;
 import ro.axon.dot.model.EmployeeDetailsList;
 import ro.axon.dot.model.EmployeeDetailsListItem;
+import ro.axon.dot.model.EmployeeUpdateRequest;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
@@ -76,12 +76,12 @@ import ro.axon.dot.model.LegallyDaysOffItem;
 import ro.axon.dot.model.LegallyDaysOffList;
 import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
-import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.model.TeamDetails;
 import ro.axon.dot.model.UserDetailsResponse;
-import ro.axon.dot.security.JwtTokenUtil;
-import ro.axon.dot.model.EmployeeUpdateRequest;
-
+import ro.axon.dot.model.VacationDaysModifyDetails;
+import ro.axon.dot.domain.repositories.EmployeeRepository;
+import ro.axon.dot.domain.repositories.LeaveRequestRepository;
+import ro.axon.dot.domain.repositories.TeamRepository;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -190,8 +190,10 @@ class EmployeeServiceTest {
     var ex = assertThrows(BusinessException.class, () -> {
       employeeService.updateLeaveRequestStatus("1", 1L, review);
     });
-    assertEquals(ex.getError().getErrorDescription().getErrorCode(), BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
-    assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
+    assertEquals(ex.getError().getErrorDescription().getErrorCode(),
+        BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
+    assertEquals(ex.getError().getErrorDescription().getDevMsg(),
+        BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
     assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
   }
 
@@ -206,8 +208,10 @@ class EmployeeServiceTest {
     var ex = assertThrows(BusinessException.class, () -> {
       employeeService.updateLeaveRequestStatus("1", 1L, answer);
     });
-    assertEquals(ex.getError().getErrorDescription().getErrorCode(),BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getErrorCode());
-    assertEquals(ex.getError().getErrorDescription().getDevMsg(),BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getDevMsg());
+    assertEquals(ex.getError().getErrorDescription().getErrorCode(),
+        BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getErrorCode());
+    assertEquals(ex.getError().getErrorDescription().getDevMsg(),
+        BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getDevMsg());
     assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
   }
 
@@ -215,21 +219,23 @@ class EmployeeServiceTest {
   void updateLeaveRequestStatusAlreadyAnswered() {
     EmployeeEty employee = new EmployeeEty();
     LeaveRequestEty request = new LeaveRequestEty();
-    request.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+    request.setStatus(LeaveRequestStatus.APPROVED);
     request.setV(1L);
 
-      LeaveRequestReview review = new LeaveRequestReview();
-      review.setV(1L);
-      review.setType("APPROVED");
-      when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
-      when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(request));
+    LeaveRequestReview review = new LeaveRequestReview();
+    review.setV(1L);
+    review.setType("APPROVED");
+    when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
+    when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(request));
 
-      var ex = assertThrows(BusinessException.class, () -> {
-          employeeService.updateLeaveRequestStatus("1", 1L, review);
-      });
-      assertEquals(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getErrorCode(), ex.getError().getErrorDescription().getErrorCode());
-      assertEquals(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getDevMsg(), ex.getError().getErrorDescription().getDevMsg());
-      assertEquals(HttpStatus.BAD_REQUEST, ex.getError().getErrorDescription().getStatus());
+    var ex = assertThrows(BusinessException.class, () -> {
+      employeeService.updateLeaveRequestStatus("1", 1L, review);
+    });
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getErrorCode(),
+        ex.getError().getErrorDescription().getErrorCode());
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING.getDevMsg(),
+        ex.getError().getErrorDescription().getDevMsg());
+    assertEquals(HttpStatus.BAD_REQUEST, ex.getError().getErrorDescription().getStatus());
   }
 
   @Test
@@ -248,16 +254,18 @@ class EmployeeServiceTest {
       employeeService.updateLeaveRequestStatus("1", 1L, answer);
     });
 
-      assertEquals(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getErrorCode(), ex.getError().getErrorDescription().getErrorCode());
-      assertEquals(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getDevMsg(), ex.getError().getErrorDescription().getDevMsg());
-      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.CONFLICT);
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT.getErrorCode(),
+        ex.getError().getErrorDescription().getErrorCode());
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT.getDevMsg(),
+        ex.getError().getErrorDescription().getDevMsg());
+    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.CONFLICT);
   }
 
   @Test
   void updateLeaveRequestStatus() {
     EmployeeEty employee = new EmployeeEty();
     LeaveRequestEty request = new LeaveRequestEty();
-    request.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+    request.setStatus(LeaveRequestStatus.PENDING);
     request.setV(1L);
 
     LeaveRequestReview answer = new LeaveRequestReview();
@@ -269,17 +277,17 @@ class EmployeeServiceTest {
     // accept
     request.setV(1L);
     LeaveRequestEty updatedRequest = employeeService.updateLeaveRequestStatus("1", 1L, answer);
-    assertEquals(updatedRequest.getStatus(), LeaveRequestEtyStatusEnum.APPROVED);
+    assertEquals(updatedRequest.getStatus(), LeaveRequestStatus.APPROVED);
     assertEquals(updatedRequest.getV(), 1L);
     assertNull(updatedRequest.getRejectReason());
 
     // reject
-    request.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+    request.setStatus(LeaveRequestStatus.PENDING);
     answer.setType("REJECTION");
     answer.setRejectionReason("Not a good time");
     answer.setV(3L);
     updatedRequest = employeeService.updateLeaveRequestStatus("1", 1L, answer);
-    assertEquals(updatedRequest.getStatus(), LeaveRequestEtyStatusEnum.REJECTED);
+    assertEquals(updatedRequest.getStatus(), LeaveRequestStatus.REJECTED);
     assertEquals(updatedRequest.getRejectReason(), "Not a good time");
     assertEquals(updatedRequest.getV(), 3L);
 
@@ -362,7 +370,7 @@ class EmployeeServiceTest {
   void checkEmployeeUniqueCredentialsDuplicateUsername() {
     when(employeeRepository.existsByUsername(USERNAME)).thenReturn(true);
     var ex = assertThrows(BusinessException.class, () ->
-      employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com"));
+        employeeService.checkEmployeeUniqueCredentials(USERNAME, "unique@gmail.com"));
     assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.USERNAME_DUPLICATE);
   }
 
@@ -391,7 +399,7 @@ class EmployeeServiceTest {
     EditLeaveRequestDetails leaveRequestEdit = new EditLeaveRequestDetails();
     leaveRequestEdit.setStartDate(LocalDate.parse("2023-08-25"));
     leaveRequestEdit.setEndDate(LocalDate.parse("2023-08-28"));
-    leaveRequestEdit.setType(LeaveRequestEtyTypeEnum.VACATION);
+    leaveRequestEdit.setType(LeaveRequestType.VACATION);
     leaveRequestEdit.setDescription("Vacation leave request");
 
     EmployeeEty employee = new EmployeeEty();
@@ -413,13 +421,13 @@ class EmployeeServiceTest {
     LeaveRequestEty leaveRequest = new LeaveRequestEty();
     Long leaveRequestIdValue = 1L;
     leaveRequest.setId(leaveRequestIdValue);
-    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.REJECTED);
+    leaveRequest.setStatus(LeaveRequestStatus.REJECTED);
     leaveRequest.setV(1L);
 
     EditLeaveRequestDetails leaveRequestEdit = new EditLeaveRequestDetails();
     leaveRequestEdit.setStartDate(LocalDate.parse("2023-08-25"));
     leaveRequestEdit.setEndDate(LocalDate.parse("2023-08-28"));
-    leaveRequestEdit.setType(LeaveRequestEtyTypeEnum.VACATION);
+    leaveRequestEdit.setType(LeaveRequestType.VACATION);
     leaveRequestEdit.setDescription("Vacation leave request");
     leaveRequestEdit.setV(2L);
 
@@ -432,7 +440,7 @@ class EmployeeServiceTest {
     BusinessException exception = assertThrows(BusinessException.class,
         () -> employeeService.editLeaveRequest(ID, leaveRequestIdValue, leaveRequestEdit));
 
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_REJECTED,
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_UPDATE_ALREADY_REJECTED,
         exception.getError().getErrorDescription());
     verify(leaveRequestRepository, never()).save(any());
   }
@@ -443,7 +451,7 @@ class EmployeeServiceTest {
     LeaveRequestEty leaveRequest = new LeaveRequestEty();
     Long leaveRequestIdValue = 1L;
     leaveRequest.setId(leaveRequestIdValue);
-    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+    leaveRequest.setStatus(LeaveRequestStatus.APPROVED);
     leaveRequest.setStartDate(LocalDate.parse("2023-08-23"));
     leaveRequest.setEndDate(LocalDate.parse("2023-08-27"));
     leaveRequest.setV(1L);
@@ -451,7 +459,7 @@ class EmployeeServiceTest {
     EditLeaveRequestDetails leaveRequestEdit = new EditLeaveRequestDetails();
     leaveRequestEdit.setStartDate(LocalDate.parse("2023-07-25"));
     leaveRequestEdit.setEndDate(LocalDate.parse("2023-07-28"));
-    leaveRequestEdit.setType(LeaveRequestEtyTypeEnum.VACATION);
+    leaveRequestEdit.setType(LeaveRequestType.VACATION);
     leaveRequestEdit.setDescription("Vacation leave request");
     leaveRequestEdit.setV(2L);
 
@@ -464,7 +472,7 @@ class EmployeeServiceTest {
     BusinessException exception = assertThrows(BusinessException.class,
         () -> employeeService.editLeaveRequest(ID, leaveRequestIdValue, leaveRequestEdit));
 
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_PAST_DATE,
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_UPDATE_IN_PAST,
         exception.getError().getErrorDescription());
     verify(leaveRequestRepository, never()).save(any());
   }
@@ -475,7 +483,7 @@ class EmployeeServiceTest {
     LeaveRequestEty leaveRequest = new LeaveRequestEty();
     Long leaveRequestIdValue = 1L;
     leaveRequest.setId(leaveRequestIdValue);
-    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+    leaveRequest.setStatus(LeaveRequestStatus.APPROVED);
     leaveRequest.setStartDate(LocalDate.parse("2023-08-23"));
     leaveRequest.setEndDate(LocalDate.parse("2023-08-27"));
     leaveRequest.setV(2L);
@@ -483,7 +491,7 @@ class EmployeeServiceTest {
     EditLeaveRequestDetails leaveRequestEdit = new EditLeaveRequestDetails();
     leaveRequestEdit.setStartDate(LocalDate.parse("2023-08-25"));
     leaveRequestEdit.setEndDate(LocalDate.parse("2023-08-28"));
-    leaveRequestEdit.setType(LeaveRequestEtyTypeEnum.VACATION);
+    leaveRequestEdit.setType(LeaveRequestType.VACATION);
     leaveRequestEdit.setDescription("Vacation leave request");
     leaveRequestEdit.setV(1L);
 
@@ -496,7 +504,7 @@ class EmployeeServiceTest {
     BusinessException exception = assertThrows(BusinessException.class,
         () -> employeeService.editLeaveRequest(ID, leaveRequestIdValue, leaveRequestEdit));
 
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION,
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT,
         exception.getError().getErrorDescription());
     verify(leaveRequestRepository, never()).save(any());
   }
@@ -507,8 +515,8 @@ class EmployeeServiceTest {
     LeaveRequestEty leaveRequest = new LeaveRequestEty();
     Long leaveRequestIdValue = 1L;
     leaveRequest.setId(leaveRequestIdValue);
-    leaveRequest.setType(LeaveRequestEtyTypeEnum.MEDICAL);
-    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+    leaveRequest.setType(LeaveRequestType.MEDICAL);
+    leaveRequest.setStatus(LeaveRequestStatus.APPROVED);
     leaveRequest.setStartDate(LocalDate.parse("2023-08-23"));
     leaveRequest.setEndDate(LocalDate.parse("2023-08-27"));
     leaveRequest.setDescription("Medical leave request");
@@ -517,7 +525,7 @@ class EmployeeServiceTest {
     EditLeaveRequestDetails leaveRequestEdit = new EditLeaveRequestDetails();
     leaveRequestEdit.setStartDate(LocalDate.parse("2023-08-25"));
     leaveRequestEdit.setEndDate(LocalDate.parse("2023-08-28"));
-    leaveRequestEdit.setType(LeaveRequestEtyTypeEnum.VACATION);
+    leaveRequestEdit.setType(LeaveRequestType.VACATION);
     leaveRequestEdit.setDescription("Vacation leave request");
     leaveRequestEdit.setV(1L);
 
@@ -536,11 +544,11 @@ class EmployeeServiceTest {
 
     LeaveRequestEty savedLeaveRequest = new LeaveRequestEty();
     savedLeaveRequest.setId(leaveRequestIdValue);
-    savedLeaveRequest.setType(LeaveRequestEtyTypeEnum.VACATION);
+    savedLeaveRequest.setType(LeaveRequestType.VACATION);
     savedLeaveRequest.setStartDate(LocalDate.parse("2023-08-25"));
     savedLeaveRequest.setEndDate(LocalDate.parse("2023-08-28"));
     savedLeaveRequest.setDescription("Vacation leave request");
-    savedLeaveRequest.setStatus(LeaveRequestEtyStatusEnum.PENDING);
+    savedLeaveRequest.setStatus(LeaveRequestStatus.PENDING);
     savedLeaveRequest.setV(1L);
 
     LegallyDaysOffItem daysOffItem = new LegallyDaysOffItem();
@@ -561,7 +569,7 @@ class EmployeeServiceTest {
     assertEquals(leaveRequestEdit.getEndDate(), leaveRequestItem.getEndDate());
     assertEquals(leaveRequestEdit.getType(), leaveRequestItem.getType());
     assertEquals(leaveRequestEdit.getDescription(), leaveRequestItem.getDescription());
-    assertEquals(LeaveRequestEtyStatusEnum.PENDING, leaveRequestItem.getStatus());
+    assertEquals(LeaveRequestStatus.PENDING, leaveRequestItem.getStatus());
   }
 
   @Test
@@ -573,8 +581,8 @@ class EmployeeServiceTest {
 
     LeaveRequestEty leaveRequest = new LeaveRequestEty();
     leaveRequest.setId(requestId);
-    leaveRequest.setType(LeaveRequestEtyTypeEnum.MEDICAL);
-    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.REJECTED);
+    leaveRequest.setType(LeaveRequestType.MEDICAL);
+    leaveRequest.setStatus(LeaveRequestStatus.REJECTED);
     leaveRequest.setStartDate(LocalDate.parse("2023-08-23"));
     leaveRequest.setEndDate(LocalDate.parse("2023-08-27"));
     leaveRequest.setDescription("Medical leave request");
@@ -589,7 +597,7 @@ class EmployeeServiceTest {
     BusinessException exception = assertThrows(BusinessException.class,
         () -> employeeService.deleteLeaveRequest(employeeId, requestId));
 
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_REJECTED,
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_DELETE_ALREADY_REJECTED,
         exception.getError().getErrorDescription());
 
     assertEquals(1, employeeEtyOptional.get().getLeaveRequests().size());
@@ -607,8 +615,8 @@ class EmployeeServiceTest {
 
     LeaveRequestEty leaveRequest = new LeaveRequestEty();
     leaveRequest.setId(requestId);
-    leaveRequest.setType(LeaveRequestEtyTypeEnum.MEDICAL);
-    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+    leaveRequest.setType(LeaveRequestType.MEDICAL);
+    leaveRequest.setStatus(LeaveRequestStatus.APPROVED);
     leaveRequest.setStartDate(LocalDate.parse("2023-07-23"));
     leaveRequest.setEndDate(LocalDate.parse("2023-07-27"));
     leaveRequest.setDescription("Medical leave request");
@@ -638,8 +646,8 @@ class EmployeeServiceTest {
 
     LeaveRequestEty leaveRequest = new LeaveRequestEty();
     leaveRequest.setId(1L);
-    leaveRequest.setType(LeaveRequestEtyTypeEnum.MEDICAL);
-    leaveRequest.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
+    leaveRequest.setType(LeaveRequestType.MEDICAL);
+    leaveRequest.setStatus(LeaveRequestStatus.APPROVED);
     leaveRequest.setStartDate(LocalDate.parse("2023-08-23"));
     leaveRequest.setEndDate(LocalDate.parse("2023-08-27"));
     leaveRequest.setDescription("Medical leave request");
@@ -681,155 +689,153 @@ class EmployeeServiceTest {
     return employee;
   }
 
-    @Test
-    @DisplayName("Test the EMPLOYEE_NOT_FOUND exception is thrown")
-    void testCreateLeaveRequestInvalidEmployee () {
-      when(employeeRepository.findById(anyString())).thenReturn(Optional.empty());
+  @Test
+  @DisplayName("Test the EMPLOYEE_NOT_FOUND exception is thrown")
+  void testCreateLeaveRequestInvalidEmployee() {
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.empty());
 
-      CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
-      assertThrows(BusinessException.class,
-          () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
+    CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
+    assertThrows(BusinessException.class,
+        () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
 
-      verify(leaveRequestRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Test the LEAVE_RQST_INVALID_PERIOD exception is thrown")
-    void testCreateLeaveRequestInvalidPeriod () {
-      EmployeeEty employee = new EmployeeEty();
-      when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
-
-      CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
-      leaveRequestDetails.setStartDate(LocalDate.now());
-      leaveRequestDetails.setEndDate(LocalDate.now().minusDays(1));
-
-      assertThrows(BusinessException.class,
-          () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
-
-      verify(leaveRequestRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Test the LEAVE_RQST_DIFF_YEARS exception is thrown")
-    void testCreateLeaveRequestDifferentYears () {
-      EmployeeEty employee = new EmployeeEty();
-      when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
-
-      CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
-      leaveRequestDetails.setStartDate(LocalDate.of(2023, 1, 1));
-      leaveRequestDetails.setEndDate(LocalDate.of(2024, 1, 1));
-
-      assertThrows(BusinessException.class,
-          () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
-
-      verify(leaveRequestRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Test the LEAVE_RQST_INVALID_PERIOD exception is thrown")
-    void testCreateLeaveRequestInvalidMonth () {
-      EmployeeEty employee = new EmployeeEty();
-      when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
-
-      CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
-      leaveRequestDetails.setStartDate(LocalDate.now().minusMonths(1));
-      leaveRequestDetails.setEndDate(LocalDate.now());
-
-      assertThrows(BusinessException.class,
-          () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
-
-      verify(leaveRequestRepository, never()).save(any());
-    }
-
-    @Test
-    public void getLeaveRequestsEmployeeNotFound () {
-      when(employeeRepository.findById(anyString())).thenThrow(
-          new BusinessException(
-              BusinessException.BusinessExceptionElement
-                  .builder()
-                  .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-                  .build()));
-
-      var ex = assertThrows(BusinessException.class, () -> {
-        employeeService.getLeaveRequests("1", LocalDate.of(2023, 8, 1),
-            LocalDate.of(2023, 8, 10));
-      });
-      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
-      assertEquals(ex.getError().getErrorDescription().getDevMsg(),
-          BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
-      assertEquals(ex.getError().getErrorDescription().getErrorCode(),
-          BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
-    }
-
-    @Test
-    public void getLeaveRequestsNoDates () {
-      EmployeeEty employee = new EmployeeEty();
-      employee.setId("1");
-      LeaveRequestEty request1 = new LeaveRequestEty();
-      LeaveRequestEty request2 = new LeaveRequestEty();
-      request1.setId(1L);
-      request1.setEmployee(employee);
-      request2.setId(2L);
-      request2.setEmployee(employee);
-      Set<LeaveRequestEty> requestsSet = new HashSet<>();
-      requestsSet.add(request1);
-      requestsSet.add(request2);
-      employee.setLeaveRequests(requestsSet);
-      when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
-      LeaveRequestDetailsList requests = employeeService.getLeaveRequests("1", null, null);
-      assertEquals(requests.getItems().size(), 2);
-      assertEquals(requests.getItems().get(0).getEmployeeDetails().getEmployeeId(), "1");
-      assertEquals(requests.getItems().get(0).getId(), 1L);
-      assertEquals(requests.getItems().get(1).getEmployeeDetails().getEmployeeId(), "1");
-      assertEquals(requests.getItems().get(1).getId(), 2L);
-    }
-
-    @Test
-    public void getLeaveRequests () {
-      EmployeeEty employee = new EmployeeEty();
-      employee.setId("1");
-      when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
-      LeaveRequestEty request1 = new LeaveRequestEty();
-      LeaveRequestEty request2 = new LeaveRequestEty();
-      LeaveRequestEty request3 = new LeaveRequestEty();
-
-      request1.setId(1L);
-      request1.setStartDate(LocalDate.of(2023, 8, 1));
-      request1.setEndDate(LocalDate.of(2023, 8, 5));
-      request1.setEmployee(employee);
-
-      request2.setId(2L);
-      request2.setStartDate(LocalDate.of(2023, 8, 7));
-      request2.setEndDate(LocalDate.of(2023, 8, 10));
-      request2.setEmployee(employee);
-
-      request3.setId(3L);
-      request3.setStartDate(LocalDate.of(2023, 8, 3));
-      request3.setEndDate(LocalDate.of(2023, 8, 11));
-      request3.setEmployee(employee);
-      Set<LeaveRequestEty> requestsSet = new HashSet<>();
-      requestsSet.add(request1);
-      requestsSet.add(request2);
-      requestsSet.add(request3);
-      employee.setLeaveRequests(requestsSet);
-
-      String id = "1";
-      LocalDate startDate = LocalDate.of(2023, 8, 1);
-      LocalDate endDate = LocalDate.of(2023, 8, 10);
-      LeaveRequestDetailsList requests = employeeService.getLeaveRequests(id, startDate, endDate);
-      assertEquals(requests.getItems().size(), 2);
-      assertEquals(requests.getItems().get(0).getEmployeeDetails().getEmployeeId(), "1");
-      assertEquals(requests.getItems().get(0).getId(), 1L);
-      assertEquals(requests.getItems().get(1).getEmployeeDetails().getEmployeeId(), "1");
-      assertEquals(requests.getItems().get(1).getId(), 2L);
-    }
+    verify(leaveRequestRepository, never()).save(any());
+  }
 
   @Test
-  void changeVacationDays()
-  {
+  @DisplayName("Test the LEAVE_RQST_INVALID_PERIOD exception is thrown")
+  void testCreateLeaveRequestInvalidPeriod() {
+    EmployeeEty employee = new EmployeeEty();
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+
+    CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
+    leaveRequestDetails.setStartDate(LocalDate.now());
+    leaveRequestDetails.setEndDate(LocalDate.now().minusDays(1));
+
+    assertThrows(BusinessException.class,
+        () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
+
+    verify(leaveRequestRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("Test the LEAVE_RQST_DIFF_YEARS exception is thrown")
+  void testCreateLeaveRequestDifferentYears() {
+    EmployeeEty employee = new EmployeeEty();
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+
+    CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
+    leaveRequestDetails.setStartDate(LocalDate.of(2023, 1, 1));
+    leaveRequestDetails.setEndDate(LocalDate.of(2024, 1, 1));
+
+    assertThrows(BusinessException.class,
+        () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
+
+    verify(leaveRequestRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("Test the LEAVE_RQST_INVALID_PERIOD exception is thrown")
+  void testCreateLeaveRequestInvalidMonth() {
+    EmployeeEty employee = new EmployeeEty();
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+
+    CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
+    leaveRequestDetails.setStartDate(LocalDate.now().minusMonths(1));
+    leaveRequestDetails.setEndDate(LocalDate.now());
+
+    assertThrows(BusinessException.class,
+        () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
+
+    verify(leaveRequestRepository, never()).save(any());
+  }
+
+  @Test
+  public void getLeaveRequestsEmployeeNotFound() {
+    when(employeeRepository.findById(anyString())).thenThrow(
+        new BusinessException(
+            BusinessException.BusinessExceptionElement
+                .builder()
+                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                .build()));
+
+    var ex = assertThrows(BusinessException.class, () -> {
+      employeeService.getLeaveRequests("1", LocalDate.of(2023, 8, 1),
+          LocalDate.of(2023, 8, 10));
+    });
+    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
+    assertEquals(ex.getError().getErrorDescription().getDevMsg(),
+        BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
+    assertEquals(ex.getError().getErrorDescription().getErrorCode(),
+        BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
+  }
+
+  @Test
+  public void getLeaveRequestsNoDates() {
+    EmployeeEty employee = new EmployeeEty();
+    employee.setId("1");
+    LeaveRequestEty request1 = new LeaveRequestEty();
+    LeaveRequestEty request2 = new LeaveRequestEty();
+    request1.setId(1L);
+    request1.setEmployee(employee);
+    request2.setId(2L);
+    request2.setEmployee(employee);
+    Set<LeaveRequestEty> requestsSet = new HashSet<>();
+    requestsSet.add(request1);
+    requestsSet.add(request2);
+    employee.setLeaveRequests(requestsSet);
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+    LeaveRequestDetailsList requests = employeeService.getLeaveRequests("1", null, null);
+    assertEquals(requests.getItems().size(), 2);
+    assertEquals(requests.getItems().get(0).getEmployeeDetails().getEmployeeId(), "1");
+    assertEquals(requests.getItems().get(0).getId(), 1L);
+    assertEquals(requests.getItems().get(1).getEmployeeDetails().getEmployeeId(), "1");
+    assertEquals(requests.getItems().get(1).getId(), 2L);
+  }
+
+  @Test
+  public void getLeaveRequests() {
+    EmployeeEty employee = new EmployeeEty();
+    employee.setId("1");
+    when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
+    LeaveRequestEty request1 = new LeaveRequestEty();
+    LeaveRequestEty request2 = new LeaveRequestEty();
+    LeaveRequestEty request3 = new LeaveRequestEty();
+
+    request1.setId(1L);
+    request1.setStartDate(LocalDate.of(2023, 8, 1));
+    request1.setEndDate(LocalDate.of(2023, 8, 5));
+    request1.setEmployee(employee);
+
+    request2.setId(2L);
+    request2.setStartDate(LocalDate.of(2023, 8, 7));
+    request2.setEndDate(LocalDate.of(2023, 8, 10));
+    request2.setEmployee(employee);
+
+    request3.setId(3L);
+    request3.setStartDate(LocalDate.of(2023, 8, 3));
+    request3.setEndDate(LocalDate.of(2023, 8, 11));
+    request3.setEmployee(employee);
+    Set<LeaveRequestEty> requestsSet = new HashSet<>();
+    requestsSet.add(request1);
+    requestsSet.add(request2);
+    requestsSet.add(request3);
+    employee.setLeaveRequests(requestsSet);
+
+    String id = "1";
+    LocalDate startDate = LocalDate.of(2023, 8, 1);
+    LocalDate endDate = LocalDate.of(2023, 8, 10);
+    LeaveRequestDetailsList requests = employeeService.getLeaveRequests(id, startDate, endDate);
+    assertEquals(requests.getItems().size(), 2);
+    assertEquals(requests.getItems().get(0).getEmployeeDetails().getEmployeeId(), "1");
+    assertEquals(requests.getItems().get(0).getId(), 1L);
+    assertEquals(requests.getItems().get(1).getEmployeeDetails().getEmployeeId(), "1");
+    assertEquals(requests.getItems().get(1).getId(), 2L);
+  }
+
+  @Test
+  void changeVacationDays() {
     EmpYearlyDaysOffEty yearlyDaysOff1 = new EmpYearlyDaysOffEty();
     EmpYearlyDaysOffEty yearlyDaysOff2 = new EmpYearlyDaysOffEty();
-
 
     EmployeeEty employee = new EmployeeEty();
     employee.setId("id1M");
@@ -846,7 +852,6 @@ class EmployeeServiceTest {
     employee.setContractEndDate(CONTRACT_END_DATE);
     employee.setUsername(USERNAME);
     employee.setTeam(TEAM_ETY);
-
 
     EmployeeEty employee2 = new EmployeeEty();
     employee2.setId("id2M");
@@ -882,22 +887,21 @@ class EmployeeServiceTest {
     set2.add(yearlyDaysOff2);
     employee2.setEmpYearlyDaysOff(set2);
 
-
     List<EmployeeEty> lista = new ArrayList<>();
     lista.add(employee);
     lista.add(employee2);
-    when(employeeRepository.findAllById(any())).thenReturn( lista );
+    when(employeeRepository.findAllById(any())).thenReturn(lista);
     when(tokenUtil.getLoggedUserId()).thenReturn("mdf_usr");
 
     VacationDaysModifyDetails v = new VacationDaysModifyDetails();
 
     v.setNoDays(1);
-    v.setType(VacationDaysChangeTypeEnum.INCREASE);
+    v.setType(VacationDaysChangeType.INCREASE);
     v.setDescription("d");
     List<String> idList = new ArrayList<>();
     idList.add("id1M");
     idList.add("id2M");
-    v.setEmployeeIds( idList );
+    v.setEmployeeIds(idList);
 
     employeeService.changeVacationDays(v);
 
@@ -907,11 +911,9 @@ class EmployeeServiceTest {
   }
 
   @Test
-  void changeVacationDaysNegativeDays()
-  {
+  void changeVacationDaysNegativeDays() {
 
     EmpYearlyDaysOffEty yearlyDaysOff2 = new EmpYearlyDaysOffEty();
-
 
     EmployeeEty employee2 = new EmployeeEty();
     employee2.setId("id2M");
@@ -929,35 +931,31 @@ class EmployeeServiceTest {
     employee2.setUsername("utilizator");
     employee2.setTeam(TEAM_ETY);
 
-
     yearlyDaysOff2.setTotalNoDays(25);
     yearlyDaysOff2.setYear(2023);
     yearlyDaysOff2.setEmployee(employee2);
     yearlyDaysOff2.setId(2L);
 
-
-
     Set<EmpYearlyDaysOffEty> set2 = new HashSet<>();
     set2.add(yearlyDaysOff2);
     employee2.setEmpYearlyDaysOff(set2);
 
-
     List<EmployeeEty> lista = new ArrayList<>();
     lista.add(employee2);
-    when(employeeRepository.findAllById(any())).thenReturn( lista );
-
+    when(employeeRepository.findAllById(any())).thenReturn(lista);
 
     VacationDaysModifyDetails v = new VacationDaysModifyDetails();
 
     v.setNoDays(111);
-    v.setType(VacationDaysChangeTypeEnum.DECREASE);
+    v.setType(VacationDaysChangeType.DECREASE);
     v.setDescription("d");
     List<String> idList = new ArrayList<>();
     idList.add("id2M");
-    v.setEmployeeIds( idList );
+    v.setEmployeeIds(idList);
 
-
-    var ex = assertThrows(BusinessException.class, () -> { employeeService.changeVacationDays(v);});
+    var ex = assertThrows(BusinessException.class, () -> {
+      employeeService.changeVacationDays(v);
+    });
     assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.NEGATIVE_DAYS_OFF);
 
   }
@@ -992,7 +990,7 @@ class EmployeeServiceTest {
         team,
         new HashSet<>(),
         new HashSet<>()
-        );
+    );
 
     when(teamRepository.findById(any())).thenReturn(Optional.of(team));
     //when(employeeRepository.findEmployeeByUsername(employee.getUsername())).thenReturn(Optional.empty());
@@ -1014,7 +1012,8 @@ class EmployeeServiceTest {
     userDetails.setRoles(Collections.singletonList("HR"));
     userDetails.setTeamDetails(new TeamDetails(3L, "HR"));
 
-    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(request, "hr_user_id");
+    EmployeeDetailsListItem returnedEmployee = employeeService.createEmployee(request,
+        "hr_user_id");
 
     EmployeeEty returned = employeeMapper.mapEmployeeDtoToEmployeeEty(returnedEmployee);
 
@@ -1087,6 +1086,7 @@ class EmployeeServiceTest {
     assertEquals(employee.getUsername(), loadedEmployee.getUsername());
     assertEquals(employee.getTeam(), loadedEmployee.getTeam());
   }
+
   @Test
   void updateEmployeeDetails_Success() {
     TeamEty teamEty = new TeamEty();

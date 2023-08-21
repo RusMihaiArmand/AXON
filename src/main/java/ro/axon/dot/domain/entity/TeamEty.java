@@ -1,4 +1,4 @@
-package ro.axon.dot.domain;
+package ro.axon.dot.domain.entity;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -7,8 +7,8 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
+import ro.axon.dot.domain.SrgKeyEntityTml;
+import ro.axon.dot.domain.enums.TeamStatus;
 
 @Entity
 @SequenceGenerator(name = "TEAM_ID_SQ", sequenceName = "TEAM_ID_SQ", allocationSize = 1)
