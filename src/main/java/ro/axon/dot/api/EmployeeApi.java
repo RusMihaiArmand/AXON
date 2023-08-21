@@ -24,19 +24,19 @@ import ro.axon.dot.service.EmployeeService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/employees")
 public class EmployeeApi {
 
   private final EmployeeService employeeService;
   private final JwtTokenUtil jwtTokenUtil;
 
-  @PostMapping(value = "/employees/register")
+  @PostMapping(value = "/register")
   public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
     return ResponseEntity.ok(
         employeeService.createEmployee(request, jwtTokenUtil.getLoggedUserId()));
   }
 
-  @GetMapping(value = "/employees")
+  @GetMapping
   public ResponseEntity<EmployeeDetailsList> getEmployeesList(
       @RequestParam(required = false) String name) {
 
@@ -45,13 +45,13 @@ public class EmployeeApi {
     return ResponseEntity.ok(employeesList);
   }
 
-  @PatchMapping(value = "/employees/{employeeId}/inactivate")
+  @PatchMapping(value = "/{employeeId}/inactivate")
   public ResponseEntity<Void> inactivateEmployee(@PathVariable String employeeId) {
     employeeService.inactivateEmployee(employeeId);
     return ResponseEntity.noContent().build();
   }
 
-  @PutMapping("employees/{employeeId}/requests/{requestId}")
+  @PutMapping("/{employeeId}/requests/{requestId}")
   public ResponseEntity<Void> editLeaveRequest(@PathVariable String employeeId,
       @PathVariable Long requestId,
       @Valid @RequestBody EditLeaveRequestDetails leaveRequestDetails) {
@@ -61,7 +61,7 @@ public class EmployeeApi {
     return ResponseEntity.noContent().build();
   }
 
-  @PatchMapping("employees/{idEmployee}/requests/{idRequest}")
+  @PatchMapping("/{idEmployee}/requests/{idRequest}")
   public ResponseEntity<Void> handleLeaveRequest(
       @PathVariable(name = "idEmployee") String idEmployee,
       @PathVariable(name = "idRequest") Long idRequest,
@@ -70,7 +70,7 @@ public class EmployeeApi {
     return ResponseEntity.noContent().build();
   }
 
-  @DeleteMapping("employees/{employeeId}/requests/{requestId}")
+  @DeleteMapping("/{employeeId}/requests/{requestId}")
   public ResponseEntity<Void> deleteLeaveRequest(@PathVariable String employeeId,
       @PathVariable Long requestId) {
 
@@ -79,7 +79,7 @@ public class EmployeeApi {
     return ResponseEntity.noContent().build();
   }
 
-  @GetMapping(value = {"/employees/{employeeId}/remaining-days-off"})
+  @GetMapping(value = {"/{employeeId}/remaining-days-off"})
   public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(
       @PathVariable String employeeId) {
 
@@ -88,7 +88,7 @@ public class EmployeeApi {
     return ResponseEntity.ok(remainingDaysOff);
   }
 
-  @PostMapping("/employees/{employeeId}/requests")
+  @PostMapping("/{employeeId}/requests")
   public ResponseEntity<Void> addLeaveRequest(@PathVariable String employeeId,
       @Valid @RequestBody CreateLeaveRequestDetails createLeaveRequestDetails) {
 
@@ -106,7 +106,7 @@ public class EmployeeApi {
     return ResponseEntity.ok(new ValidationResponse());
   }
 
-  @GetMapping(value = "/employees/{employeeId}/requests")
+  @GetMapping(value = "/{employeeId}/requests")
   public ResponseEntity<LeaveRequestDetailsList> getLeaveRequests(
       @PathVariable(name = "employeeId") String idEmployee,
       @RequestParam(name = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -114,14 +114,14 @@ public class EmployeeApi {
     return ResponseEntity.ok(employeeService.getLeaveRequests(idEmployee, startDate, endDate));
   }
 
-  @PostMapping("/employees/days-off")
+  @PostMapping("/days-off")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void modifyEmployeesDaysOff(
       @Valid @RequestBody VacationDaysModifyDetails vacationDaysModifyDetails) {
     employeeService.changeVacationDays(vacationDaysModifyDetails);
   }
 
-  @PatchMapping("/employees/{employeeId}")
+  @PatchMapping("/{employeeId}")
   public ResponseEntity<Void> updateEmployeeDetails(@PathVariable String employeeId,
       @Valid @RequestBody EmployeeUpdateRequest employeeUpdateRequest) {
 

@@ -277,7 +277,7 @@ class EmployeeApiTest {
       doThrow(new BusinessException(
               BusinessException.BusinessExceptionElement
                       .builder()
-                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT)
                       .build()))
               .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
@@ -286,8 +286,8 @@ class EmployeeApiTest {
                       .accept(MediaType.APPLICATION_JSON)
                       .content(getJsonAnswer()))
               .andExpect(status().isConflict())
-              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getDevMsg()))
-              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getErrorCode()));
+              .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT.getDevMsg()))
+              .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT.getErrorCode()));
   }
 
   @Test
@@ -386,7 +386,7 @@ class EmployeeApiTest {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PAST_DATE).build()));
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_UPDATE_IN_PAST).build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
@@ -399,7 +399,7 @@ class EmployeeApiTest {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_REJECTED).build()));
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_UPDATE_ALREADY_REJECTED).build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
@@ -412,7 +412,7 @@ class EmployeeApiTest {
 
     when(employeeService.editLeaveRequest(anyString(), anyLong(), any()))
         .thenThrow(new BusinessException(BusinessExceptionElement
-            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT)
             .build()));
 
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
