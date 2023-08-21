@@ -1,5 +1,6 @@
 package ro.axon.dot.service;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -59,21 +60,20 @@ public class EmployeeService {
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenUtil tokenUtil;
 
+  private final Clock clock;
+
   @Transactional(readOnly = true)
   public EmployeeDetailsList getEmployeesDetails(String name) {
     var employeeDetailsList = new EmployeeDetailsList();
-    List<EmployeeEty> employees;
+    List<EmployeeEty> employees = employeeRepository.findAll();
 
     Optional<String> searchName = Optional.ofNullable(name);
 
     if (searchName.isPresent() && !searchName.get().isEmpty()) {
-      employees = employeeRepository.findAll().stream()
-          .filter(employee ->
+      employees = employees.stream().filter(employee ->
               employee.getFirstName().toLowerCase().contains(searchName.get().toLowerCase()) ||
                   employee.getLastName().toLowerCase().contains(searchName.get().toLowerCase()))
           .collect(Collectors.toList());
-    } else {
-      employees = employeeRepository.findAll();
     }
 
     employeeDetailsList.setItems(employees.stream()
@@ -130,7 +130,7 @@ public class EmployeeService {
       throw new BusinessException(
           BusinessException.BusinessExceptionElement
               .builder()
-              .errorDescription(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION)
+              .errorDescription(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT)
               .build());
     }
   }
@@ -198,7 +198,7 @@ public class EmployeeService {
 
   public void inactivateEmployee(String employeeId) {
 
-    EmployeeEty employee = findEmployeeById(employeeId);
+    EmployeeEty employee = loadEmployeeById(employeeId);
 
     employee.setStatus("INACTIVE");
 
@@ -213,7 +213,7 @@ public class EmployeeService {
       Long requestId,
       EditLeaveRequestDetails editLeaveRequestDetails) {
 
-    EmployeeEty employee = findEmployeeById(employeeId);
+    EmployeeEty employee = loadEmployeeById(employeeId);
 
     LeaveRequestEty leaveRequest = checkLeaveRequestExists(employee, requestId);
 
@@ -223,26 +223,25 @@ public class EmployeeService {
 
       int countedDaysOff = checkCountedDaysOff(editLeaveRequestDetails, employee);
 
-      leaveRequest = setLeaveRequestFromDTO(leaveRequest, editLeaveRequestDetails, countedDaysOff);
+      setLeaveRequestFromDTO(leaveRequest, editLeaveRequestDetails, countedDaysOff);
     }
 
-    LeaveRequestDetailsListItem leaveRequestDetailsListItem = LeaveRequestMapper.INSTANCE
-        .mapLeaveRequestEtyToLeaveRequestDto(leaveRequestRepository.save(leaveRequest));
+    return LeaveRequestMapper.INSTANCE.mapLeaveRequestEtyToLeaveRequestDto(leaveRequestRepository
+        .save(leaveRequest));
 
-    return leaveRequestDetailsListItem;
   }
 
 
   public void deleteLeaveRequest(String employeeId, Long requestId) {
 
-    EmployeeEty employee = findEmployeeById(employeeId);
+    EmployeeEty employee = loadEmployeeById(employeeId);
 
     LeaveRequestEty leaveRequest = checkLeaveRequestExists(employee, requestId);
 
     if (leaveRequest.getStatus().equals(LeaveRequestStatus.REJECTED)) {
 
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
-          BusinessErrorCode.LEAVE_REQUEST_REJECTED).build());
+          BusinessErrorCode.LEAVE_REQUEST_DELETE_ALREADY_REJECTED).build());
     }
     if (leaveRequest.getStatus().equals(LeaveRequestStatus.APPROVED) &&
         leaveRequest.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))) {
@@ -258,13 +257,6 @@ public class EmployeeService {
     }
   }
 
-  private EmployeeEty findEmployeeById(String employeeId) {
-
-    return employeeRepository.findById(employeeId).orElseThrow(
-        () -> new BusinessException(BusinessExceptionElement.builder().errorDescription(
-            BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()
-        ));
-  }
 
   private LeaveRequestEty checkLeaveRequestExists(EmployeeEty employee, Long requestId) {
 
@@ -280,15 +272,15 @@ public class EmployeeService {
 
     if (editLeaveRequestDetails.getV() < leaveRequest.getV()) {
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
-          BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION).build());
+          BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT).build());
     }
     if (leaveRequest.getStatus().equals(LeaveRequestStatus.REJECTED)) {
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
-          BusinessErrorCode.LEAVE_REQUEST_REJECTED).build());
+          BusinessErrorCode.LEAVE_REQUEST_UPDATE_ALREADY_REJECTED).build());
     }
     if (editLeaveRequestDetails.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))) {
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
-          BusinessErrorCode.LEAVE_REQUEST_PAST_DATE).build());
+          BusinessErrorCode.LEAVE_REQUEST_UPDATE_IN_PAST).build());
     }
   }
 
@@ -330,12 +322,12 @@ public class EmployeeService {
   public void createLeaveRequest(String employeeId,
       CreateLeaveRequestDetails createLeaveRequestDetails) {
 
-    EmployeeEty employee = findEmployeeById(employeeId);
+    EmployeeEty employee = loadEmployeeById(employeeId);
 
     if (createLeaveRequestDetails.getEndDate()
         .isBefore(createLeaveRequestDetails.getStartDate())) {
       throw new BusinessException(
-          BusinessException.BusinessExceptionElement
+          BusinessExceptionElement
               .builder()
               .errorDescription(BusinessErrorCode.LEAVE_RQST_INVALID_PERIOD)
               .build());
@@ -344,7 +336,7 @@ public class EmployeeService {
     if (createLeaveRequestDetails.getStartDate().getYear()
         != createLeaveRequestDetails.getEndDate().getYear()) {
       throw new BusinessException(
-          BusinessException.BusinessExceptionElement
+          BusinessExceptionElement
               .builder()
               .errorDescription(BusinessErrorCode.LEAVE_RQST_DIFF_YEARS)
               .build());
@@ -356,7 +348,7 @@ public class EmployeeService {
     if (createLeaveRequestDetails.getStartDate().getMonthValue()
         < currentDate.getMonthValue()) {
       throw new BusinessException(
-          BusinessException.BusinessExceptionElement
+          BusinessExceptionElement
               .builder()
               .errorDescription(BusinessErrorCode.LEAVE_RQST_INVALID_MONTH)
               .build());
@@ -366,15 +358,14 @@ public class EmployeeService {
 
     LeaveRequestEty leaveRequestEty = new LeaveRequestEty();
 
-    leaveRequestEty = setLeaveRequestFromDTO(leaveRequestEty, createLeaveRequestDetails,
-        countedDaysOff);
+    setLeaveRequestFromDTO(leaveRequestEty, createLeaveRequestDetails, countedDaysOff);
 
     employee.addLeaveRequest(leaveRequestEty);
     employeeRepository.save(employee);
 
   }
 
-  private LeaveRequestEty setLeaveRequestFromDTO(LeaveRequestEty leaveRequestEty,
+  private void setLeaveRequestFromDTO(LeaveRequestEty leaveRequestEty,
       LeaveRequestCreateEditDetails leaveRequestDTO, int countedDaysOff) {
 
     leaveRequestEty.setNoDays(countedDaysOff);
@@ -384,12 +375,14 @@ public class EmployeeService {
     leaveRequestEty.setDescription(leaveRequestDTO.getDescription());
     leaveRequestEty.setStatus(LeaveRequestStatus.PENDING);
 
-    leaveRequestEty.setCrtUsr(tokenUtil.getLoggedUserId());
-    leaveRequestEty.setCrtTms(Instant.now());
     leaveRequestEty.setMdfUsr(tokenUtil.getLoggedUserId());
     leaveRequestEty.setMdfTms(Instant.now());
 
-    return leaveRequestEty;
+    if(leaveRequestDTO instanceof CreateLeaveRequestDetails){
+      leaveRequestEty.setCrtUsr(tokenUtil.getLoggedUserId());
+      leaveRequestEty.setCrtTms(Instant.now());
+    }
+
   }
 
   private int checkCountedDaysOff(LeaveRequestCreateEditDetails leaveRequestDate,
@@ -636,12 +629,7 @@ public class EmployeeService {
   @Transactional
   public void updateEmployeeDetails(String employeeId,
       EmployeeUpdateRequest employeeUpdateRequest) {
-    EmployeeEty employeeEty = employeeRepository.findById(employeeId)
-        .orElseThrow(() -> new BusinessException(
-            BusinessExceptionElement.builder()
-                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-                .build()
-        ));
+    EmployeeEty employeeEty = loadEmployeeById(employeeId);
 
     if (employeeUpdateRequest.getV() < employeeEty.getV()) {
       throw new BusinessException(
@@ -662,6 +650,9 @@ public class EmployeeService {
     employeeEty.setEmail(employeeUpdateRequest.getEmail());
     employeeEty.setRole(employeeUpdateRequest.getRole());
     employeeEty.setTeam(teamEty);
+
+    employeeEty.setMdfUsr(tokenUtil.getLoggedUserId());
+    employeeEty.setMdfTms(clock.instant());
 
     teamEty.getEmployees().add(employeeEty);
 
