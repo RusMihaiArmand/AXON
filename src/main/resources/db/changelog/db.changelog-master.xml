@@ -264,4 +264,10 @@
                   relativeToChangelogFile="true"/>
     </changeSet>
 
+    <changeSet author="paul.desktop" id="006">
+        <comment>Initial Leave Request load update</comment>
+        <loadUpdateData file="includes/data-leave-request-initial-load-update.csv" tableName="LEAVE_REQUEST"
+                  relativeToChangelogFile="true" primaryKey="ID"/>
+    </changeSet>
+
 </databaseChangeLog>
