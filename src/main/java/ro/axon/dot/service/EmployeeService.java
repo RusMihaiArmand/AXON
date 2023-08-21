@@ -56,7 +56,6 @@ public class EmployeeService {
   private final TeamRepository teamRepository;
   private final LeaveRequestRepository leaveRequestRepository;
   private final LegallyDaysOffService legallyDaysOffService;
-
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenUtil tokenUtil;
 
@@ -201,9 +200,7 @@ public class EmployeeService {
     EmployeeEty employee = loadEmployeeById(employeeId);
 
     employee.setStatus("INACTIVE");
-
     employee.setMdfTms(Instant.now());
-
     employee.setMdfUsr(tokenUtil.getLoggedUserId());
 
     employeeRepository.save(employee);
@@ -294,10 +291,9 @@ public class EmployeeService {
 
     Integer totalDaysOff = getTotalYearlyDaysOffFromEmployee(employee);
     List<LeaveRequestEty> approvedVacationLeaveRequests = getVacationLeaveRequests(employee);
-    Integer spentDaysOff;
     //  we assume that we can take the spent days off from the leave requests directly without checking for valid dates
     //  i.e. weekends/legal days off (validated on data input)
-    spentDaysOff = approvedVacationLeaveRequests.stream().mapToInt(LeaveRequestEty::getNoDays)
+    Integer spentDaysOff = approvedVacationLeaveRequests.stream().mapToInt(LeaveRequestEty::getNoDays)
         .reduce(0, Integer::sum);
     return totalDaysOff - spentDaysOff;
 
@@ -306,9 +302,8 @@ public class EmployeeService {
   @Transactional(readOnly = true)
   public RemainingDaysOff getEmployeeRemainingDaysOff(String employeeId) {
     var remainingDaysOff = new RemainingDaysOff();
-    EmployeeEty employee;
 
-    employee = employeeRepository.findById(employeeId)
+    EmployeeEty employee = employeeRepository.findById(employeeId)
         .orElseThrow(() -> new BusinessException(
             BusinessException.BusinessExceptionElement.builder()
                 .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));

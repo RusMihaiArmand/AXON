@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,16 +26,12 @@ import ro.axon.dot.model.TeamDetailsList;
 import ro.axon.dot.model.TeamDetailsListItem;
 import ro.axon.dot.service.TeamService;
 
-
 @ExtendWith(MockitoExtension.class)
 class TeamApiTest {
-
   @Mock
   private TeamService teamService;
-
   @InjectMocks
   private TeamApi teamApi;
-
   MockMvc mockMvc;
 
   @BeforeEach

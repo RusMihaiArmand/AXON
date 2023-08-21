@@ -14,17 +14,14 @@ import lombok.Setter;
 @Table(name = "LEGALLY_DAYS_OFF")
 public class LegallyDaysOffEty  {
 
-
     @Id
     @Column(name = "DATE")
     private LocalDate date;
-
     @Column(name = "DESCRIPTION")
     private String desc;
 
     public LocalDate getId() {
         return date;
     }
-
 
 }

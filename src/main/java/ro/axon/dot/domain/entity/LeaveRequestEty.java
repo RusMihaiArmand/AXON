@@ -2,7 +2,6 @@ package ro.axon.dot.domain.entity;
 
 import lombok.Getter;
 import lombok.Setter;
-
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.Instant;
@@ -16,7 +15,6 @@ import ro.axon.dot.domain.SrgKeyEntityTml;
 @Setter
 @Table(name = "LEAVE_REQUEST")
 public class LeaveRequestEty extends SrgKeyEntityTml<Long> {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "LEAVE_REQUEST_ID_SQ")

@@ -26,7 +26,6 @@ import static ro.axon.dot.EmployeeTestAttributes.ROLE;
 import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
-
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -49,7 +48,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ro.axon.dot.config.TimeConfiguration;
 import ro.axon.dot.config.component.JwtTokenUtil;
 import ro.axon.dot.domain.entity.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.entity.EmployeeEty;
@@ -80,13 +78,11 @@ import ro.axon.dot.domain.repositories.EmployeeRepository;
 import ro.axon.dot.domain.repositories.LeaveRequestRepository;
 import ro.axon.dot.domain.repositories.TeamRepository;
 
-
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
 
   @InjectMocks
   EmployeeService employeeService;
-
   @Mock
   JwtTokenUtil tokenUtil;
   @Mock
@@ -101,7 +97,6 @@ class EmployeeServiceTest {
   PasswordEncoder passwordEncoder;
   EmployeeMapper employeeMapper;
   Clock clock;
-
 
   @BeforeEach
   void setUp() {

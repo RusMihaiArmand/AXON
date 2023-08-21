@@ -2,7 +2,6 @@ package ro.axon.dot.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,18 +18,13 @@ import ro.axon.dot.domain.entity.LegallyDaysOffEty;
 import ro.axon.dot.domain.repositories.LegallyDaysOffRepository;
 import ro.axon.dot.model.LegallyDaysOffList;
 
-
 @ExtendWith(MockitoExtension.class)
 class LegallyDaysOffServiceTest {
-
-
   @Mock
   LegallyDaysOffRepository legallyDaysOffRepository;
-
   LegallyDaysOffPersistenceManager legallyDaysOffPersistenceManager;
   LegallyDaysOffService legallyDaysOffService;
   LegallyDaysOffList days;
-
   MockMvc mockMvc;
 
   @BeforeEach
@@ -43,8 +37,6 @@ class LegallyDaysOffServiceTest {
     legallyDaysOffPersistenceManager = new LegallyDaysOffPersistenceManager(legallyDaysOffRepository);
     legallyDaysOffService = new LegallyDaysOffService(legallyDaysOffPersistenceManager);
   }
-
-
 
   @Test
   void getDaysOffTest() {
@@ -111,21 +103,17 @@ class LegallyDaysOffServiceTest {
     legallyDaysOffEty[14].setDate(LocalDate.parse("2024-01-01"));
     legallyDaysOffEty[14].setDesc("2024");
 
-
     when(legallyDaysOffRepository.findAll()).thenReturn(Arrays.asList(legallyDaysOffEty));
 
     days = legallyDaysOffService.getOffDays(null,null);
     assertEquals(15,days.getDays().size());
 
-
     List<String> period = new ArrayList<>();
     period.add("2023-04"); period.add("2023-06");
     List<String> years = new ArrayList<>();
 
-
     days = legallyDaysOffService.getOffDays(period,years);
     assertEquals(5,days.getDays().size());
-
 
     years.add("2022");
     days = legallyDaysOffService.getOffDays(period,years);
@@ -135,11 +123,8 @@ class LegallyDaysOffServiceTest {
     days = legallyDaysOffService.getOffDays(period,years);
     assertEquals(14,days.getDays().size());
 
-
     days = legallyDaysOffService.getOffDays(null,years);
     assertEquals(14,days.getDays().size());
-
-
 
   }
 

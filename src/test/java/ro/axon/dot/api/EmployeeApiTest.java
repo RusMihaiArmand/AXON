@@ -30,7 +30,6 @@ import static ro.axon.dot.EmployeeTestAttributes.ROLE;
 import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 import static ro.axon.dot.EmployeeTestAttributes.V;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,7 +37,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-
 import java.util.List;
 import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,11 +79,9 @@ import ro.axon.dot.service.EmployeeService;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeApiTest {
-
   private final String employeeId = EmployeeTestAttributes.ID;
   private final Long requestId = 1L;
   private final String editLeaveRequestContent = "{ \"startDate\": \"2023-08-25\", \"endDate\": \"2023-08-28\", \"type\": \"VACATION\", \"description\": \"Vacation leave request\", \"v\": 1 }";
-
   public static final TeamDetailsListItem teamDetails1 = new TeamDetailsListItem();
   public static final TeamDetailsListItem teamDetails2 = new TeamDetailsListItem();
   public static final EmployeeDetailsListItem employee = new EmployeeDetailsListItem();
@@ -94,10 +90,8 @@ class EmployeeApiTest {
   JwtTokenUtil tokenUtil;
   @Mock
   EmployeeService employeeService;
-
   @InjectMocks
   EmployeeApi employeeApi;
-
   MockMvc mockMvc;
 
   @BeforeEach
@@ -429,7 +423,6 @@ class EmployeeApiTest {
     verify(employeeService, times(1)).deleteLeaveRequest(anyString(), anyLong());
   }
 
-
   private EmployeeDetailsListItem initEmployee() {
 
     EmployeeDetailsListItem employee = new EmployeeDetailsListItem();
@@ -472,7 +465,6 @@ class EmployeeApiTest {
         eq(createLeaveRequestDetails));
 
   }
-
 
   @Test
   void getRemainingDaysOffEmployeeNotFound() throws Exception {
@@ -596,8 +588,6 @@ class EmployeeApiTest {
         .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
   }
 
-
-
   @Test
   void changeVacationDays() throws Exception
   {
@@ -619,7 +609,6 @@ class EmployeeApiTest {
             .content(objectMapper.writeValueAsString(v))
         )
         .andExpect(status().is(204));
-
   }
 
   @Test
@@ -664,10 +653,8 @@ class EmployeeApiTest {
     request.setContractStartDate(LocalDate.now());
     request.setNoDaysOff(20);
 
-
     when(employeeService.createEmployee(request,"user_hr_id")).thenReturn(employeeDto);
     when(tokenUtil.getLoggedUserId()).thenReturn("user_hr_id");
-
 
     ResponseEntity<?> responseEntity = employeeApi.register(request);
 
