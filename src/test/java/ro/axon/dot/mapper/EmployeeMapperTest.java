@@ -2,7 +2,6 @@ package ro.axon.dot.mapper;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static ro.axon.dot.EmployeeTestAttributes.*;
-
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,6 @@ import ro.axon.dot.model.EmployeeDetailsListItem;
 class EmployeeMapperTest {
 
   EmployeeMapper employeeMapper = EmployeeMapper.INSTANCE;
-
   @Test
   void mapEmployeeEtyToEmployeeDto() {
 
@@ -47,7 +45,6 @@ class EmployeeMapperTest {
     employeeEty.setUsername(USERNAME);
     employeeEty.setTeam(TEAM_ETY);
     employeeEty.setEmpYearlyDaysOff(empYearlyDaysOffEtySet);
-
 
     EmployeeDetailsListItem employeeDetailsListItem = employeeMapper.mapEmployeeEtyToEmployeeDto(employeeEty);
 

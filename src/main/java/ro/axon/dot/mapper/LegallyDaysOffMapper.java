@@ -6,7 +6,6 @@ import org.mapstruct.factory.Mappers;
 import ro.axon.dot.domain.entity.LegallyDaysOffEty;
 import ro.axon.dot.model.LegallyDaysOffItem;
 
-
 @Mapper(unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface LegallyDaysOffMapper {
 

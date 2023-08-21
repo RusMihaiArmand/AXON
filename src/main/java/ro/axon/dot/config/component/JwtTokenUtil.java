@@ -40,12 +40,9 @@ import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 @Component
 @EnableConfigurationProperties(JwtTokenUtilProperties.class)
 public class JwtTokenUtil {
-
 	private final JwtTokenUtilProperties properties;
-
 	private RSAPublicKey publicKey;
 	private RSAPrivateKey privateKey;
-
 	private final Clock clock;
 
 	public JwtTokenUtil(JwtTokenUtilProperties properties, ResourceLoader resourceLoader, Clock clock) {
@@ -57,9 +54,9 @@ public class JwtTokenUtil {
 	private void readKeys(ResourceLoader resourceLoader){
 		Resource publicKeyResource = resourceLoader.getResource(properties.publicKeyLocation());
 		Resource privateKeyResource = resourceLoader.getResource(properties.privateKeyLocation());
-
 		String publicKeyString;
 		String privateKeyString;
+
 		try {
 			publicKeyString = new String(Files.readAllBytes(publicKeyResource.getFile().toPath()));
 			privateKeyString = new String(Files.readAllBytes(privateKeyResource.getFile().toPath()));
@@ -75,19 +72,16 @@ public class JwtTokenUtil {
 
 	public SignedJWT generateAccessToken(EmployeeEty employee, Instant currentTime) {
 		JWK jwk = new RSAKey.Builder(publicKey).keyID(properties.keyId()).privateKey(privateKey).build();
-
 		return setupToken(employee, jwk, "access", properties.accessTokenDuration(), currentTime);
 	}
 
 	public SignedJWT generateRefreshToken(EmployeeEty employee, Instant currentTime) {
 		JWK jwk = new RSAKey.Builder(publicKey).keyID(String.valueOf(UUID.randomUUID())).privateKey(privateKey).build();
-
 		return setupToken(employee, jwk, "refresh", properties.refreshTokenDuration(), currentTime);
 	}
 
 	public SignedJWT regenerateRefreshToken(EmployeeEty employee, SignedJWT token, Instant currentTime) {
 		JWK jwk = new RSAKey.Builder(publicKey).keyID(token.getHeader().getKeyID()).privateKey(privateKey).build();
-
 		return setupToken(employee, jwk, "refresh", properties.refreshTokenDuration(), currentTime);
 	}
 
@@ -166,7 +160,6 @@ public class JwtTokenUtil {
 	public String getAudienceFromToken(SignedJWT token) {
 		return getClaimSet(token).getSubject();
 	}
-
 	public String getUsernameFromToken(SignedJWT token) {
 
 		String username = (String) getClaimSet(token).getClaim("username");

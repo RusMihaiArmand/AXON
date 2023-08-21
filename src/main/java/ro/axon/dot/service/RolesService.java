@@ -13,7 +13,6 @@ import ro.axon.dot.model.EmployeeRolesList;
 public class RolesService {
 
   private final EmployeeRolesProperties employeeRolesProperties;
-
   @Transactional(readOnly = true)
   public EmployeeRolesList getEmployeeRoles() {
     EmployeeRolesList employeeRolesList = new EmployeeRolesList();

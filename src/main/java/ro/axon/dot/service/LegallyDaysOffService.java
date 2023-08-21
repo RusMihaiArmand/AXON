@@ -1,6 +1,5 @@
 package ro.axon.dot.service;
 
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -14,9 +13,7 @@ import ro.axon.dot.model.LegallyDaysOffList;
 @Service
 @Transactional(readOnly = true)
 public class LegallyDaysOffService {
-
   private final LegallyDaysOffPersistenceManager legallyDaysOffPersistenceManager;
-
 
   public LegallyDaysOffService(LegallyDaysOffPersistenceManager legallyDaysOffPersistenceManager) {
     this.legallyDaysOffPersistenceManager = legallyDaysOffPersistenceManager;

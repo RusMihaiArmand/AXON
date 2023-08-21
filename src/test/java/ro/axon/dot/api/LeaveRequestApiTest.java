@@ -16,11 +16,9 @@ import ro.axon.dot.domain.LeaveRequestQuery;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.service.LeaveRequestService;
-
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -28,15 +26,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 @ExtendWith(MockitoExtension.class)
 class LeaveRequestApiTest {
-
     @Mock
     private LeaveRequestService leaveRequestService;
     @InjectMocks
     private LeaveRequestApi leaveRequestApi;
-
     MockMvc mockMvc;
 
     @BeforeEach

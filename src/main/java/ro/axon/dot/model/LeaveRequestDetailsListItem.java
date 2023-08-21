@@ -3,7 +3,6 @@ package ro.axon.dot.model;
 import lombok.Data;
 import ro.axon.dot.domain.enums.LeaveRequestStatus;
 import ro.axon.dot.domain.enums.LeaveRequestType;
-
 import java.time.LocalDate;
 import java.time.Instant;
 

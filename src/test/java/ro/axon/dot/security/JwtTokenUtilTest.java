@@ -21,7 +21,6 @@ import static ro.axon.dot.EmployeeTestAttributes.ROLE;
 import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
-
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import java.text.ParseException;
@@ -43,10 +42,8 @@ import ro.axon.dot.exceptions.BusinessException;
 class JwtTokenUtilTest {
 
   private final JwtTokenUtilProperties properties;
-
   private final JwtTokenUtil tokenUtil;
   private EmployeeEty employee;
-
   private final Clock clock;
 
   public JwtTokenUtilTest() {

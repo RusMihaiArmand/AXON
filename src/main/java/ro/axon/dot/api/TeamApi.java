@@ -19,16 +19,12 @@ import ro.axon.dot.service.TeamService;
 public class TeamApi {
 
   private final TeamService teamService;
-
   @GetMapping
   public ResponseEntity<TeamDetailsList> getTeamDetailsList() {
-
     return ResponseEntity.ok(teamService.getActiveTeams());
   }
-
   @PostMapping
   public ResponseEntity<Void> createTeam(@Valid @RequestBody CreateTeamDetails teamDetails) {
-
     teamService.saveTeam(teamDetails);
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }

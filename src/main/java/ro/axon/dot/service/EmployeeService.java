@@ -56,7 +56,6 @@ public class EmployeeService {
   private final TeamRepository teamRepository;
   private final LeaveRequestRepository leaveRequestRepository;
   private final LegallyDaysOffService legallyDaysOffService;
-
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenUtil tokenUtil;
 
@@ -182,9 +181,18 @@ public class EmployeeService {
     return false;
   }
 
-  @Transactional(readOnly = true)
-  public boolean checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
+  private boolean isNoQueryParamsProvided(String usernameParam, String emailParam) {
+    Optional<String> username = Optional.ofNullable(usernameParam);
+    Optional<String> email = Optional.ofNullable(emailParam);
+    return !(username.isPresent() && !username.get().isEmpty()) && !(email.isPresent() && !email.get().isEmpty());
+  }
 
+  @Transactional(readOnly = true)
+  public void checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
+    if (isNoQueryParamsProvided(usernameParam, emailParam)) {
+      throw new BusinessException(BusinessException.BusinessExceptionElement.builder()
+              .errorDescription(BusinessErrorCode.EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST).build());
+    }
     if (isUsernameFound(usernameParam, employeeRepository)) {
       throw new BusinessException(BusinessException.BusinessExceptionElement.builder()
           .errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build());
@@ -193,7 +201,6 @@ public class EmployeeService {
       throw new BusinessException(BusinessException.BusinessExceptionElement.builder()
           .errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build());
     }
-    return true;
   }
 
   public void inactivateEmployee(String employeeId) {
@@ -294,10 +301,9 @@ public class EmployeeService {
 
     Integer totalDaysOff = getTotalYearlyDaysOffFromEmployee(employee);
     List<LeaveRequestEty> approvedVacationLeaveRequests = getVacationLeaveRequests(employee);
-    Integer spentDaysOff;
     //  we assume that we can take the spent days off from the leave requests directly without checking for valid dates
     //  i.e. weekends/legal days off (validated on data input)
-    spentDaysOff = approvedVacationLeaveRequests.stream().mapToInt(LeaveRequestEty::getNoDays)
+    Integer spentDaysOff = approvedVacationLeaveRequests.stream().mapToInt(LeaveRequestEty::getNoDays)
         .reduce(0, Integer::sum);
     return totalDaysOff - spentDaysOff;
 
@@ -306,9 +312,8 @@ public class EmployeeService {
   @Transactional(readOnly = true)
   public RemainingDaysOff getEmployeeRemainingDaysOff(String employeeId) {
     var remainingDaysOff = new RemainingDaysOff();
-    EmployeeEty employee;
 
-    employee = employeeRepository.findById(employeeId)
+    EmployeeEty employee = employeeRepository.findById(employeeId)
         .orElseThrow(() -> new BusinessException(
             BusinessException.BusinessExceptionElement.builder()
                 .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()));
