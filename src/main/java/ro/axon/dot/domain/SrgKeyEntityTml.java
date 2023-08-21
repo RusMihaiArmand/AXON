@@ -1,6 +1,5 @@
 package ro.axon.dot.domain;
 
-
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;

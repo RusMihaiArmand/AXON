@@ -13,8 +13,6 @@ import javax.validation.Payload;
 public @interface RejectionReasonRequired {
 
   String message() default "Rejection reason is required for rejected leave requests.";
-
   Class<?>[] groups() default {};
-
   Class<? extends Payload>[] payload() default {};
 }

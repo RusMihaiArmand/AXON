@@ -12,7 +12,6 @@ import ro.axon.dot.config.properties.JwtTokenUtilProperties;
 public class TokenUtilSetup {
 
   private JwtTokenUtilProperties properties;
-
   private JwtTokenUtil tokenUtil;
 
   public TokenUtilSetup() {

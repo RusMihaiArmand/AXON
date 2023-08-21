@@ -4,7 +4,6 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import java.time.LocalDate;
 import ro.axon.dot.domain.entity.QLeaveRequestEty;
 import ro.axon.dot.domain.enums.LeaveRequestStatus;
@@ -15,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class LeaveRequestQueryTest {
     private LeaveRequestQuery leaveRequestQuery;
     private QLeaveRequestEty root;
-
     static final BooleanExpression TRUE_EXP = Expressions.TRUE.isTrue();
 
     @BeforeEach

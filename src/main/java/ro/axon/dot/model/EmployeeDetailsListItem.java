@@ -8,7 +8,6 @@ import lombok.Data;
 public class EmployeeDetailsListItem {
 
   private String id;
-
   private String firstName;
   private String lastName;
   private String email;

@@ -1,7 +1,6 @@
 package ro.axon.dot.model;
 
 import lombok.Data;
-
 import java.time.Instant;
 import ro.axon.dot.domain.enums.TeamStatus;
 

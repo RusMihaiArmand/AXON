@@ -10,15 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 import ro.axon.dot.model.LegallyDaysOffList;
 import ro.axon.dot.service.LegallyDaysOffService;
 
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
 public class LegallyDaysOffApi {
 
   private final LegallyDaysOffService legallyDaysOffService;
-
-
   @GetMapping("misc/legally-days-off")
   public ResponseEntity<LegallyDaysOffList> getDaysOff( @RequestParam("periods") List<String> periods,
       @RequestParam("years") List<String> years) {

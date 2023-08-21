@@ -1,6 +1,5 @@
 package ro.axon.dot.service;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -19,7 +18,6 @@ import static ro.axon.dot.EmployeeTestAttributes.ROLE;
 import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
-
 import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
@@ -33,14 +31,10 @@ import ro.axon.dot.domain.entity.RefreshTokenEty;
 import ro.axon.dot.domain.repositories.RefreshTokenRepository;
 import ro.axon.dot.domain.enums.TokenStatus;
 
-
 class RefreshTokenServiceTest {
-
   @Mock
   RefreshTokenRepository repository;
-
   RefreshTokenService service;
-
   private EmployeeEty employee;
 
   private static EmployeeEty setupEmployee() {

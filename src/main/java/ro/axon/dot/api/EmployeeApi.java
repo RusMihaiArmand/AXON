@@ -29,7 +29,6 @@ import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.service.EmployeeService;
 
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/employees")
@@ -74,6 +73,7 @@ public class EmployeeApi {
       @PathVariable(name = "idEmployee") String idEmployee,
       @PathVariable(name = "idRequest") Long idRequest,
       @Valid @RequestBody LeaveRequestReview review) {
+
     employeeService.updateLeaveRequestStatus(idEmployee, idRequest, review);
     return ResponseEntity.noContent().build();
   }
@@ -91,9 +91,7 @@ public class EmployeeApi {
   public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(
       @PathVariable String employeeId) {
 
-    RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(employeeId);
-
-    return ResponseEntity.ok(remainingDaysOff);
+    return ResponseEntity.ok(employeeService.getEmployeeRemainingDaysOff(employeeId));
   }
 
   @PostMapping("/{employeeId}/requests")

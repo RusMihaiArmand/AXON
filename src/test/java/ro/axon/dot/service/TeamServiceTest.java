@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +23,6 @@ import ro.axon.dot.config.component.JwtTokenUtil;
 
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
-
   @Mock
   private TeamRepository teamRepository;
   @Mock

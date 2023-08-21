@@ -14,7 +14,6 @@ import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 public class RefreshTokenService {
 
   private final RefreshTokenRepository refreshTokenRepository;
-
   @Transactional
   public RefreshTokenEty saveRefreshToken(RefreshTokenEty refreshTokenEty) {
     return refreshTokenRepository.save(refreshTokenEty);

@@ -2,7 +2,6 @@ package ro.axon.dot.domain;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
-
 import java.time.LocalDate;
 import ro.axon.dot.domain.entity.QLeaveRequestEty;
 import ro.axon.dot.domain.enums.LeaveRequestStatus;
