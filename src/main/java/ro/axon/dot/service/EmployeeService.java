@@ -182,9 +182,18 @@ public class EmployeeService {
     return false;
   }
 
-  @Transactional(readOnly = true)
-  public boolean checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
+  private boolean isNoQueryParamsProvided(String usernameParam, String emailParam) {
+    Optional<String> username = Optional.ofNullable(usernameParam);
+    Optional<String> email = Optional.ofNullable(emailParam);
+    return !(username.isPresent() && !username.get().isEmpty()) && !(email.isPresent() && !email.get().isEmpty());
+  }
 
+  @Transactional(readOnly = true)
+  public void checkEmployeeUniqueCredentials(String usernameParam, String emailParam) {
+    if (isNoQueryParamsProvided(usernameParam, emailParam)) {
+      throw new BusinessException(BusinessException.BusinessExceptionElement.builder()
+              .errorDescription(BusinessErrorCode.EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST).build());
+    }
     if (isUsernameFound(usernameParam, employeeRepository)) {
       throw new BusinessException(BusinessException.BusinessExceptionElement.builder()
           .errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build());
@@ -193,7 +202,6 @@ public class EmployeeService {
       throw new BusinessException(BusinessException.BusinessExceptionElement.builder()
           .errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build());
     }
-    return true;
   }
 
   public void inactivateEmployee(String employeeId) {

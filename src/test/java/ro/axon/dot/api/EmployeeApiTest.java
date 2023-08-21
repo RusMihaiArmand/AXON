@@ -507,12 +507,25 @@ class EmployeeApiTest {
 
   @Test
   void checkEmployeeUniqueCredentials() throws Exception {
-    when(employeeService.checkEmployeeUniqueCredentials(anyString(), anyString())).thenReturn(true);
-
     mockMvc.perform(get("/api/v1/employee/validation")
             .param("username", USERNAME)
             .param("email", EMAIL))
-        .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value("true"));
+  }
+
+  @Test
+  void checkEmployeeUniqueCredentialsNoQueryParams() throws Exception {
+    doThrow(new BusinessException(BusinessExceptionElement
+            .builder().errorDescription(BusinessErrorCode.EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST).build()
+    )).when(employeeService).checkEmployeeUniqueCredentials("", "");
+
+    mockMvc.perform(get("/api/v1/employee/validation")
+                    .param("username", "")
+                    .param("email", "")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST.getErrorCode()));
   }
 
   @Test
@@ -526,8 +539,7 @@ class EmployeeApiTest {
             .param("email", EMAIL)
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isConflict())
-        .andExpect(
-            jsonPath("$.errorCode").value(BusinessErrorCode.USERNAME_DUPLICATE.getErrorCode()));
+        .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.USERNAME_DUPLICATE.getErrorCode()));
   }
 
   @Test

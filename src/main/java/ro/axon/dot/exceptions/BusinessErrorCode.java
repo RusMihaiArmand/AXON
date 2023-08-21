@@ -36,7 +36,8 @@ public enum BusinessErrorCode {
     NEGATIVE_DAYS_OFF("EDOT0025500", "Number of days off became negative.", HttpStatus.BAD_REQUEST),
     TEAM_NOT_FOUND("EDOT0026404", "Team not found", HttpStatus.NOT_FOUND),
     NO_JWT_AUTH_FOUND("EDOT0027401", "No JWT Auth found in Security Context!", HttpStatus.UNAUTHORIZED),
-    EMPLOYEE_VERSION_CONFLICT("EDOT0028409", "Conflict on employee version.", HttpStatus.CONFLICT);
+    EMPLOYEE_VERSION_CONFLICT("EDOT0028409", "Conflict on employee version.", HttpStatus.CONFLICT),
+    EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST("EDOT0029400", "The username and the email are not provided in the query params.", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String devMsg;
