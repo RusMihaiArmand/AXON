@@ -4,6 +4,8 @@ import java.time.Clock;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.core.io.DefaultResourceLoader;
+import ro.axon.dot.config.component.JwtTokenUtil;
+import ro.axon.dot.config.properties.JwtTokenUtilProperties;
 
 @Getter
 @Setter

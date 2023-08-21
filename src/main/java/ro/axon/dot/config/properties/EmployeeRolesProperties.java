@@ -1,4 +1,4 @@
-package ro.axon.dot.config;
+package ro.axon.dot.config.properties;
 
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;

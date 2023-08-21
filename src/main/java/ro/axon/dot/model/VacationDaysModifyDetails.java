@@ -6,7 +6,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Data;
-import ro.axon.dot.domain.VacationDaysChangeTypeEnum;
+import ro.axon.dot.domain.enums.VacationDaysChangeType;
 
 @Data
 public class VacationDaysModifyDetails {
@@ -17,7 +17,7 @@ public class VacationDaysModifyDetails {
   @Min(value = 1, message = "Number of days must be greater than zero")
   private int noDays;
   @NotNull(message = "Vacation days change type cannot be null")
-  private VacationDaysChangeTypeEnum type;
+  private VacationDaysChangeType type;
   @Size(max = 255)
   private String description;
 

@@ -3,8 +3,7 @@ package ro.axon.dot.model;
 import lombok.Data;
 
 import java.time.Instant;
-import ro.axon.dot.domain.TeamStatus;
-import ro.axon.dot.service.TeamService;
+import ro.axon.dot.domain.enums.TeamStatus;
 
 @Data
 public class TeamDetailsListItem {

@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
-import ro.axon.dot.domain.TeamEty;
+import ro.axon.dot.domain.entity.TeamEty;
 import ro.axon.dot.model.TeamDetailsListItem;
 
 /**

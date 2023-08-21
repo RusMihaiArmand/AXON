@@ -1,12 +1,10 @@
 package ro.axon.dot.service;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ro.axon.dot.domain.RefreshTokenEty;
-import ro.axon.dot.domain.RefreshTokenRepository;
+import ro.axon.dot.domain.entity.RefreshTokenEty;
+import ro.axon.dot.domain.repositories.RefreshTokenRepository;
 import ro.axon.dot.exceptions.BusinessErrorCode;
 import ro.axon.dot.exceptions.BusinessException;
 import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;

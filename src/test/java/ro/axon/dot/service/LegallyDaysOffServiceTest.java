@@ -14,9 +14,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import ro.axon.dot.config.LegallyDaysOffPersistenceManager;
-import ro.axon.dot.domain.LegallyDaysOffEty;
-import ro.axon.dot.domain.LegallyDaysOffRepository;
+import ro.axon.dot.domain.persistence.LegallyDaysOffPersistenceManager;
+import ro.axon.dot.domain.entity.LegallyDaysOffEty;
+import ro.axon.dot.domain.repositories.LegallyDaysOffRepository;
 import ro.axon.dot.model.LegallyDaysOffList;
 
 

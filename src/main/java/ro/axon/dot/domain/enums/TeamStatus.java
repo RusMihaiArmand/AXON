@@ -1,4 +1,4 @@
-package ro.axon.dot.domain;
+package ro.axon.dot.domain.enums;
 
 public enum TeamStatus {
     ACTIVE, DISABLED

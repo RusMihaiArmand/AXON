@@ -10,8 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.enums.LeaveRequestType;
 import ro.axon.dot.domain.LeaveRequestQuery;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
@@ -51,28 +51,29 @@ class LeaveRequestApiTest {
         LeaveRequestQuery leaveRequestQuery = new LeaveRequestQuery();
         LeaveRequestDetailsListItem leaveRequest1 = new LeaveRequestDetailsListItem();
         leaveRequest1.setId(1L);
-        leaveRequest1.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-        leaveRequest1.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+        leaveRequest1.setStatus(LeaveRequestStatus.PENDING);
+        leaveRequest1.setType(LeaveRequestType.MEDICAL);
 
         LeaveRequestDetailsListItem leaveRequest2 = new LeaveRequestDetailsListItem();
         leaveRequest2.setId(2L);
-        leaveRequest2.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-        leaveRequest2.setType(LeaveRequestEtyTypeEnum.VACATION);
+        leaveRequest2.setStatus(LeaveRequestStatus.PENDING);
+        leaveRequest2.setType(LeaveRequestType.VACATION);
 
         LeaveRequestDetailsListItem leaveRequest3 = new LeaveRequestDetailsListItem();
         leaveRequest3.setId(3L);
-        leaveRequest3.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-        leaveRequest3.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+        leaveRequest3.setStatus(LeaveRequestStatus.APPROVED);
+        leaveRequest3.setType(LeaveRequestType.MEDICAL);
 
         LeaveRequestDetailsListItem leaveRequest4 = new LeaveRequestDetailsListItem();
         leaveRequest4.setId(4L);
-        leaveRequest4.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-        leaveRequest4.setType(LeaveRequestEtyTypeEnum.VACATION);
+        leaveRequest4.setStatus(LeaveRequestStatus.APPROVED);
+        leaveRequest4.setType(LeaveRequestType.VACATION);
 
         LeaveRequestDetailsList requests = new LeaveRequestDetailsList();
-        requests.setItems(Stream.of(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4).filter(r -> r.getStatus() == LeaveRequestEtyStatusEnum.REJECTED).collect(Collectors.toList()));
+        requests.setItems(Stream.of(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4).filter(r -> r.getStatus() == LeaveRequestStatus.REJECTED).collect(Collectors.toList()));
 
-        when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withStatus(LeaveRequestEtyStatusEnum.REJECTED).build())).thenReturn(requests);
+        when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withStatus(
+            LeaveRequestStatus.REJECTED).build())).thenReturn(requests);
 
         mockMvc.perform(get("/api/v1/requests?status=rejected")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -84,23 +85,23 @@ class LeaveRequestApiTest {
     void getLeaveRequestDetailsListAll() throws Exception {
         LeaveRequestDetailsListItem leaveRequest1 = new LeaveRequestDetailsListItem();
         leaveRequest1.setId(1L);
-        leaveRequest1.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-        leaveRequest1.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+        leaveRequest1.setStatus(LeaveRequestStatus.PENDING);
+        leaveRequest1.setType(LeaveRequestType.MEDICAL);
 
         LeaveRequestDetailsListItem leaveRequest2 = new LeaveRequestDetailsListItem();
         leaveRequest2.setId(2L);
-        leaveRequest2.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-        leaveRequest2.setType(LeaveRequestEtyTypeEnum.VACATION);
+        leaveRequest2.setStatus(LeaveRequestStatus.PENDING);
+        leaveRequest2.setType(LeaveRequestType.VACATION);
 
         LeaveRequestDetailsListItem leaveRequest3 = new LeaveRequestDetailsListItem();
         leaveRequest3.setId(3L);
-        leaveRequest3.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-        leaveRequest3.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+        leaveRequest3.setStatus(LeaveRequestStatus.APPROVED);
+        leaveRequest3.setType(LeaveRequestType.MEDICAL);
 
         LeaveRequestDetailsListItem leaveRequest4 = new LeaveRequestDetailsListItem();
         leaveRequest4.setId(4L);
-        leaveRequest4.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-        leaveRequest4.setType(LeaveRequestEtyTypeEnum.VACATION);
+        leaveRequest4.setStatus(LeaveRequestStatus.APPROVED);
+        leaveRequest4.setType(LeaveRequestType.VACATION);
 
         LeaveRequestDetailsList requests = new LeaveRequestDetailsList();
         requests.setItems(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));
@@ -122,28 +123,29 @@ class LeaveRequestApiTest {
         LeaveRequestQuery leaveRequestQuery = new LeaveRequestQuery();
         LeaveRequestDetailsListItem leaveRequest1 = new LeaveRequestDetailsListItem();
         leaveRequest1.setId(1L);
-        leaveRequest1.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-        leaveRequest1.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+        leaveRequest1.setStatus(LeaveRequestStatus.PENDING);
+        leaveRequest1.setType(LeaveRequestType.MEDICAL);
 
         LeaveRequestDetailsListItem leaveRequest2 = new LeaveRequestDetailsListItem();
         leaveRequest2.setId(2L);
-        leaveRequest2.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-        leaveRequest2.setType(LeaveRequestEtyTypeEnum.VACATION);
+        leaveRequest2.setStatus(LeaveRequestStatus.PENDING);
+        leaveRequest2.setType(LeaveRequestType.VACATION);
 
         LeaveRequestDetailsListItem leaveRequest3 = new LeaveRequestDetailsListItem();
         leaveRequest3.setId(3L);
-        leaveRequest3.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-        leaveRequest3.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+        leaveRequest3.setStatus(LeaveRequestStatus.APPROVED);
+        leaveRequest3.setType(LeaveRequestType.MEDICAL);
 
         LeaveRequestDetailsListItem leaveRequest4 = new LeaveRequestDetailsListItem();
         leaveRequest4.setId(4L);
-        leaveRequest4.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-        leaveRequest4.setType(LeaveRequestEtyTypeEnum.VACATION);
+        leaveRequest4.setStatus(LeaveRequestStatus.APPROVED);
+        leaveRequest4.setType(LeaveRequestType.VACATION);
 
         LeaveRequestDetailsList requests = new LeaveRequestDetailsList();
-        requests.setItems(Stream.of(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4).filter(r -> r.getType() == LeaveRequestEtyTypeEnum.MEDICAL).collect(Collectors.toList()));
+        requests.setItems(Stream.of(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4).filter(r -> r.getType() == LeaveRequestType.MEDICAL).collect(Collectors.toList()));
 
-        when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withType(LeaveRequestEtyTypeEnum.MEDICAL).build())).thenReturn(requests);
+        when(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withType(
+            LeaveRequestType.MEDICAL).build())).thenReturn(requests);
 
         mockMvc.perform(get("/api/v1/requests?type=medical")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -158,23 +160,23 @@ class LeaveRequestApiTest {
         LeaveRequestQuery leaveRequestQuery = new LeaveRequestQuery();
         LeaveRequestDetailsListItem leaveRequest1 = new LeaveRequestDetailsListItem();
         leaveRequest1.setId(1L);
-        leaveRequest1.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-        leaveRequest1.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+        leaveRequest1.setStatus(LeaveRequestStatus.PENDING);
+        leaveRequest1.setType(LeaveRequestType.MEDICAL);
 
         LeaveRequestDetailsListItem leaveRequest2 = new LeaveRequestDetailsListItem();
         leaveRequest2.setId(2L);
-        leaveRequest2.setStatus(LeaveRequestEtyStatusEnum.PENDING);
-        leaveRequest2.setType(LeaveRequestEtyTypeEnum.VACATION);
+        leaveRequest2.setStatus(LeaveRequestStatus.PENDING);
+        leaveRequest2.setType(LeaveRequestType.VACATION);
 
         LeaveRequestDetailsListItem leaveRequest3 = new LeaveRequestDetailsListItem();
         leaveRequest3.setId(3L);
-        leaveRequest3.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-        leaveRequest3.setType(LeaveRequestEtyTypeEnum.MEDICAL);
+        leaveRequest3.setStatus(LeaveRequestStatus.APPROVED);
+        leaveRequest3.setType(LeaveRequestType.MEDICAL);
 
         LeaveRequestDetailsListItem leaveRequest4 = new LeaveRequestDetailsListItem();
         leaveRequest4.setId(4L);
-        leaveRequest4.setStatus(LeaveRequestEtyStatusEnum.APPROVED);
-        leaveRequest4.setType(LeaveRequestEtyTypeEnum.VACATION);
+        leaveRequest4.setStatus(LeaveRequestStatus.APPROVED);
+        leaveRequest4.setType(LeaveRequestType.VACATION);
 
         LeaveRequestDetailsList requests = new LeaveRequestDetailsList();
         requests.setItems(Arrays.asList(leaveRequest1, leaveRequest2, leaveRequest3, leaveRequest4));

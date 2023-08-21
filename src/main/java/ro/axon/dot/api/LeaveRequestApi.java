@@ -3,8 +3,8 @@ package ro.axon.dot.api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ro.axon.dot.domain.LeaveRequestEtyStatusEnum;
-import ro.axon.dot.domain.LeaveRequestEtyTypeEnum;
+import ro.axon.dot.domain.enums.LeaveRequestStatus;
+import ro.axon.dot.domain.enums.LeaveRequestType;
 import ro.axon.dot.domain.LeaveRequestQuery;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.service.LeaveRequestService;
@@ -31,17 +31,17 @@ public class LeaveRequestApi {
         Optional<String> typeParamOpt = Optional.ofNullable(typeParam);
         Optional<String> startDateParamOpt = Optional.ofNullable(startDateParam);
         Optional<String> endDateParamOpt = Optional.ofNullable(endDateParam);
-        LeaveRequestEtyStatusEnum status;
+        LeaveRequestStatus status;
         try {
-            status = LeaveRequestEtyStatusEnum.valueOf(statusParamOpt.orElseGet(() -> "n/a").toUpperCase());
+            status = LeaveRequestStatus.valueOf(statusParamOpt.orElseGet(() -> "n/a").toUpperCase());
         }
         catch (Exception e) {
             status = null;
         }
         String search = searchParamOpt.orElseGet(() -> null);
-        LeaveRequestEtyTypeEnum type;
+        LeaveRequestType type;
         try {
-            type = LeaveRequestEtyTypeEnum.valueOf(typeParamOpt.orElseGet(() -> "n/a").toUpperCase());
+            type = LeaveRequestType.valueOf(typeParamOpt.orElseGet(() -> "n/a").toUpperCase());
         }
         catch (Exception e) {
             type = null;

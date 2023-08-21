@@ -10,7 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ro.axon.dot.config.EmployeeRolesProperties;
+import ro.axon.dot.config.properties.EmployeeRolesProperties;
 import ro.axon.dot.model.EmployeeRolesList;
 
 @ExtendWith(MockitoExtension.class)

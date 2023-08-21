@@ -1,4 +1,4 @@
-package ro.axon.dot.domain;
+package ro.axon.dot.domain.entity;
 
 import java.time.LocalDate;
 import javax.persistence.Column;

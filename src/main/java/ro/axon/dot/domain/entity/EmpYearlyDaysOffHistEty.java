@@ -1,4 +1,4 @@
-package ro.axon.dot.domain;
+package ro.axon.dot.domain.entity;
 
 import java.time.Instant;
 import javax.persistence.Column;
@@ -14,6 +14,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import ro.axon.dot.domain.enums.VacationDaysChangeType;
 
 @Entity
 @SequenceGenerator(name = "EMP_YEARLY_DAYS_OFF_HIST_ID_SQ", sequenceName = "EMP_YEARLY_DAYS_OFF_HIST_ID_SQ", allocationSize = 1)
@@ -34,7 +35,7 @@ public class EmpYearlyDaysOffHistEty{
 
   @Enumerated(EnumType.STRING)
   @Column(name = "TYPE")
-  private VacationDaysChangeTypeEnum type;
+  private VacationDaysChangeType type;
 
   @Column(name = "CRT_USR")
   private String crtUsr;
