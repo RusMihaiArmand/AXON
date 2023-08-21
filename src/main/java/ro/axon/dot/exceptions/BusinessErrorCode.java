@@ -29,15 +29,16 @@ public enum BusinessErrorCode {
     LEAVE_REQUEST_VERSION_CONFLICT("EDOT0018409", "Conflict on leave request version.", HttpStatus.CONFLICT),
     USERNAME_DUPLICATE("EDOT0019409", "An employee with this username already exists.", HttpStatus.CONFLICT),
     EMAIL_DUPLICATE("EDOT0020409", "An employee with this email already exists.", HttpStatus.CONFLICT),
-    LEAVE_RQST_DIFF_YEARS("ED0T0021400", "Leave request has different years", HttpStatus.BAD_REQUEST),
+    LEAVE_RQST_DIFF_YEARS("ED0T0021400", "Cannot create leave request with dates in different years.", HttpStatus.BAD_REQUEST),
     LEAVE_RQST_INVALID_PERIOD("ED0T0022400", "Invalid period for leave request", HttpStatus.BAD_REQUEST),
-    LEAVE_RQST_INVALID_NUMBER_DAYS("ED0T0023400", "Leave request has too many days", HttpStatus.BAD_REQUEST),
+    LEAVE_RQST_INVALID_NUMBER_DAYS("ED0T0023400", "The number of days related to the leave request exceeds the number of days available.", HttpStatus.BAD_REQUEST),
     LEAVE_RQST_INVALID_MONTH("ED0T0024400", "Invalid month for leave request", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_NOT_PENDING("EDOT0025400", "Leave request must be pending in order to APPROVE or REJECT it.", HttpStatus.BAD_REQUEST),
     NEGATIVE_DAYS_OFF("EDOT0026500", "Number of days off became negative.", HttpStatus.BAD_REQUEST),
     TEAM_NOT_FOUND("EDOT0027404", "Team not found", HttpStatus.NOT_FOUND),
     NO_JWT_AUTH_FOUND("EDOT0028401", "No JWT Auth found in Security Context!", HttpStatus.UNAUTHORIZED),
-    EMPLOYEE_VERSION_CONFLICT("EDOT0029409", "Conflict on employee version.", HttpStatus.CONFLICT);
+    EMPLOYEE_VERSION_CONFLICT("EDOT0029409", "Conflict on employee version.", HttpStatus.CONFLICT),
+    EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST("EDOT0030400", "The username and the email are not provided in the query params.", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String devMsg;

@@ -18,17 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ro.axon.dot.config.component.JwtTokenUtil;
-import ro.axon.dot.model.CreateLeaveRequestDetails;
-import ro.axon.dot.model.EditLeaveRequestDetails;
-import ro.axon.dot.model.EmployeeDetailsList;
-import ro.axon.dot.model.EmployeeUpdateRequest;
-import ro.axon.dot.model.LeaveRequestDetailsList;
-import ro.axon.dot.model.LeaveRequestReview;
-import ro.axon.dot.model.RegisterRequest;
-import ro.axon.dot.model.RemainingDaysOff;
-import ro.axon.dot.model.VacationDaysModifyDetails;
+import ro.axon.dot.model.*;
 import ro.axon.dot.service.EmployeeService;
-
 
 @RestController
 @RequiredArgsConstructor
@@ -74,6 +65,7 @@ public class EmployeeApi {
       @PathVariable(name = "idEmployee") String idEmployee,
       @PathVariable(name = "idRequest") Long idRequest,
       @Valid @RequestBody LeaveRequestReview review) {
+
     employeeService.updateLeaveRequestStatus(idEmployee, idRequest, review);
     return ResponseEntity.noContent().build();
   }
@@ -91,9 +83,7 @@ public class EmployeeApi {
   public ResponseEntity<RemainingDaysOff> getEmployeeRemainingDaysOff(
       @PathVariable String employeeId) {
 
-    RemainingDaysOff remainingDaysOff = employeeService.getEmployeeRemainingDaysOff(employeeId);
-
-    return ResponseEntity.ok(remainingDaysOff);
+    return ResponseEntity.ok(employeeService.getEmployeeRemainingDaysOff(employeeId));
   }
 
   @PostMapping("/{employeeId}/requests")
@@ -106,14 +96,12 @@ public class EmployeeApi {
   }
 
   @GetMapping(value = "/employee/validation")
-  public ResponseEntity<Void> checkEmployeeUniqueCredentials(
+  public ResponseEntity<ValidationResponse> checkEmployeeUniqueCredentials(
       @RequestParam(name = "username", required = false) String username,
       @RequestParam(name = "email", required = false) String email) {
 
-    if (employeeService.checkEmployeeUniqueCredentials(username, email)) {
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.badRequest().build();
+    employeeService.checkEmployeeUniqueCredentials(username, email);
+    return ResponseEntity.ok(new ValidationResponse());
   }
 
   @GetMapping(value = "/{employeeId}/requests")

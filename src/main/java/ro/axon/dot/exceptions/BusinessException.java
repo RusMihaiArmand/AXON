@@ -1,16 +1,14 @@
 package ro.axon.dot.exceptions;
+
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-
 @Getter
 @AllArgsConstructor
 public class BusinessException extends RuntimeException {
     private final BusinessExceptionElement error;
-
-
     public BusinessException(Throwable cause, BusinessExceptionElement error) {
         super(cause);
         this.error = error;

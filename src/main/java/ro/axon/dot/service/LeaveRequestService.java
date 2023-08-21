@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ro.axon.dot.domain.entity.LeaveRequestEty;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.LeaveRequestDetailsList;
-
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -30,7 +29,5 @@ public class LeaveRequestService {
                 .map(LeaveRequestMapper.INSTANCE::mapLeaveRequestEtyToLeaveRequestDto).collect(Collectors.toList()));
         return leaveRequestDetailsList;
     }
-
-
 
 }

@@ -11,12 +11,10 @@ import ro.axon.dot.domain.enums.LeaveRequestStatus;
 import ro.axon.dot.domain.repositories.LeaveRequestRepository;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
-
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import ro.axon.dot.domain.repositories.EmployeeRepository;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -27,7 +25,6 @@ class LeaveRequestServiceTest {
     private LeaveRequestService leaveRequestService;
     @Mock
     private LeaveRequestRepository leaveRequestRepository;
-
     @Mock
     private EmployeeRepository employeeRepository;
 
