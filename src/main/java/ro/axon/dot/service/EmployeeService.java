@@ -552,7 +552,9 @@ public class EmployeeService {
     EmpYearlyDaysOffHistEty daysOffHistEty = new EmpYearlyDaysOffHistEty();
     daysOffHistEty.setEmpYearlyDaysOffEty(daysOff);
     daysOffHistEty.setNoDays(request.getNoDaysOff());
-    daysOffHistEty.setDescription("Initial number of days off for the current year");
+
+    final String INITIAL_DAYS_OFF_DESCRIPTION = "Initial number of days off for the current year";
+    daysOffHistEty.setDescription(INITIAL_DAYS_OFF_DESCRIPTION);
     daysOffHistEty.setType(VacationDaysChangeTypeEnum.INCREASE);
     daysOffHistEty.setCrtUsr(loggedUserId);
     daysOffHistEty.setCrtTms(now);
@@ -598,7 +600,7 @@ public class EmployeeService {
         .orElseThrow(() -> new BusinessException(
             BusinessExceptionElement
                 .builder()
-                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                .errorDescription(BusinessErrorCode.USER_NOT_FOUND)
                 .build()
         ));
   }

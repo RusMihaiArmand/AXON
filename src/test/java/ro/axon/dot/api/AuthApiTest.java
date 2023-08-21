@@ -248,12 +248,12 @@ class AuthApiTest {
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenThrow(new BusinessException(BusinessExceptionElement
         .builder()
-        .errorDescription(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND)
+        .errorDescription(BusinessErrorCode.INVALID_REFRESH_TOKEN)
         .build()));
 
     BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(tokenRequest));
 
-    assertEquals(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND, exception.getError().getErrorDescription());
+    assertEquals(BusinessErrorCode.INVALID_REFRESH_TOKEN, exception.getError().getErrorDescription());
   }
   @Test
   void refresh_token_revoked() {

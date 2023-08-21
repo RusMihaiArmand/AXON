@@ -4,7 +4,6 @@ import com.nimbusds.jwt.SignedJWT;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
@@ -51,13 +50,14 @@ public class AuthApi {
     EmployeeEty employee = employeeService.loadEmployeeByUsername(request.getUsername());
 
     verifyPassword(request.getPassword(), employee);
+    verifyEmployeeStatus(employee);
 
     Instant now = clock.instant();
 
     final SignedJWT accessToken = jwtTokenUtil.generateAccessToken(employee, now);
     final SignedJWT refreshToken = jwtTokenUtil.generateRefreshToken(employee, now);
 
-    createRefreshToken(refreshToken, employee, now);
+    createRefreshTokenEty(refreshToken, employee, now);
 
     Instant accessTokenExpiration = jwtTokenUtil.getExpirationDateFromToken(accessToken);
     Instant refreshTokenExpiration = jwtTokenUtil.getExpirationDateFromToken(refreshToken);
@@ -67,9 +67,9 @@ public class AuthApi {
         .accessToken(accessToken.serialize())
         .refreshToken(refreshToken.serialize())
         .accessTokenExpirationTime(
-            OffsetDateTime.ofInstant(accessTokenExpiration, ZoneId.systemDefault()).toLocalDateTime())
+            OffsetDateTime.ofInstant(accessTokenExpiration, ZoneOffset.UTC))
         .refreshTokenExpirationTime(
-            OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneId.systemDefault()).toLocalDateTime())
+            OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneOffset.UTC))
         .build());
   }
 
@@ -154,6 +154,15 @@ public class AuthApi {
     }
   }
 
+  private void verifyEmployeeStatus(EmployeeEty employee) {
+    if(employee.getStatus().equalsIgnoreCase("inactive")){
+      throw new BusinessException(BusinessExceptionElement
+          .builder()
+          .errorDescription(BusinessErrorCode.LOGIN_INACTIVE_USER)
+          .build());
+    }
+  }
+
   private void checkAudience(SignedJWT refreshToken, RefreshTokenEty refreshTokenEty) {
     if (!jwtTokenUtil.getAudienceFromToken(refreshToken).equals(refreshTokenEty.getEmployee().getId())) {
       Map<String, Object> variables = new HashMap<>();
@@ -185,13 +194,13 @@ public class AuthApi {
             .accessToken(accessToken.serialize())
             .refreshToken(refreshToken.serialize())
             .accessTokenExpirationTime(
-                OffsetDateTime.ofInstant(accessTokenExpiration, ZoneId.systemDefault()).toLocalDateTime())
+                OffsetDateTime.ofInstant(accessTokenExpiration, ZoneOffset.UTC))
             .refreshTokenExpirationTime(
-                OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneId.systemDefault()).toLocalDateTime())
+                OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneOffset.UTC))
         .build());
   }
 
-  private void createRefreshToken(SignedJWT refreshToken, EmployeeEty employee, Instant now) {
+  private void createRefreshTokenEty(SignedJWT refreshToken, EmployeeEty employee, Instant now) {
 
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty(refreshToken.getHeader().getKeyID(),
         TokenStatus.ACTIVE,

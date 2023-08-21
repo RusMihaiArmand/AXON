@@ -1,7 +1,5 @@
 package ro.axon.dot.service;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +24,7 @@ public class RefreshTokenService {
     return refreshTokenRepository.findById(keyId)
         .orElseThrow(() -> new BusinessException(BusinessExceptionElement
             .builder()
-            .errorDescription(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND)
+            .errorDescription(BusinessErrorCode.INVALID_REFRESH_TOKEN)
             .build()));
   }
 }
