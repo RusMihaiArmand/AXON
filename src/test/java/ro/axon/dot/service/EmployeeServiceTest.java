@@ -27,6 +27,7 @@ import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -99,7 +100,7 @@ class EmployeeServiceTest {
 
   PasswordEncoder passwordEncoder;
   EmployeeMapper employeeMapper;
-  TimeConfiguration timeConfiguration;
+  Clock clock;
 
 
   @BeforeEach
@@ -108,7 +109,7 @@ class EmployeeServiceTest {
     employeeMapper = new EmployeeMapperImpl();
     employeeService = new EmployeeService(employeeRepository, teamRepository,
         leaveRequestRepository,
-        legallyDaysOffService, passwordEncoder, tokenUtil, timeConfiguration);
+        legallyDaysOffService, passwordEncoder, tokenUtil, clock);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");

@@ -1,5 +1,6 @@
 package ro.axon.dot.service;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -45,7 +46,6 @@ import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.domain.repositories.EmployeeRepository;
 import ro.axon.dot.domain.repositories.LeaveRequestRepository;
 import ro.axon.dot.domain.repositories.TeamRepository;
-import ro.axon.dot.config.TimeConfiguration;
 
 @Service
 @RequiredArgsConstructor
@@ -60,7 +60,7 @@ public class EmployeeService {
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenUtil tokenUtil;
 
-  private final TimeConfiguration timeConfiguration;
+  private final Clock clock;
 
   @Transactional(readOnly = true)
   public EmployeeDetailsList getEmployeesDetails(String name) {
@@ -660,7 +660,7 @@ public class EmployeeService {
     employeeEty.setTeam(teamEty);
 
     employeeEty.setMdfUsr(tokenUtil.getLoggedUserId());
-    employeeEty.setMdfTms(timeConfiguration.clock().instant());
+    employeeEty.setMdfTms(clock.instant());
 
     teamEty.getEmployees().add(employeeEty);
 
