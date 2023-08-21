@@ -1,24 +1,24 @@
 package ro.axon.dot.model;
 
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 @Data
 @NoArgsConstructor
 public class EmployeeUpdateRequest {
 
-  @NonNull
+  @NotNull
   private String teamId;
-  @NonNull
+  @NotNull
   private String firstName;
-  @NonNull
+  @NotNull
   private String lastName;
-  @NonNull
+  @NotNull
   private String email;
-  @NonNull
+  @NotNull
   private String role;
-  @NonNull
+  @NotNull
   private Long v;
 
 }

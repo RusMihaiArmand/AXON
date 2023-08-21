@@ -48,6 +48,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import ro.axon.dot.config.TimeConfiguration;
 import ro.axon.dot.config.component.JwtTokenUtil;
 import ro.axon.dot.domain.entity.EmpYearlyDaysOffEty;
 import ro.axon.dot.domain.entity.EmployeeEty;
@@ -98,6 +99,7 @@ class EmployeeServiceTest {
 
   PasswordEncoder passwordEncoder;
   EmployeeMapper employeeMapper;
+  TimeConfiguration timeConfiguration;
 
 
   @BeforeEach
@@ -106,7 +108,7 @@ class EmployeeServiceTest {
     employeeMapper = new EmployeeMapperImpl();
     employeeService = new EmployeeService(employeeRepository, teamRepository,
         leaveRequestRepository,
-        legallyDaysOffService, passwordEncoder, tokenUtil);
+        legallyDaysOffService, passwordEncoder, tokenUtil, timeConfiguration);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -248,9 +250,9 @@ class EmployeeServiceTest {
       employeeService.updateLeaveRequestStatus("1", 1L, answer);
     });
 
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getErrorCode(),
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT.getErrorCode(),
         ex.getError().getErrorDescription().getErrorCode());
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION.getDevMsg(),
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT.getDevMsg(),
         ex.getError().getErrorDescription().getDevMsg());
     assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.CONFLICT);
   }
@@ -434,7 +436,7 @@ class EmployeeServiceTest {
     BusinessException exception = assertThrows(BusinessException.class,
         () -> employeeService.editLeaveRequest(ID, leaveRequestIdValue, leaveRequestEdit));
 
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_REJECTED,
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_UPDATE_ALREADY_REJECTED,
         exception.getError().getErrorDescription());
     verify(leaveRequestRepository, never()).save(any());
   }
@@ -466,7 +468,7 @@ class EmployeeServiceTest {
     BusinessException exception = assertThrows(BusinessException.class,
         () -> employeeService.editLeaveRequest(ID, leaveRequestIdValue, leaveRequestEdit));
 
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_PAST_DATE,
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_UPDATE_IN_PAST,
         exception.getError().getErrorDescription());
     verify(leaveRequestRepository, never()).save(any());
   }
@@ -498,7 +500,7 @@ class EmployeeServiceTest {
     BusinessException exception = assertThrows(BusinessException.class,
         () -> employeeService.editLeaveRequest(ID, leaveRequestIdValue, leaveRequestEdit));
 
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_PRECEDING_VERSION,
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT,
         exception.getError().getErrorDescription());
     verify(leaveRequestRepository, never()).save(any());
   }
@@ -575,7 +577,7 @@ class EmployeeServiceTest {
     BusinessException exception = assertThrows(BusinessException.class,
         () -> employeeService.deleteLeaveRequest(employeeId, requestId));
 
-    assertEquals(BusinessErrorCode.LEAVE_REQUEST_REJECTED,
+    assertEquals(BusinessErrorCode.LEAVE_REQUEST_DELETE_ALREADY_REJECTED,
         exception.getError().getErrorDescription());
 
     assertEquals(1, employeeEtyOptional.get().getLeaveRequests().size());
