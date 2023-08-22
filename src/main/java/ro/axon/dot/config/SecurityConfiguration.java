@@ -55,6 +55,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             "/api/v1/refresh", "/api/v1/logout").permitAll()
         .antMatchers(HttpMethod.POST,"/api/v1/employees/register", "/api/v1/teams").hasAnyRole("HR")
         .antMatchers(HttpMethod.PATCH, "/api/v1/employees/{employeeId}").hasAnyRole("HR")
+        .antMatchers(HttpMethod.POST, "/api/v1/employees/days-off").hasRole("HR")
         .antMatchers(HttpMethod.PATCH,"/api/v1/employees/{employeeId}/inactivate").hasAnyRole("HR")
         .antMatchers(HttpMethod.PATCH,"/api/v1/employees/{employeeId}/requests/{requestId}").hasAnyRole("HR", "TEAM_LEAD")
         .antMatchers(HttpMethod.GET,"/api/v1/requests").hasAnyRole("HR", "TEAM_LEAD")
