@@ -30,29 +30,29 @@ public class LeaveRequestApi {
         Optional<String> endDateParamOpt = Optional.ofNullable(endDateParam);
         LeaveRequestStatus status;
         try {
-            status = LeaveRequestStatus.valueOf(statusParamOpt.orElseGet(() -> "n/a").toUpperCase());
+            status = LeaveRequestStatus.valueOf(statusParamOpt.orElse("n/a").toUpperCase());
         }
         catch (Exception e) {
             status = null;
         }
-        String search = searchParamOpt.orElseGet(() -> null);
+        String search = searchParamOpt.orElse(null);
         LeaveRequestType type;
         try {
-            type = LeaveRequestType.valueOf(typeParamOpt.orElseGet(() -> "n/a").toUpperCase());
+            type = LeaveRequestType.valueOf(typeParamOpt.orElse("n/a").toUpperCase());
         }
         catch (Exception e) {
             type = null;
         }
         LocalDate startDate;
         try {
-            startDate = LocalDate.parse(startDateParamOpt.orElseGet(() -> "n/a"));
+            startDate = LocalDate.parse(startDateParamOpt.orElse("n/a"));
         }
         catch (Exception e) {
             startDate = null;
         }
         LocalDate endDate;
         try {
-            endDate = LocalDate.parse(endDateParamOpt.orElseGet(() -> "n/a"));
+            endDate = LocalDate.parse(endDateParamOpt.orElse("n/a"));
         }
         catch (Exception e) {
             endDate = null;
