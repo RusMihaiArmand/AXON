@@ -27,8 +27,8 @@ public class MiscApi {
   }
 
   @GetMapping("legally-days-off")
-  public ResponseEntity<LegallyDaysOffList> getDaysOff(@RequestParam("periods") List<String> periods,
-      @RequestParam("years") List<String> years) {
+  public ResponseEntity<LegallyDaysOffList> getDaysOff(@RequestParam(name = "periods", required = false) List<String> periods,
+      @RequestParam(name = "years", required = false) List<String> years) {
 
     return ResponseEntity.ok(legallyDaysOffService.getOffDays(periods, years));
   }
