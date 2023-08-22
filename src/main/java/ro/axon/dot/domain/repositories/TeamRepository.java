@@ -8,4 +8,9 @@ import ro.axon.dot.domain.enums.TeamStatus;
 
 public interface TeamRepository extends JpaRepository<TeamEty, Long>, QuerydslPredicateExecutor<TeamEty> {
   List<TeamEty> findByStatus(TeamStatus status);
+<<<<<<< Updated upstream
+=======
+  TeamEty findByName(String teamName);
+
+>>>>>>> Stashed changes
 }
