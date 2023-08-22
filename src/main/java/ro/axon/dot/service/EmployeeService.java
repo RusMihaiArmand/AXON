@@ -60,6 +60,7 @@ public class EmployeeService {
   private final JwtTokenUtil tokenUtil;
 
   private final Clock clock;
+  private final String INITIAL_DAYS_OFF_DESCRIPTION = "Initial number of days off for the current year";
 
   @Transactional(readOnly = true)
   public EmployeeDetailsList getEmployeesDetails(String name) {
@@ -557,7 +558,6 @@ public class EmployeeService {
     daysOffHistEty.setEmpYearlyDaysOffEty(daysOff);
     daysOffHistEty.setNoDays(request.getNoDaysOff());
 
-    final String INITIAL_DAYS_OFF_DESCRIPTION = "Initial number of days off for the current year";
     daysOffHistEty.setDescription(INITIAL_DAYS_OFF_DESCRIPTION);
     daysOffHistEty.setType(VacationDaysChangeType.INCREASE);
     daysOffHistEty.setCrtUsr(loggedUserId);
