@@ -81,6 +81,9 @@ import ro.axon.dot.service.EmployeeService;
 class EmployeeApiTest {
   private final String employeeId = EmployeeTestAttributes.ID;
   private final Long requestId = 1L;
+
+  private final String createLeaveRequestContent = "{ \"startDate\": \"2023-08-15\", \"endDate\": \"2023-08-17\", \"type\": \"MEDICAL\", \"description\": \"description\"}";
+
   private final String editLeaveRequestContent = "{ \"startDate\": \"2023-08-25\", \"endDate\": \"2023-08-28\", \"type\": \"VACATION\", \"description\": \"Vacation leave request\", \"v\": 1 }";
   public static final TeamDetailsListItem teamDetails1 = new TeamDetailsListItem();
   public static final TeamDetailsListItem teamDetails2 = new TeamDetailsListItem();
@@ -187,7 +190,7 @@ class EmployeeApiTest {
 
     EmployeeDetailsList employeesList = new EmployeeDetailsList();
 
-    employeesList.setItems(Arrays.asList(employee));
+    employeesList.setItems(List.of(employee));
 
     when(employeeService.getEmployeesDetails(anyString())).thenReturn(employeesList);
 
@@ -213,13 +216,11 @@ class EmployeeApiTest {
 
 
   @Test
-  void answerLeaveRequestEmployeeNotFound() throws Exception {
+  void handleLeaveRequestEmployeeNotFound() throws Exception {
     doThrow(new BusinessException(
         BusinessException.BusinessExceptionElement
-            .builder()
-            .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-            .build()))
-        .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
+            .builder().errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND).build()))
+            .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
     mockMvc.perform(patch("/api/v1/employees/1/requests/1")
                       .contentType(MediaType.APPLICATION_JSON)
@@ -231,31 +232,27 @@ class EmployeeApiTest {
   }
 
   @Test
-  void answerLeaveRequestRequestNotFound() throws Exception {
-      doThrow(new BusinessException(
-              BusinessException.BusinessExceptionElement
-                      .builder()
-                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND)
-                      .build()))
-              .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
+  void handleLeaveRequestRequestNotFound() throws Exception {
+    doThrow(new BusinessException(
+        BusinessException.BusinessExceptionElement
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND).build()))
+            .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
       mockMvc.perform(patch("/api/v1/employees/1/requests/1")
                       .contentType(MediaType.APPLICATION_JSON)
                       .accept(MediaType.APPLICATION_JSON)
                       .content(getJsonAnswer()))
-              .andExpect(status().isNotFound())
+              .andExpect(status().isBadRequest())
               .andExpect(jsonPath("$.message").value(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getDevMsg()))
               .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.LEAVE_REQUEST_NOT_FOUND.getErrorCode()));
   }
 
   @Test
-  void answerLeaveRequestRequestResolved() throws Exception {
-      doThrow(new BusinessException(
-              BusinessException.BusinessExceptionElement
-                      .builder()
-                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING)
-                      .build()))
-              .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
+  void handleLeaveRequestRequestResolved() throws Exception {
+    doThrow(new BusinessException(
+        BusinessException.BusinessExceptionElement
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_NOT_PENDING).build()))
+            .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
       mockMvc.perform(patch("/api/v1/employees/1/requests/1")
                       .contentType(MediaType.APPLICATION_JSON)
@@ -267,13 +264,11 @@ class EmployeeApiTest {
   }
 
   @Test
-  void answerLeaveRequestOutdatedVersion() throws Exception {
-      doThrow(new BusinessException(
-              BusinessException.BusinessExceptionElement
-                      .builder()
-                      .errorDescription(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT)
-                      .build()))
-              .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
+  void handleLeaveRequestOutdatedVersion() throws Exception {
+    doThrow(new BusinessException(
+        BusinessException.BusinessExceptionElement
+            .builder().errorDescription(BusinessErrorCode.LEAVE_REQUEST_VERSION_CONFLICT).build()))
+            .when(employeeService).updateLeaveRequestStatus(anyString(), anyLong(), any());
 
       mockMvc.perform(patch("/api/v1/employees/1/requests/1")
                       .contentType(MediaType.APPLICATION_JSON)
@@ -306,9 +301,7 @@ class EmployeeApiTest {
 
   @Test
   void inactivateEmployeeSuccess() throws Exception {
-    String employeeId = ID;
-
-    mockMvc.perform(patch("/api/v1/employees/" + employeeId + "/inactivate"))
+    mockMvc.perform(patch("/api/v1/employees/" + ID + "/inactivate"))
         .andExpect(status().isNoContent());
   }
 
@@ -340,7 +333,7 @@ class EmployeeApiTest {
   }
 
   @Test
-  void editLeaveRequestSucces() throws Exception {
+  void editLeaveRequestSuccess() throws Exception {
 
     mockMvc.perform(
             put("/api/v1/employees/" + employeeId + "/requests/" + requestId, employeeId, requestId)
@@ -372,7 +365,7 @@ class EmployeeApiTest {
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(editLeaveRequestContent))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -445,10 +438,98 @@ class EmployeeApiTest {
   }
 
   @Test
+  public void addLeaveRequestEmployeeNotFound() throws Exception {
+    doThrow(new BusinessException(
+            BusinessException.BusinessExceptionElement
+                    .builder()
+                    .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                    .build()))
+            .when(employeeService).createLeaveRequest(anyString(), any());
+
+    mockMvc.perform(post("/api/v1/employees/1/requests")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createLeaveRequestContent))
+            .andExpect(status().isNotFound());
+
+    verify(employeeService, times(1)).createLeaveRequest(anyString(), any());
+  }
+
+  @Test
+  public void addLeaveRequestInvalidPeriod() throws Exception {
+    doThrow(new BusinessException(
+            BusinessException.BusinessExceptionElement
+                    .builder()
+                    .errorDescription(BusinessErrorCode.LEAVE_RQST_INVALID_PERIOD)
+                    .build()))
+            .when(employeeService).createLeaveRequest(anyString(), any());
+
+    mockMvc.perform(post("/api/v1/employees/1/requests")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createLeaveRequestContent))
+            .andExpect(status().isBadRequest());
+
+    verify(employeeService, times(1)).createLeaveRequest(anyString(), any());
+  }
+
+  @Test
+  public void addLeaveRequestInvalidMonth() throws Exception {
+    doThrow(new BusinessException(
+            BusinessException.BusinessExceptionElement
+                    .builder()
+                    .errorDescription(BusinessErrorCode.LEAVE_RQST_INVALID_MONTH)
+                    .build()))
+            .when(employeeService).createLeaveRequest(anyString(), any());
+
+    mockMvc.perform(post("/api/v1/employees/1/requests")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createLeaveRequestContent))
+            .andExpect(status().isBadRequest());
+
+    verify(employeeService, times(1)).createLeaveRequest(anyString(), any());
+  }
+
+  @Test
+  public void addLeaveRequestInvalidNumberOfDays() throws Exception {
+    doThrow(new BusinessException(
+            BusinessException.BusinessExceptionElement
+                    .builder()
+                    .errorDescription(BusinessErrorCode.LEAVE_RQST_INVALID_NUMBER_DAYS)
+                    .build()))
+            .when(employeeService).createLeaveRequest(anyString(), any());
+
+    mockMvc.perform(post("/api/v1/employees/1/requests")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createLeaveRequestContent))
+            .andExpect(status().isBadRequest());
+
+    verify(employeeService, times(1)).createLeaveRequest(anyString(), any());
+  }
+
+  @Test
+  public void addLeaveRequestDifferentYears() throws Exception {
+    doThrow(new BusinessException(
+            BusinessException.BusinessExceptionElement
+                    .builder()
+                    .errorDescription(BusinessErrorCode.LEAVE_RQST_DIFF_YEARS)
+                    .build()))
+            .when(employeeService).createLeaveRequest(anyString(), any());
+
+    mockMvc.perform(post("/api/v1/employees/1/requests")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createLeaveRequestContent))
+            .andExpect(status().isBadRequest());
+
+    verify(employeeService, times(1)).createLeaveRequest(anyString(), any());
+  }
+
+  @Test
   @DisplayName("When add leave request then return status code")
   void whenAddLeaveRequestThenReturnStatus() throws Exception {
-    String createLeaveRequestContent = "{ \"startDate\": \"2023-08-15\", \"endDate\": \"2023-08-17\", \"type\": \"MEDICAL\", \"description\": \"description\"}";
-
     CreateLeaveRequestDetails createLeaveRequestDetails = new CreateLeaveRequestDetails();
     createLeaveRequestDetails.setType(LeaveRequestType.MEDICAL);
     createLeaveRequestDetails.setStartDate(LocalDate.of(2023,8, 15));
@@ -499,7 +580,7 @@ class EmployeeApiTest {
 
   @Test
   void checkEmployeeUniqueCredentials() throws Exception {
-    mockMvc.perform(get("/api/v1/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/employee/validation")
             .param("username", USERNAME)
             .param("email", EMAIL))
             .andExpect(status().isOk())
@@ -512,7 +593,7 @@ class EmployeeApiTest {
             .builder().errorDescription(BusinessErrorCode.EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST).build()
     )).when(employeeService).checkEmployeeUniqueCredentials("", "");
 
-    mockMvc.perform(get("/api/v1/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/employee/validation")
                     .param("username", "")
                     .param("email", "")
                     .contentType(MediaType.APPLICATION_JSON))
@@ -526,7 +607,7 @@ class EmployeeApiTest {
         .builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build()
     )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
 
-    mockMvc.perform(get("/api/v1/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/employee/validation")
             .param("username", USERNAME)
             .param("email", EMAIL)
             .contentType(MediaType.APPLICATION_JSON))
@@ -540,7 +621,7 @@ class EmployeeApiTest {
         .builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build()
     )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
 
-    mockMvc.perform(get("/api/v1/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/employee/validation")
             .param("username", USERNAME)
             .param("email", EMAIL)
             .contentType(MediaType.APPLICATION_JSON))
