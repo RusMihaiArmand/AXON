@@ -442,7 +442,7 @@ public class EmployeeService {
 
     List<LeaveRequestEty> leaveRequests = employeeOptional.get().getLeaveRequests().stream()
         .toList();
-    if (startDate != null) {
+    if (startDate != null && endDate != null) {
       leaveRequests = leaveRequests
           .stream()
           .filter(request ->
