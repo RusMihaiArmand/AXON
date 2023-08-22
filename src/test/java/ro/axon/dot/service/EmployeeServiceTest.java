@@ -31,6 +31,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -67,6 +68,7 @@ import ro.axon.dot.model.EmployeeUpdateRequest;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestDetailsListItem;
 import ro.axon.dot.model.LeaveRequestReview;
+import ro.axon.dot.model.LegallyDaysOffList;
 import ro.axon.dot.model.RegisterRequest;
 import ro.axon.dot.model.RemainingDaysOff;
 import ro.axon.dot.model.TeamDetails;
@@ -75,8 +77,6 @@ import ro.axon.dot.model.VacationDaysModifyDetails;
 import ro.axon.dot.domain.repositories.EmployeeRepository;
 import ro.axon.dot.domain.repositories.LeaveRequestRepository;
 import ro.axon.dot.domain.repositories.TeamRepository;
-
-import ro.axon.dot.model.*;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
@@ -96,17 +96,16 @@ class EmployeeServiceTest {
 
   PasswordEncoder passwordEncoder;
   EmployeeMapper employeeMapper;
-
-  @Mock
   Clock clock;
 
   @BeforeEach
   void setUp() {
     passwordEncoder = new BCryptPasswordEncoder();
     employeeMapper = new EmployeeMapperImpl();
+    clock = Clock.systemDefaultZone();
+
     employeeService = new EmployeeService(employeeRepository, teamRepository,
-        leaveRequestRepository,
-        legallyDaysOffService, passwordEncoder, tokenUtil, clock);
+        leaveRequestRepository, legallyDaysOffService, passwordEncoder, tokenUtil, clock);
 
     TEAM_ETY.setId(1L);
     TEAM_ETY.setName("AxonTeam");
@@ -116,7 +115,7 @@ class EmployeeServiceTest {
   }
 
   @Test
-  void getEmployeesDetails() throws Exception {
+  void getEmployeesDetails() {
 
     EmployeeEty employee = initEmployee();
 
@@ -191,7 +190,7 @@ class EmployeeServiceTest {
         BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
     assertEquals(ex.getError().getErrorDescription().getDevMsg(),
         BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
-    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
+    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
   }
 
   @Test
@@ -665,15 +664,15 @@ class EmployeeServiceTest {
     when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
 
     CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
-    leaveRequestDetails.setStartDate(LocalDate.now());
-    leaveRequestDetails.setEndDate(LocalDate.now().minusDays(1));
+    leaveRequestDetails.setStartDate(LocalDate.ofInstant(clock.instant(), clock.getZone()));
+    leaveRequestDetails.setEndDate(LocalDate.ofInstant(clock.instant(), clock.getZone()).minusDays(1));
 
-      BusinessException ex = assertThrows(BusinessException.class,
-          () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
+    BusinessException ex = assertThrows(BusinessException.class,
+        () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
 
-      assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.LEAVE_RQST_INVALID_PERIOD);
-      verify(leaveRequestRepository, never()).save(any());
-    }
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.LEAVE_RQST_INVALID_PERIOD);
+    verify(leaveRequestRepository, never()).save(any());
+  }
 
   @Test
   @DisplayName("Test the LEAVE_RQST_DIFF_YEARS exception is thrown")
@@ -685,12 +684,12 @@ class EmployeeServiceTest {
     leaveRequestDetails.setStartDate(LocalDate.of(2023, 1, 1));
     leaveRequestDetails.setEndDate(LocalDate.of(2024, 1, 1));
 
-      BusinessException ex = assertThrows(BusinessException.class,
-          () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
+    BusinessException ex = assertThrows(BusinessException.class,
+        () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
 
-      assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.LEAVE_RQST_DIFF_YEARS);
-      verify(leaveRequestRepository, never()).save(any());
-    }
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.LEAVE_RQST_DIFF_YEARS);
+    verify(leaveRequestRepository, never()).save(any());
+  }
 
   @Test
   @DisplayName("Test the LEAVE_RQST_INVALID_PERIOD exception is thrown")
@@ -699,15 +698,15 @@ class EmployeeServiceTest {
     when(employeeRepository.findById(anyString())).thenReturn(Optional.of(employee));
 
     CreateLeaveRequestDetails leaveRequestDetails = new CreateLeaveRequestDetails();
-    leaveRequestDetails.setStartDate(LocalDate.now().minusMonths(1));
-    leaveRequestDetails.setEndDate(LocalDate.now());
+    leaveRequestDetails.setStartDate(LocalDate.ofInstant(clock.instant(), clock.getZone()).minusMonths(1));
+    leaveRequestDetails.setEndDate(LocalDate.ofInstant(clock.instant(), clock.getZone()));
 
-      BusinessException ex = assertThrows(BusinessException.class,
-              () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
+    BusinessException ex = assertThrows(BusinessException.class,
+        () -> employeeService.createLeaveRequest("1", leaveRequestDetails));
 
-      assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.LEAVE_RQST_INVALID_MONTH);
-      verify(leaveRequestRepository, never()).save(any());
-    }
+    assertEquals(ex.getError().getErrorDescription(), BusinessErrorCode.LEAVE_RQST_INVALID_MONTH);
+    verify(leaveRequestRepository, never()).save(any());
+  }
 
   @Test
   @DisplayName("Test the LEAVE_RQST_INVALID_NUMBER_DAYS exception is thrown")
@@ -758,25 +757,25 @@ class EmployeeServiceTest {
     verify(employeeRepository, times(1)).save(any());
   }
 
-    @Test
-    public void getLeaveRequestsEmployeeNotFound () {
-      when(employeeRepository.findById(anyString())).thenThrow(
-          new BusinessException(
-              BusinessException.BusinessExceptionElement
-                  .builder()
-                  .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
-                  .build()));
+  @Test
+  public void getLeaveRequestsEmployeeNotFound () {
+    when(employeeRepository.findById(anyString())).thenThrow(
+        new BusinessException(
+            BusinessException.BusinessExceptionElement
+                .builder()
+                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                .build()));
 
-      BusinessException ex = assertThrows(BusinessException.class, () -> {
-        employeeService.getLeaveRequests("1", LocalDate.of(2023, 8, 1),
-            LocalDate.of(2023, 8, 10));
-      });
-      assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.NOT_FOUND);
-      assertEquals(ex.getError().getErrorDescription().getDevMsg(),
-          BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
-      assertEquals(ex.getError().getErrorDescription().getErrorCode(),
-          BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
-    }
+    BusinessException ex = assertThrows(BusinessException.class, () -> {
+      employeeService.getLeaveRequests("1", LocalDate.of(2023, 8, 1),
+          LocalDate.of(2023, 8, 10));
+    });
+    assertEquals(ex.getError().getErrorDescription().getStatus(), HttpStatus.BAD_REQUEST);
+    assertEquals(ex.getError().getErrorDescription().getDevMsg(),
+        BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg());
+    assertEquals(ex.getError().getErrorDescription().getErrorCode(),
+        BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode());
+  }
 
   @Test
   public void getLeaveRequestsNoDates() {
@@ -976,9 +975,9 @@ class EmployeeServiceTest {
     team.setId(1L);
     team.setName("Backend");
     team.setCrtUsr("crtUsr");
-    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setCrtTms(clock.instant());
     team.setMdfUsr("mdfUsr");
-    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfTms(clock.instant());
     team.setStatus(TeamStatus.ACTIVE);
 
     EmployeeEty employee = new EmployeeEty(
@@ -987,13 +986,13 @@ class EmployeeServiceTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         team,
@@ -1012,7 +1011,7 @@ class EmployeeServiceTest {
     request.setTeamId(1L);
     request.setRole("USER");
     request.setEmail("jon@mail.com");
-    request.setContractStartDate(LocalDate.now());
+    request.setContractStartDate(LocalDate.ofInstant(clock.instant(), clock.getZone()));
     request.setNoDaysOff(20);
 
     UserDetailsResponse userDetails = new UserDetailsResponse();
@@ -1051,9 +1050,9 @@ class EmployeeServiceTest {
     team.setId(1L);
     team.setName("Backend");
     team.setCrtUsr("crtUsr");
-    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setCrtTms(clock.instant());
     team.setMdfUsr("mdfUsr");
-    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfTms(clock.instant());
     team.setStatus(TeamStatus.ACTIVE);
 
     EmployeeEty employee = new EmployeeEty(
@@ -1062,13 +1061,13 @@ class EmployeeServiceTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         team,

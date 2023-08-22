@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.nimbusds.jwt.SignedJWT;
 import java.time.Clock;
@@ -15,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashSet;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +37,8 @@ import ro.axon.dot.model.LoginRequest;
 import ro.axon.dot.model.LoginResponse;
 import ro.axon.dot.model.RefreshTokenRequest;
 import ro.axon.dot.config.component.JwtTokenUtil;
+import ro.axon.dot.model.TeamDetails;
+import ro.axon.dot.model.UserDetailsResponse;
 import ro.axon.dot.security.TokenUtilSetup;
 import ro.axon.dot.service.EmployeeService;
 import ro.axon.dot.service.RefreshTokenService;
@@ -68,13 +73,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -93,8 +98,8 @@ class AuthApiTest {
     assertNotNull(responseEntity.getBody());
 
     LoginResponse response = (LoginResponse) responseEntity.getBody();
-    assertTrue(response.getAccessTokenExpirationTime().toInstant(ZoneOffset.UTC).isAfter(clock.instant()));
-    assertTrue(response.getRefreshTokenExpirationTime().toInstant(ZoneOffset.UTC).isAfter(clock.instant()));
+    assertTrue(response.getAccessTokenExpirationTime().toInstant().isAfter(clock.instant()));
+    assertTrue(response.getRefreshTokenExpirationTime().toInstant().isAfter(clock.instant()));
   }
 
   @Test
@@ -105,13 +110,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -137,13 +142,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -170,13 +175,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -215,13 +220,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -242,12 +247,12 @@ class AuthApiTest {
 
     when(refreshTokenService.findTokenByKeyId(refreshToken.getHeader().getKeyID())).thenThrow(new BusinessException(BusinessExceptionElement
         .builder()
-        .errorDescription(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND)
+        .errorDescription(BusinessErrorCode.INVALID_REFRESH_TOKEN)
         .build()));
 
     BusinessException exception = assertThrows(BusinessException.class, () -> api.refresh(tokenRequest));
 
-    assertEquals(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND, exception.getError().getErrorDescription());
+    assertEquals(BusinessErrorCode.INVALID_REFRESH_TOKEN, exception.getError().getErrorDescription());
   }
   @Test
   void refresh_token_revoked() {
@@ -258,13 +263,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -300,13 +305,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -343,13 +348,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -363,13 +368,13 @@ class AuthApiTest {
         "smith",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "alex2",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -405,13 +410,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -447,13 +452,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -467,13 +472,13 @@ class AuthApiTest {
         "smith",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "alex2",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -509,13 +514,13 @@ class AuthApiTest {
         "doe",
         "email@bla.com",
         "crtUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "mdfUsr",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         passwordEncoder.encode("axon_jon121"),
         new TeamEty(),
@@ -543,6 +548,50 @@ class AuthApiTest {
 
   @Test
   void getUserDetails() {
+    tokenUtil = mock(JwtTokenUtil.class);
+    api = new AuthApi(passwordEncoder, tokenUtil, employeeService, refreshTokenService, clock);
 
+    TeamEty teamEty = new TeamEty();
+    teamEty.setId(1L);
+    teamEty.setName("Test");
+
+    EmployeeEty employee = new EmployeeEty(
+        "11",
+        "jon",
+        "doe",
+        "email@bla.com",
+        "crtUsr",
+        clock.instant(),
+        "mdfUsr",
+        clock.instant(),
+        "role.user",
+        "status.active",
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        "jon121",
+        passwordEncoder.encode("axon_jon121"),
+        teamEty,
+        new HashSet<>(),
+        new HashSet<>()
+    );
+
+    when(tokenUtil.getLoggedUserId()).thenReturn("11");
+    when(employeeService.loadEmployeeById("11")).thenReturn(employee);
+
+    ResponseEntity<?> response = api.getUserDetails();
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    UserDetailsResponse expectedResponse = UserDetailsResponse.builder()
+        .employeeId("11")
+        .username("jon121")
+        .roles(List.of("role.user"))
+        .teamDetails(new TeamDetails(teamEty.getId(), teamEty.getName()))
+        .build();
+
+    UserDetailsResponse actualResponse = (UserDetailsResponse) response.getBody();
+    assertEquals(expectedResponse, actualResponse);
+
+    verify(employeeService).loadEmployeeById("11");
   }
 }

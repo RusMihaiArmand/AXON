@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +25,9 @@ import ro.axon.dot.config.component.JwtTokenUtil;
 
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
+
+  @Mock
+  private Clock clock;
   @Mock
   private TeamRepository teamRepository;
   @Mock
@@ -62,6 +67,7 @@ class TeamServiceTest {
 
     when(tokenUtil.getLoggedUserId()).thenReturn("usr_hr");
     when(teamRepository.save(any())).thenReturn(team1);
+    when(clock.instant()).thenReturn(Clock.systemDefaultZone().instant());
 
     teamService.saveTeam(teamDetails);
 
@@ -84,6 +90,7 @@ class TeamServiceTest {
 
     when(teamRepository.save(Mockito.any(TeamEty.class))).thenThrow(RuntimeException.class);
     when(tokenUtil.getLoggedUserId()).thenReturn("mdf_usr");
+    when(clock.instant()).thenReturn(Clock.systemDefaultZone().instant());
 
     assertThatCode(() -> teamService.saveTeam(teamDetails)).isInstanceOf(RuntimeException.class);
 

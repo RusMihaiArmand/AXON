@@ -23,7 +23,7 @@ public class RefreshTokenService {
     return refreshTokenRepository.findById(keyId)
         .orElseThrow(() -> new BusinessException(BusinessExceptionElement
             .builder()
-            .errorDescription(BusinessErrorCode.REFRESH_TOKEN_NOT_FOUND)
+            .errorDescription(BusinessErrorCode.INVALID_REFRESH_TOKEN)
             .build()));
   }
 }

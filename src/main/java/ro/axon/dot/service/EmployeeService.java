@@ -60,6 +60,7 @@ public class EmployeeService {
   private final JwtTokenUtil tokenUtil;
 
   private final Clock clock;
+  private final String INITIAL_DAYS_OFF_DESCRIPTION = "Initial number of days off for the current year";
 
   @Transactional(readOnly = true)
   public EmployeeDetailsList getEmployeesDetails(String name) {
@@ -208,7 +209,9 @@ public class EmployeeService {
     EmployeeEty employee = loadEmployeeById(employeeId);
 
     employee.setStatus("INACTIVE");
-    employee.setMdfTms(Instant.now());
+
+    employee.setMdfTms(clock.instant());
+
     employee.setMdfUsr(tokenUtil.getLoggedUserId());
 
     employeeRepository.save(employee);
@@ -249,7 +252,7 @@ public class EmployeeService {
           BusinessErrorCode.LEAVE_REQUEST_DELETE_ALREADY_REJECTED).build());
     }
     if (leaveRequest.getStatus().equals(LeaveRequestStatus.APPROVED) &&
-        leaveRequest.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))) {
+        leaveRequest.getStartDate().isBefore(LocalDate.ofInstant(clock.instant(), clock.getZone()).withDayOfMonth(1))) {
 
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
           BusinessErrorCode.LEAVE_REQUEST_DELETE_APPROVED_PAST_DATE).build());
@@ -283,7 +286,7 @@ public class EmployeeService {
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
           BusinessErrorCode.LEAVE_REQUEST_UPDATE_ALREADY_REJECTED).build());
     }
-    if (editLeaveRequestDetails.getStartDate().isBefore(LocalDate.now().withDayOfMonth(1))) {
+    if (editLeaveRequestDetails.getStartDate().isBefore(LocalDate.ofInstant(clock.instant(), clock.getZone()).withDayOfMonth(1))) {
       throw new BusinessException(BusinessExceptionElement.builder().errorDescription(
           BusinessErrorCode.LEAVE_REQUEST_UPDATE_IN_PAST).build());
     }
@@ -345,7 +348,7 @@ public class EmployeeService {
               .build());
     }
 
-    var currentDate = LocalDate.now();
+    var currentDate = LocalDate.ofInstant(clock.instant(), clock.getZone());
 
     if (createLeaveRequestDetails.getStartDate().getMonthValue()
         < currentDate.getMonthValue()) {
@@ -377,14 +380,15 @@ public class EmployeeService {
     leaveRequestEty.setDescription(leaveRequestDTO.getDescription());
     leaveRequestEty.setStatus(LeaveRequestStatus.PENDING);
 
+    Instant now = clock.instant();
+
     leaveRequestEty.setMdfUsr(tokenUtil.getLoggedUserId());
-    leaveRequestEty.setMdfTms(Instant.now());
+    leaveRequestEty.setMdfTms(now);
 
     if(leaveRequestDTO instanceof CreateLeaveRequestDetails){
       leaveRequestEty.setCrtUsr(tokenUtil.getLoggedUserId());
-      leaveRequestEty.setCrtTms(Instant.now());
+      leaveRequestEty.setCrtTms(now);
     }
-
   }
 
   private int checkCountedDaysOff(LeaveRequestCreateEditDetails leaveRequestDate,
@@ -478,7 +482,7 @@ public class EmployeeService {
     EmpYearlyDaysOffEty empDaysOffEty = new EmpYearlyDaysOffEty();
 
     empDaysOffEty.setEmployee(employee);
-    empDaysOffEty.setYear(LocalDate.now().getYear());
+    empDaysOffEty.setYear(LocalDate.ofInstant(clock.instant(), clock.getZone()).getYear());
     empDaysOffEty.setTotalNoDays(0);
     empDaysOffEty.setEmpYearlyDaysOffHistEtySet(new HashSet<>());
 
@@ -491,7 +495,7 @@ public class EmployeeService {
       throws BusinessException {
     EmpYearlyDaysOffEty daysOffEty;
     daysOffEty = emp.getEmpYearlyDaysOff().stream()
-        .filter(yearlyDaysOff -> yearlyDaysOff.getYear().equals(LocalDate.now().getYear()))
+        .filter(yearlyDaysOff -> yearlyDaysOff.getYear().equals(LocalDate.ofInstant(clock.instant(), clock.getZone()).getYear()))
         .findFirst()
         .orElseGet(() -> createDaysOffEty(emp));
 
@@ -503,7 +507,7 @@ public class EmployeeService {
     }
 
     daysOffEty.setTotalNoDays(daysLeft);
-    daysOffEty.setYear(LocalDate.now().getYear());
+    daysOffEty.setYear(LocalDate.ofInstant(clock.instant(), clock.getZone()).getYear());
 
     EmpYearlyDaysOffHistEty daysOffHistory = new EmpYearlyDaysOffHistEty();
 
@@ -517,8 +521,7 @@ public class EmployeeService {
     }
 
     daysOffHistory.setCrtUsr(tokenUtil.getLoggedUserId());
-    daysOffHistory.setCrtTms(Instant.now());
-
+    daysOffHistory.setCrtTms(clock.instant());
     daysOffHistory.setEmpYearlyDaysOffEty(daysOffEty);
 
     daysOffEty.getEmpYearlyDaysOffHistEtySet().add(daysOffHistory);
@@ -532,7 +535,7 @@ public class EmployeeService {
     verifyEmployeeExists(request.getUsername());
 
     TeamEty team = loadTeamById(request.getTeamId());
-    final LocalDateTime now = LocalDateTime.now();
+    Instant now = clock.instant();
 
     EmployeeEty toSave = setEmployeeDetails(request, loggedUserId, team, now);
     EmpYearlyDaysOffEty daysOff = setDaysOffDetails(request, loggedUserId, toSave, now);
@@ -545,7 +548,7 @@ public class EmployeeService {
   }
 
   private EmpYearlyDaysOffEty setDaysOffDetails(RegisterRequest request, String loggedUserId,
-      EmployeeEty employee, LocalDateTime now) {
+      EmployeeEty employee, Instant now) {
     EmpYearlyDaysOffEty daysOff = new EmpYearlyDaysOffEty();
 
     daysOff.setYear(request.getContractStartDate().getYear());
@@ -554,19 +557,18 @@ public class EmployeeService {
     EmpYearlyDaysOffHistEty daysOffHistEty = new EmpYearlyDaysOffHistEty();
     daysOffHistEty.setEmpYearlyDaysOffEty(daysOff);
     daysOffHistEty.setNoDays(request.getNoDaysOff());
-    daysOffHistEty.setDescription("Initial number of days off for the current year");
+
+    daysOffHistEty.setDescription(INITIAL_DAYS_OFF_DESCRIPTION);
     daysOffHistEty.setType(VacationDaysChangeType.INCREASE);
     daysOffHistEty.setCrtUsr(loggedUserId);
-    daysOffHistEty.setCrtTms(now.toInstant(ZoneOffset.UTC));
+    daysOffHistEty.setCrtTms(now);
 
     daysOff.setEmpYearlyDaysOffHistEtySet(Set.of(daysOffHistEty));
     daysOff.setEmployee(employee);
 
     return daysOff;
   }
-
-  private EmployeeEty setEmployeeDetails(RegisterRequest request, String loggedUserId, TeamEty team,
-      LocalDateTime now) {
+  private EmployeeEty setEmployeeDetails(RegisterRequest request, String loggedUserId, TeamEty team, Instant now){
     EmployeeEty toSave = new EmployeeEty();
 
     toSave.setTeam(team);
@@ -579,8 +581,8 @@ public class EmployeeService {
     toSave.setContractStartDate(request.getContractStartDate());
     toSave.setCrtUsr(loggedUserId);
     toSave.setMdfUsr(loggedUserId);
-    toSave.setCrtTms(now.toInstant(ZoneOffset.UTC));
-    toSave.setMdfTms(now.toInstant(ZoneOffset.UTC));
+    toSave.setCrtTms(now);
+    toSave.setMdfTms(now);
     toSave.setStatus("ACTIVE");
     toSave.setPassword(passwordEncoder.encode("axon_" + toSave.getUsername()));
 
@@ -602,7 +604,7 @@ public class EmployeeService {
         .orElseThrow(() -> new BusinessException(
             BusinessExceptionElement
                 .builder()
-                .errorDescription(BusinessErrorCode.EMPLOYEE_NOT_FOUND)
+                .errorDescription(BusinessErrorCode.USER_NOT_FOUND)
                 .build()
         ));
   }

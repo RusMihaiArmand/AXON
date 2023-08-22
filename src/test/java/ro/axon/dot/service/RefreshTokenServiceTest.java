@@ -18,8 +18,9 @@ import static ro.axon.dot.EmployeeTestAttributes.ROLE;
 import static ro.axon.dot.EmployeeTestAttributes.STATUS;
 import static ro.axon.dot.EmployeeTestAttributes.TEAM_ETY;
 import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
+
+import java.time.Clock;
 import java.time.Instant;
-import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +37,7 @@ class RefreshTokenServiceTest {
   RefreshTokenRepository repository;
   RefreshTokenService service;
   private EmployeeEty employee;
+  private Clock clock;
 
   private static EmployeeEty setupEmployee() {
     EmployeeEty employee = new EmployeeEty();
@@ -64,12 +66,14 @@ class RefreshTokenServiceTest {
     service = new RefreshTokenService(repository);
 
     employee = setupEmployee();
+
+    clock = Clock.systemDefaultZone();
   }
 
   @Test
   void saveRefreshToken() {
 
-    Instant now = new Date().toInstant();
+    Instant now = clock.instant();
 
     RefreshTokenEty refreshToken = new RefreshTokenEty(
         String.valueOf(UUID.randomUUID()),
@@ -96,7 +100,7 @@ class RefreshTokenServiceTest {
 
   @Test
   void findTokenByKeyId() {
-    Instant now = new Date().toInstant();
+    Instant now = clock.instant();
 
     String uuid = String.valueOf(UUID.randomUUID());
 

@@ -32,6 +32,7 @@ import static ro.axon.dot.EmployeeTestAttributes.USERNAME;
 import static ro.axon.dot.EmployeeTestAttributes.V;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -88,6 +89,7 @@ class EmployeeApiTest {
   public static final TeamDetailsListItem teamDetails1 = new TeamDetailsListItem();
   public static final TeamDetailsListItem teamDetails2 = new TeamDetailsListItem();
   public static final EmployeeDetailsListItem employee = new EmployeeDetailsListItem();
+  private Clock clock;
 
   @Mock
   JwtTokenUtil tokenUtil;
@@ -102,6 +104,8 @@ class EmployeeApiTest {
     mockMvc = MockMvcBuilders.standaloneSetup(employeeApi)
         .setControllerAdvice(new ApiExceptionHandler())
         .build();
+
+    clock = Clock.systemDefaultZone();
 
     teamDetails1.setName("AxonTeam");
     teamDetails2.setName("InternshipTeam");
@@ -226,7 +230,7 @@ class EmployeeApiTest {
                       .contentType(MediaType.APPLICATION_JSON)
                       .accept(MediaType.APPLICATION_JSON)
                       .content(getJsonAnswer()))
-              .andExpect(status().isNotFound())
+              .andExpect(status().isBadRequest())
               .andExpect(jsonPath("$.message").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg()))
               .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
   }
@@ -314,7 +318,7 @@ class EmployeeApiTest {
     )).when(employeeService).inactivateEmployee(employeeId);
 
     mockMvc.perform(patch("/api/v1/employees/{employeeId}/inactivate", employeeId))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isBadRequest());
 
     verify(employeeService, times(1)).inactivateEmployee(employeeId);
   }
@@ -352,7 +356,7 @@ class EmployeeApiTest {
     mockMvc.perform(put("/api/v1/employees/" + employeeId + "/requests/" + requestId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(editLeaveRequestContent))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -450,7 +454,7 @@ class EmployeeApiTest {
                     .accept(MediaType.APPLICATION_JSON)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(createLeaveRequestContent))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isBadRequest());
 
     verify(employeeService, times(1)).createLeaveRequest(anyString(), any());
   }
@@ -558,7 +562,7 @@ class EmployeeApiTest {
 
     mockMvc.perform(get("/api/v1/employees/{employeeId}/remaining-days-off", ID)
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound())
+            .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
   }
 
@@ -580,7 +584,7 @@ class EmployeeApiTest {
 
   @Test
   void checkEmployeeUniqueCredentials() throws Exception {
-    mockMvc.perform(get("/api/v1/employees/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/validation")
             .param("username", USERNAME)
             .param("email", EMAIL))
             .andExpect(status().isOk())
@@ -593,7 +597,7 @@ class EmployeeApiTest {
             .builder().errorDescription(BusinessErrorCode.EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST).build()
     )).when(employeeService).checkEmployeeUniqueCredentials("", "");
 
-    mockMvc.perform(get("/api/v1/employees/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/validation")
                     .param("username", "")
                     .param("email", "")
                     .contentType(MediaType.APPLICATION_JSON))
@@ -607,7 +611,7 @@ class EmployeeApiTest {
         .builder().errorDescription(BusinessErrorCode.USERNAME_DUPLICATE).build()
     )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
 
-    mockMvc.perform(get("/api/v1/employees/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/validation")
             .param("username", USERNAME)
             .param("email", EMAIL)
             .contentType(MediaType.APPLICATION_JSON))
@@ -621,7 +625,7 @@ class EmployeeApiTest {
         .builder().errorDescription(BusinessErrorCode.EMAIL_DUPLICATE).build()
     )).when(employeeService).checkEmployeeUniqueCredentials(USERNAME, EMAIL);
 
-    mockMvc.perform(get("/api/v1/employees/employee/validation")
+    mockMvc.perform(get("/api/v1/employees/validation")
             .param("username", USERNAME)
             .param("email", EMAIL)
             .contentType(MediaType.APPLICATION_JSON))
@@ -676,7 +680,7 @@ class EmployeeApiTest {
 
     mockMvc.perform(get("/api/v1/employees/1/requests")
             .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isNotFound())
+        .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getDevMsg()))
         .andExpect(jsonPath("$.errorCode").value(BusinessErrorCode.EMPLOYEE_NOT_FOUND.getErrorCode()));
   }
@@ -710,9 +714,9 @@ class EmployeeApiTest {
     team.setId(1L);
     team.setName("Backend");
     team.setCrtUsr("crtUsr");
-    team.setCrtTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setCrtTms(clock.instant());
     team.setMdfUsr("mdfUsr");
-    team.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    team.setMdfTms(clock.instant());
     team.setStatus(TeamStatus.ACTIVE);
 
     EmployeeEty employee = new EmployeeEty(
@@ -721,13 +725,13 @@ class EmployeeApiTest {
         "doe",
         "jon@mail.com",
         "user_hr_id",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "user_hr_id",
-        LocalDateTime.now().toInstant(ZoneOffset.UTC),
+        clock.instant(),
         "role.user",
         "status.active",
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
+        LocalDate.ofInstant(clock.instant(), clock.getZone()),
         "jon121",
         new BCryptPasswordEncoder().encode("axon_jon121"),
         team,
@@ -743,7 +747,7 @@ class EmployeeApiTest {
     request.setTeamId(1L);
     request.setRole("USER");
     request.setEmail("jon@mail.com");
-    request.setContractStartDate(LocalDate.now());
+    request.setContractStartDate(LocalDate.ofInstant(clock.instant(), clock.getZone()));
     request.setNoDaysOff(20);
 
     when(employeeService.createEmployee(request,"user_hr_id")).thenReturn(employeeDto);

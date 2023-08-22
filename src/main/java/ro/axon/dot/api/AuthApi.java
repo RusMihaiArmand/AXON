@@ -3,7 +3,6 @@ package ro.axon.dot.api;
 import com.nimbusds.jwt.SignedJWT;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -50,11 +49,13 @@ public class AuthApi {
 
     EmployeeEty employee = employeeService.loadEmployeeByUsername(request.getUsername());
     verifyPassword(request.getPassword(), employee);
+    verifyEmployeeStatus(employee);
     Instant now = clock.instant();
 
     final SignedJWT accessToken = jwtTokenUtil.generateAccessToken(employee, now);
     final SignedJWT refreshToken = jwtTokenUtil.generateRefreshToken(employee, now);
-    createRefreshToken(refreshToken, employee, now);
+
+    createRefreshTokenEty(refreshToken, employee, now);
 
     Instant accessTokenExpiration = jwtTokenUtil.getExpirationDateFromToken(accessToken);
     Instant refreshTokenExpiration = jwtTokenUtil.getExpirationDateFromToken(refreshToken);
@@ -64,9 +65,9 @@ public class AuthApi {
         .accessToken(accessToken.serialize())
         .refreshToken(refreshToken.serialize())
         .accessTokenExpirationTime(
-            OffsetDateTime.ofInstant(accessTokenExpiration, ZoneOffset.UTC).toLocalDateTime())
+            OffsetDateTime.ofInstant(accessTokenExpiration, ZoneOffset.UTC))
         .refreshTokenExpirationTime(
-            OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneOffset.UTC).toLocalDateTime())
+            OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneOffset.UTC))
         .build());
   }
 
@@ -89,7 +90,7 @@ public class AuthApi {
     Pair<SignedJWT, RefreshTokenEty> tokenEtyPair = parseAndCheckToken(request.getRefreshToken());
 
     RefreshTokenEty fromDB = tokenEtyPair.getSecond();
-    fromDB.setMdfTms(LocalDateTime.now().toInstant(ZoneOffset.UTC));
+    fromDB.setMdfTms(clock.instant());
     fromDB.setStatus(TokenStatus.REVOKED);
 
     refreshTokenService.saveRefreshToken(fromDB);
@@ -152,6 +153,15 @@ public class AuthApi {
     }
   }
 
+  private void verifyEmployeeStatus(EmployeeEty employee) {
+    if(employee.getStatus().equalsIgnoreCase("inactive")){
+      throw new BusinessException(BusinessExceptionElement
+          .builder()
+          .errorDescription(BusinessErrorCode.LOGIN_INACTIVE_USER)
+          .build());
+    }
+  }
+
   private void checkAudience(SignedJWT refreshToken, RefreshTokenEty refreshTokenEty) {
 
     if (!jwtTokenUtil.getAudienceFromToken(refreshToken)
@@ -168,7 +178,8 @@ public class AuthApi {
   }
 
   private ResponseEntity<?> regenerateToken(SignedJWT token, RefreshTokenEty tokenEty) {
-    final Instant now = clock.instant();
+    Instant now = clock.instant();
+
     SignedJWT accessToken = jwtTokenUtil.generateAccessToken(tokenEty.getEmployee(), now);
     SignedJWT refreshToken = jwtTokenUtil.regenerateRefreshToken(tokenEty.getEmployee(), token, now);
     Instant accessTokenExpiration = jwtTokenUtil.getExpirationDateFromToken(accessToken);
@@ -180,16 +191,17 @@ public class AuthApi {
 
     return ResponseEntity.ok(LoginResponse
         .builder()
-        .accessToken(accessToken.serialize())
-        .refreshToken(refreshToken.serialize())
-        .accessTokenExpirationTime(
-            OffsetDateTime.ofInstant(accessTokenExpiration, ZoneOffset.UTC).toLocalDateTime())
-        .refreshTokenExpirationTime(
-            OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneOffset.UTC).toLocalDateTime())
+            .accessToken(accessToken.serialize())
+            .refreshToken(refreshToken.serialize())
+            .accessTokenExpirationTime(
+                OffsetDateTime.ofInstant(accessTokenExpiration, ZoneOffset.UTC))
+            .refreshTokenExpirationTime(
+                OffsetDateTime.ofInstant(refreshTokenExpiration, ZoneOffset.UTC))
         .build());
   }
 
-  private void createRefreshToken(SignedJWT refreshToken, EmployeeEty employee, Instant now) {
+  private void createRefreshTokenEty(SignedJWT refreshToken, EmployeeEty employee, Instant now) {
+
     RefreshTokenEty refreshTokenEty = new RefreshTokenEty(refreshToken.getHeader().getKeyID(),
         TokenStatus.ACTIVE,
         employee,

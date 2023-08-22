@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static ro.axon.dot.EmployeeTestAttributes.CONTRACT_END_DATE;
 import static ro.axon.dot.EmployeeTestAttributes.CONTRACT_START_DATE;
 import static ro.axon.dot.EmployeeTestAttributes.CRT_TMS;
@@ -28,6 +30,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Date;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import ro.axon.dot.config.component.JwtTokenUtil;
 import ro.axon.dot.config.properties.JwtTokenUtilProperties;
 import ro.axon.dot.domain.entity.EmployeeEty;
@@ -38,7 +44,7 @@ class JwtTokenUtilTest {
   private final JwtTokenUtilProperties properties;
   private final JwtTokenUtil tokenUtil;
   private EmployeeEty employee;
-  private Clock clock;
+  private final Clock clock;
 
   public JwtTokenUtilTest() {
     TokenUtilSetup tokenUtilSetup = new TokenUtilSetup();
@@ -139,6 +145,19 @@ class JwtTokenUtilTest {
 
     assertNotNull(token2);
     assertThrows(BusinessException.class, () -> tokenUtil.isTokenExpired(tokenUtil.getExpirationDateFromToken(token2).atOffset(ZoneOffset.UTC).toLocalDateTime()));
+  }
+
+  @Test
+  public void getLoggedUserId() {
+    Jwt jwt = mock(Jwt.class);
+    when(jwt.getSubject()).thenReturn("testUserId");
+
+    Authentication authentication = new JwtAuthenticationToken(jwt);
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+    String userId = tokenUtil.getLoggedUserId();
+
+    assertEquals("testUserId", userId);
   }
 
 }
