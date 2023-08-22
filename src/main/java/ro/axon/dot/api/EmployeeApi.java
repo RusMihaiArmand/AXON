@@ -93,7 +93,7 @@ public class EmployeeApi {
 
   }
 
-  @GetMapping(value = "/employee/validation")
+  @GetMapping(value = "/validation")
   public ResponseEntity<ValidationResponse> checkEmployeeUniqueCredentials(
       @RequestParam(name = "username", required = false) String username,
       @RequestParam(name = "email", required = false) String email) {
