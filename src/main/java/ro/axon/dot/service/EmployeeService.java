@@ -156,10 +156,10 @@ public class EmployeeService {
     }
     if (review.getType().equals("REJECTION")) {
       request.setStatus(LeaveRequestStatus.REJECTED);
+      request.setRejectReason(review.getRejectionReason());
     }
-
-    request.setRejectReason(review.getRejectionReason());
-    request.setV(review.getV());
+    request.setMdfUsr(tokenUtil.getLoggedUserId());
+    request.setMdfTms(clock.instant());
     leaveRequestRepository.save(request);
     return request;
   }
@@ -345,7 +345,6 @@ public class EmployeeService {
               .builder()
               .errorDescription(BusinessErrorCode.LEAVE_RQST_DIFF_YEARS)
               .build());
-
     }
 
     var currentDate = LocalDate.ofInstant(clock.instant(), clock.getZone());
@@ -409,7 +408,6 @@ public class EmployeeService {
 
     return (int) countedDaysOff;
   }
-
 
   protected long calculateCountedDaysOff(LocalDate startDate, LocalDate endDate) {
     return startDate.datesUntil(endDate.plusDays(1))

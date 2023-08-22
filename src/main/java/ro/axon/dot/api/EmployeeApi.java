@@ -52,11 +52,9 @@ public class EmployeeApi {
 
   @PutMapping("/{employeeId}/requests/{requestId}")
   public ResponseEntity<Void> editLeaveRequest(@PathVariable String employeeId,
-      @PathVariable Long requestId,
-      @Valid @RequestBody EditLeaveRequestDetails leaveRequestDetails) {
+      @PathVariable Long requestId, @RequestBody @Valid EditLeaveRequestDetails leaveRequestDetails) {
 
     employeeService.editLeaveRequest(employeeId, requestId, leaveRequestDetails);
-
     return ResponseEntity.noContent().build();
   }
 
@@ -64,7 +62,7 @@ public class EmployeeApi {
   public ResponseEntity<Void> handleLeaveRequest(
       @PathVariable(name = "idEmployee") String idEmployee,
       @PathVariable(name = "idRequest") Long idRequest,
-      @Valid @RequestBody LeaveRequestReview review) {
+      @RequestBody @Valid LeaveRequestReview review) {
 
     employeeService.updateLeaveRequestStatus(idEmployee, idRequest, review);
     return ResponseEntity.noContent().build();
@@ -88,7 +86,7 @@ public class EmployeeApi {
 
   @PostMapping("/{employeeId}/requests")
   public ResponseEntity<Void> addLeaveRequest(@PathVariable String employeeId,
-      @Valid @RequestBody CreateLeaveRequestDetails createLeaveRequestDetails) {
+    @RequestBody @Valid CreateLeaveRequestDetails createLeaveRequestDetails) {
 
     employeeService.createLeaveRequest(employeeId, createLeaveRequestDetails);
     return ResponseEntity.status(HttpStatus.CREATED).build();

@@ -19,9 +19,9 @@ public enum BusinessErrorCode {
     TOKEN_EXPIRED("EDOT0008400", "Token is expired", HttpStatus.BAD_REQUEST),
     PASSWORD_NOT_MATCHING("EDOT0009400", "Password does not match", HttpStatus.BAD_REQUEST),
     AUDIENCE_DOES_NOT_MATCH("EDOT0010401", "Audience doesn't match", HttpStatus.UNAUTHORIZED),
-    EMPLOYEE_NOT_FOUND("EDOT0011404", "The employee with the given ID does not exist.", HttpStatus.NOT_FOUND),
+    EMPLOYEE_NOT_FOUND("EDOT0011400", "The employee with the given ID does not exist.", HttpStatus.BAD_REQUEST),
     YEARLY_DAYS_OFF_NOT_SET("EDOT0012400", "The vacation days for this employee have not been set for this year.", HttpStatus.BAD_REQUEST),
-    LEAVE_REQUEST_NOT_FOUND("EDOT0013404", "The leave request with the given ID does not exist.", HttpStatus.NOT_FOUND),
+    LEAVE_REQUEST_NOT_FOUND("EDOT0013400", "The leave request with the given ID does not exist.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_UPDATE_ALREADY_REJECTED("EDOT0014400", "Cannot update already rejected leave request.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_DELETE_ALREADY_REJECTED("EDOT0015400", "Cannot delete already rejected leave request.", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_UPDATE_IN_PAST("EDOT0016400", "Cannot update leave request with date in the past.", HttpStatus.BAD_REQUEST),
@@ -35,11 +35,11 @@ public enum BusinessErrorCode {
     LEAVE_RQST_INVALID_MONTH("ED0T0024400", "Invalid month for leave request", HttpStatus.BAD_REQUEST),
     LEAVE_REQUEST_NOT_PENDING("EDOT0025400", "Leave request must be pending in order to APPROVE or REJECT it.", HttpStatus.BAD_REQUEST),
     NEGATIVE_DAYS_OFF("EDOT0026500", "Number of days off became negative.", HttpStatus.BAD_REQUEST),
-    TEAM_NOT_FOUND("EDOT0027404", "Team not found", HttpStatus.NOT_FOUND),
+    TEAM_NOT_FOUND("EDOT0027400", "Team not found", HttpStatus.BAD_REQUEST),
     NO_JWT_AUTH_FOUND("EDOT0028401", "No JWT Auth found in Security Context!", HttpStatus.UNAUTHORIZED),
     EMPLOYEE_VERSION_CONFLICT("EDOT0029409", "Conflict on employee version.", HttpStatus.CONFLICT),
     EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST("EDOT0030400", "The username and the email are not provided in the query params.", HttpStatus.BAD_REQUEST),
-    USER_NOT_FOUND("EDOT0031404", "Employee with given username not found", HttpStatus.NOT_FOUND),
+    USER_NOT_FOUND("EDOT0031400", "Employee with given username not found", HttpStatus.BAD_REQUEST),
     LOGIN_INACTIVE_USER("EDOT0032403", "User can't login, status is INACTIVE", HttpStatus.FORBIDDEN);
 
     private final String errorCode;
