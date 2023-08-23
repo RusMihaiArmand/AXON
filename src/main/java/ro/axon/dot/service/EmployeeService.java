@@ -666,21 +666,19 @@ public class EmployeeService {
     if(teamName == null || teamName.isEmpty()){
       return employeeRepository.findAll();
     }else{
-      TeamEty team = teamRepository.findByName(teamName);
-      if(team == null){
-        throw(new BusinessException(
-                BusinessExceptionElement.builder()
-                        .errorDescription(BusinessErrorCode.TEAM_NOT_FOUND)
-                        .build()));
-      }
+      TeamEty team = teamRepository.findByNameIgnoreCase(teamName)
+          .orElseThrow(() -> new BusinessException(BusinessExceptionElement
+              .builder().errorDescription(BusinessErrorCode.TEAM_NOT_FOUND).build()));
+
       return team.getEmployees().stream().toList();
     }
   }
   public List<LeaveRequestEty> getEmployeeLeaveRequestByPeriod(LocalDate startDate, LocalDate endDate,
                                                                EmployeeEty employee){
     return employee.getLeaveRequests().stream().filter(leaveRequestEty ->
-                !(leaveRequestEty.getEndDate().isBefore(startDate) || leaveRequestEty.getStartDate().isAfter(endDate))
-                    && (leaveRequestEty.getStatus().equals(LeaveRequestStatus.APPROVED))
+                !leaveRequestEty.getEndDate().isBefore(startDate) &&
+                    !leaveRequestEty.getStartDate().isAfter(endDate) &&
+                    (leaveRequestEty.getStatus().equals(LeaveRequestStatus.APPROVED))
             )
         .collect(Collectors.toList());
   }

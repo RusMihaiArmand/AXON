@@ -40,7 +40,8 @@ public enum BusinessErrorCode {
     EMPLOYEE_VERSION_CONFLICT("EDOT0029409", "Conflict on employee version.", HttpStatus.CONFLICT),
     EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST("EDOT0030400", "The username and the email are not provided in the query params.", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND("EDOT0031400", "Employee with given username not found", HttpStatus.BAD_REQUEST),
-    LOGIN_INACTIVE_USER("EDOT0032403", "User can't login, status is INACTIVE", HttpStatus.FORBIDDEN);
+    LOGIN_INACTIVE_USER("EDOT0032403", "User can't login, status is INACTIVE", HttpStatus.FORBIDDEN),
+    INVALID_DATE_PROVIDED("EDOT0033400", "Invalid date provided.", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String devMsg;

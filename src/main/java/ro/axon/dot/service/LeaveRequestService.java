@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.axon.dot.domain.entity.EmployeeEty;
 import ro.axon.dot.domain.entity.LeaveRequestEty;
-import ro.axon.dot.domain.enums.LeaveRequestStatus;
 import ro.axon.dot.domain.enums.LeaveRequestType;
+import ro.axon.dot.exceptions.BusinessErrorCode;
+import ro.axon.dot.exceptions.BusinessException;
+import ro.axon.dot.exceptions.BusinessException.BusinessExceptionElement;
 import ro.axon.dot.mapper.LeaveRequestMapper;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 
@@ -50,21 +52,13 @@ public class LeaveRequestService {
     public LeaveRequestReport generateLeaveRequestReport(String teamName, LocalDate startDate,
                                                          LocalDate endDate) {
 
+        if(startDate.isEqual(endDate) || startDate.isAfter(endDate)){
+            throw new BusinessException(BusinessExceptionElement
+                .builder().errorDescription(BusinessErrorCode.INVALID_DATE_PROVIDED).build());
+        }
+
         List<LeaveRequestReportItem> reportItems = new ArrayList<>();
         List<EmployeeEty> employees = employeeService.getEmployeeFromTeam(teamName);
-
-        employees = employees.stream()
-                .filter(employeeEty ->
-                        employeeEty.getLeaveRequests().stream()
-                                .anyMatch(leaveRequestEty ->
-                                        (leaveRequestEty.getStartDate().isBefore(endDate) ||
-                                                leaveRequestEty.getEndDate().isAfter(startDate))
-                                                && (leaveRequestEty.getStatus().equals(LeaveRequestStatus.APPROVED))
-                                )
-                )
-                .collect(Collectors.toList());
-
-
 
         for (EmployeeEty employee : employees){
             LeaveRequestReportItem reportItem = new LeaveRequestReportItem();
@@ -106,15 +100,13 @@ public class LeaveRequestService {
                                       LocalDate endDate) {
         int totalVacationDays = 0;
         for (LeaveRequestEty leaveRequest : leaveRequests) {
-            if (leaveRequest.getStatus().equals(LeaveRequestStatus.APPROVED)) {
-                if (leaveRequest.getStartDate().isAfter(startDate) && leaveRequest.getEndDate().isBefore(endDate)) {
+                if (!leaveRequest.getStartDate().isBefore(startDate) && !leaveRequest.getEndDate().isAfter(endDate)) {
                     totalVacationDays += leaveRequest.getNoDays();
                 } else if (leaveRequest.getStartDate().isBefore(startDate)) {
                     totalVacationDays += (int) employeeService.calculateCountedDaysOff(startDate, leaveRequest.getEndDate());
                 } else if (leaveRequest.getEndDate().isAfter(endDate) ) {
                     totalVacationDays += (int) employeeService.calculateCountedDaysOff(leaveRequest.getStartDate(), endDate);
                 }
-            }
         }
         return totalVacationDays;
     }
