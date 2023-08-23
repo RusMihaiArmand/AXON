@@ -678,11 +678,11 @@ public class EmployeeService {
   }
   public List<LeaveRequestEty> getEmployeeLeaveRequestByPeriod(LocalDate startDate, LocalDate endDate,
                                                                EmployeeEty employee){
-    return employee.getLeaveRequests().stream().filter((leaveRequestEty ->
-            (leaveRequestEty.getStartDate().isBefore(endDate) ||
-                    leaveRequestEty.getEndDate().isAfter(startDate))
+    return employee.getLeaveRequests().stream().filter(leaveRequestEty ->
+                !(leaveRequestEty.getEndDate().isBefore(startDate) || leaveRequestEty.getStartDate().isAfter(endDate))
                     && (leaveRequestEty.getStatus().equals(LeaveRequestStatus.APPROVED))
-    )).collect(Collectors.toList());
+            )
+        .collect(Collectors.toList());
   }
 
 }
