@@ -22,7 +22,10 @@ public class LeaveRequestQuery {
     }
 
     public LeaveRequestQuery withEmployeeName(String nameSearch) {
-        if (nameSearch != null) employeeNameExp = root.employee.firstName.containsIgnoreCase(nameSearch).or(root.employee.lastName.containsIgnoreCase(nameSearch));
+        if (nameSearch != null) {
+            employeeNameExp = root.employee.firstName.containsIgnoreCase(nameSearch)
+                .or(root.employee.lastName.containsIgnoreCase(nameSearch));
+        }
         return this;
     }
 

@@ -12,28 +12,28 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RegisterRequest {
-  @NotEmpty
+  @NotEmpty(message = "Username should not be empty or null")
   private String username;
 
-  @NotEmpty
+  @NotEmpty(message = "Firstname should not be empty or null")
   private String firstname;
 
-  @NotEmpty
+  @NotEmpty(message = "Lastname should not be empty or null")
   private String lastname;
 
-  @NotEmpty
+  @NotEmpty(message = "Email should not be empty or null")
   private String email;
 
-  @NotEmpty
+  @NotEmpty(message = "Role should not be empty or null")
   private String role;
 
-  @NotNull
+  @NotNull(message = "Team is missing")
   private Long teamId;
 
-  @NotNull
+  @NotNull(message = "Contract start date should not be null")
   private LocalDate contractStartDate;
 
-  @NotNull
+  @NotNull(message = "Number of days off should not be null")
   @Min(value = 0, message = "Numbers of days cannot be negative")
   private Integer noDaysOff;
 }

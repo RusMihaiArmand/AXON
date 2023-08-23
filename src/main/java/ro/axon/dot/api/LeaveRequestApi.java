@@ -25,7 +25,7 @@ public class LeaveRequestApi {
                                                                               @RequestParam(name="search", required = false) String searchParam,
                                                                               @RequestParam(name="type", required = false) String typeParam,
                                                                               @RequestParam(name="startDate", required = false) String startDateParam,
-                                                                              @RequestParam(name="endDate", required = false) String endDateParam) throws Exception {
+                                                                              @RequestParam(name="endDate", required = false) String endDateParam) {
         Optional<String> statusParamOpt = Optional.ofNullable(statusParam);
         Optional<String> searchParamOpt = Optional.ofNullable(searchParam);
         Optional<String> typeParamOpt = Optional.ofNullable(typeParam);
