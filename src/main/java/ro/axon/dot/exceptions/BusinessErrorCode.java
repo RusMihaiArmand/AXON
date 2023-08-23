@@ -38,7 +38,8 @@ public enum BusinessErrorCode {
     TEAM_NOT_FOUND("EDOT0027404", "Team not found", HttpStatus.NOT_FOUND),
     NO_JWT_AUTH_FOUND("EDOT0028401", "No JWT Auth found in Security Context!", HttpStatus.UNAUTHORIZED),
     EMPLOYEE_VERSION_CONFLICT("EDOT0029409", "Conflict on employee version.", HttpStatus.CONFLICT),
-    EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST("EDOT0030400", "The username and the email are not provided in the query params.", HttpStatus.BAD_REQUEST);
+    EMPLOYEE_DETAILS_VALIDATION_INVALID_REQUEST("EDOT0030400", "The username and the email are not provided in the query params.", HttpStatus.BAD_REQUEST),
+    INVALID_DATE_PROVIDED("EDOT0031400", "Invalid date provided.", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String devMsg;
