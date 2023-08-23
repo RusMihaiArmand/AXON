@@ -9,7 +9,6 @@ import ro.axon.dot.domain.enums.LeaveRequestType;
 import ro.axon.dot.domain.LeaveRequestQuery;
 import ro.axon.dot.model.LeaveRequestDetailsList;
 import ro.axon.dot.model.LeaveRequestReport;
-import ro.axon.dot.model.LeaveRequestReportItem;
 import ro.axon.dot.service.LeaveRequestService;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -20,13 +19,8 @@ import java.util.Optional;
 public class LeaveRequestApi {
 
     private final LeaveRequestService leaveRequestService;
-<<<<<<< Updated upstream
-    @GetMapping("requests")
-=======
-
 
     @GetMapping
->>>>>>> Stashed changes
     public ResponseEntity<LeaveRequestDetailsList> getLeaveRequestDetailsList(@RequestParam(name="status", required = false) String statusParam,
                                                                               @RequestParam(name="search", required = false) String searchParam,
                                                                               @RequestParam(name="type", required = false) String typeParam,
@@ -71,8 +65,7 @@ public class LeaveRequestApi {
         return ResponseEntity.ok(leaveRequestService.getLeaveRequestsDetailsSorted(leaveRequestQuery.withStatus(status)
                 .withEmployeeName(search).withType(type).withStartDate(startDate).withEndDate(endDate).build()));
     }
-<<<<<<< Updated upstream
-=======
+
 
     @GetMapping("/by-period")
     public ResponseEntity<LeaveRequestReport> getLeaveRequestsByPeriod(
@@ -83,5 +76,4 @@ public class LeaveRequestApi {
         return ResponseEntity.ok(report);
     }
 
->>>>>>> Stashed changes
 }
