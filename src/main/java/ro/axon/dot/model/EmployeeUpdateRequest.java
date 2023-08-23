@@ -1,5 +1,6 @@
 package ro.axon.dot.model;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,17 +9,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(force = true)
 public class EmployeeUpdateRequest {
 
-  @NotNull
+  @NotNull(message = "Team is missing")
   private String teamId;
-  @NotNull
+  @NotEmpty(message = "Firstname should not be empty or null")
   private String firstName;
-  @NotNull
+  @NotEmpty(message = "Lastname should not be empty or null")
   private String lastName;
-  @NotNull
+  @NotEmpty(message = "Email should not be empty or null")
   private String email;
-  @NotNull
+  @NotEmpty(message = "Role should not be empty or null")
   private String role;
-  @NotNull
+  @NotNull(message = "Version is missing")
   private Long v;
 
 }
